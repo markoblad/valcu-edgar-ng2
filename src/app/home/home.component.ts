@@ -6,6 +6,8 @@ import {
 import { AppState } from '../app.service';
 import { Title } from './title';
 import { XLargeDirective } from './x-large';
+import { XbrlUtility } from '../edgar';
+import { EdgarArchiveService } from '../edgar';
 
 @Component({
   // The selector is what angular internally uses
@@ -24,10 +26,12 @@ import { XLargeDirective } from './x-large';
 export class HomeComponent implements OnInit {
   // Set our default values
   public localState = { value: '' };
+  public edgarContent: any = null;
   // TypeScript public modifiers
   constructor(
     public appState: AppState,
-    public title: Title
+    public title: Title,
+    public edgarArchiveService: EdgarArchiveService
   ) {}
 
   public ngOnInit() {
@@ -39,5 +43,12 @@ export class HomeComponent implements OnInit {
     console.log('submitState', value);
     this.appState.set('value', value);
     this.localState.value = '';
+    // this.edgarContent = this.edgarArchiveService.get(value)
+    this.edgarArchiveService.getEdgarCompanyKeys(value).subscribe(
+      res => {
+        this.edgarContent = XbrlUtility.processXsdDoc(res);
+      },
+      error => console.log(error)
+    );;
   }
 }
