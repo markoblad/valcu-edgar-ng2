@@ -14,33 +14,79 @@ export class XbrlUtility {
     return ['ns', 'xbrli', 'link', 'xbrldi', 'xsd', 'xs'];
   }
 
-  public static get XSD_TAX(): {tags: any, atts: any} { return {
+  public static get XSD_TAX(): {tags: any, e_tag_atts: any} { return {
       tags: {
         r_tag: 'roleType',
         def_tag: 'definition',
         use_tag: 'usedOn',
         e_tag: 'element',
       },
-      atts: {
-        id_att: 'id',
-        name_att: 'name',
-        nillable_att: 'nillable',
-        substitution_group_att: 'substitutionGroup',
-        type_att: 'type',
-        period_type_att: 'periodType', // 'xbrli:periodType'
-        abstract_att: 'abstract',
-        balance_att: 'balance', // 'xbrli:balance'
-        e_atts: ['id', 'name', 'nillable', 'substitution_group', 'type', 'period_type', 'abstract', 'balance'],
-      }
+      e_tag_atts: [
+        'id',
+        'name',
+        'nillable',
+        'substitutionGroup',
+        'type',
+        'periodType', // 'xbrli:periodType'
+        'abstract',
+        'balance', // 'xbrli:balance'
+      ]
     // loc hrefs from # map to xsd element ids; loc hrefs starting from # may be duplicative of loc labels but sometimes labels have a random number appended
     // arc froms and tos map to loc labels
     //  roleRef roleURIs map to xlink:roles within file; roleRef href from # maps to xsd; 
     };
   }
 
+  public static get PRE_TAX(): {tags: any, r_tag_atts: any, p_tag_atts: any, l_tag_atts: any, pa_tag_atts: any} { return {
+      tags: {
+        r_tag: 'roleRef',
+        p_tag: 'presentationLink',
+        l_tag: 'loc',
+        pa_tag: 'presentationArc'
+      },
+      r_tag_atts: [
+        'roleURI',
+        'href', // 'xlink:href'
+        'type', // 'xlink:type'
+      ],
+      p_tag_atts: [
+        'role', //xlink:role
+        'type', // 'xlink:type'
+        'title', // 'xlink:title'
+      ],
+      l_tag_atts: [
+        'href', // 'xlink:href'
+        'label', // 'xlink:label'
+        'type', // 'xlink:type'
+      ],
+      pa_tag_atts: [
+        'order',
+        'preferredLabel',
+        'arcrole', // 'xlink:arcrole'
+        'from', // 'xlink:from'
+        'to', // 'xlink:to',
+        'type', // 'xlink:type'
+        'priority',
+        'use',
+      ]
+      // roleRef href connects to xsd at #; roleRef roleURI connects to pLink xlink:xrole
+      // loc href conncects to xsd; loc xlink:label connects to pArc; pArc connects to loc xlink:labels
+      // preferredLabel connects to lab.xml link:label xlink:role
+      //  some locs points to dei hrefs
+    };
+  }
+
+
+
+
+
   public static processDoc(doc: XMLDocument, fn: (doc: XMLDocument, ns_href: string, ns_prefix: string, nss: {}) => {}): any {
     let ns_href, ns_prefix, nss, returnObj;
     ({ns_href, ns_prefix, nss} = XbrlUtility.getNamespace(doc));
+// console.log('doc', doc);
+// console.log('ns_href', ns_href);
+// console.log('ns_prefix', ns_prefix);
+// console.log('nss', JSON.stringify(nss));
     returnObj = fn(doc, ns_href, ns_prefix, nss);
     return returnObj;
   }
@@ -118,13 +164,37 @@ export class XbrlUtility {
 //                   no_namespace_doc = doc.remove_namespaces!
 //                   @r = no_namespace_doc.css("/#{tag}")
 
+  public static getNodeAtts(node, atts: any): any {
+    if (node && atts) {
+      let obj = {};
+      (atts || []).forEach(function(att) {
+        let attVal = node.getAttribute(att);
+        obj[att] = attVal;
+      });
+      return obj
+    }
+  }
+
+  public static getNodeTagsAtts(node, tag: string, tagAtts: [string], ns_href, ns_prefix, nss): any {
+    if (node && tag && tagAtts) {
+      let parse = XbrlUtility.parseTag(tag, ns_href, ns_prefix, nss, node, false);
+      let objs      = [];
+      for (let i = 0; i < parse.length; i++) {
+        let parseI = parse[i];
+        if (parseI) {
+          let nestedObj = {};
+          nestedObj = XbrlUtility.getNodeAtts(parseI, tagAtts);
+          if (nestedObj) objs.push(nestedObj);
+        }
+      }
+      return objs
+    }
+  }
+
+
   // {roles: [uri: string, def: string, use: string], elements: [any]}
   public static processXsdDoc(doc: XMLDocument): any {
     return XbrlUtility.processDoc(doc, function(doc, ns_href, ns_prefix, nss) {
-console.log('doc', doc);
-console.log('ns_href', ns_href);
-console.log('ns_prefix', ns_prefix);
-console.log('nss', JSON.stringify(nss));
       let returnObj  =  {roles: [], elements: []};
       let rolesParse = XbrlUtility.parseTag(XbrlUtility.XSD_TAX.tags.r_tag, ns_href, ns_prefix, nss, doc, true);
 console.log('rolesParse', JSON.stringify(rolesParse));
@@ -153,12 +223,8 @@ console.log('roles', JSON.stringify(roles));
       for (let i = 0; i < elementsParse.length; i++) {
         let element = elementsParse[i];
         if (element) {
-          let eObj = {};
-          XbrlUtility.XSD_TAX.atts.e_atts.forEach(function(att) {
-            let attVal = element.getAttribute(att);
-            eObj[att] = attVal;
-          });
-          elements.push(eObj);
+          let eObj = XbrlUtility.getNodeAtts(element, XbrlUtility.XSD_TAX.e_tag_atts);
+          if (eObj) elements.push(eObj);
         }
       };
       returnObj.elements = elements;
@@ -167,5 +233,48 @@ console.log('returnObj', JSON.stringify(returnObj));
       return returnObj
     });
   }
+
+  public static processPreDoc(doc: XMLDocument): any {
+    return XbrlUtility.processDoc(doc, function(doc, ns_href, ns_prefix, nss) {
+      let returnObj  =  {roles: [], plinks: []};
+      let rolesParse = XbrlUtility.parseTag(XbrlUtility.PRE_TAX.tags.r_tag, ns_href, ns_prefix, nss, doc, true);
+console.log('rolesParse', JSON.stringify(rolesParse));
+
+
+      let roles      = [];
+      for (let i = 0; i < rolesParse.length; i++) {
+        let role = rolesParse[i];
+        if (role) {
+          let obj = XbrlUtility.getNodeAtts(role, XbrlUtility.PRE_TAX.r_tag_atts);
+          if (obj) roles.push(obj);
+        }
+      };
+      returnObj.roles = roles;
+console.log('roles', JSON.stringify(roles));
+
+      let plinksParse = XbrlUtility.parseTag(XbrlUtility.PRE_TAX.tags.p_tag, ns_href, ns_prefix, nss, doc, true);
+      let plinks      = [];
+      for (let i = 0; i < plinksParse.length; i++) {
+        let plinkParse = plinksParse[i];
+
+
+        let obj = {locs: [], prearcs: []};
+        if (plinkParse) {
+          obj = XbrlUtility.getNodeAtts(plinkParse, XbrlUtility.PRE_TAX.p_tag_atts);
+        }
+        obj.locs = XbrlUtility.getNodeTagsAtts(plinkParse, XbrlUtility.PRE_TAX.tags.l_tag, XbrlUtility.PRE_TAX.l_tag_atts, ns_href, ns_prefix, nss)
+        obj.prearcs = XbrlUtility.getNodeTagsAtts(plinkParse, XbrlUtility.PRE_TAX.tags.pa_tag, XbrlUtility.PRE_TAX.pa_tag_atts, ns_href, ns_prefix, nss)
+        if (obj) plinks.push(obj);
+      };
+      returnObj.plinks = plinks;
+    // @pre_h = nil if @pre_h["roles"].blank? || @pre_h["plinks"].blank?
+
+
+// console.log('elements', JSON.stringify(elements));
+console.log('returnObj', JSON.stringify(returnObj));
+      return returnObj
+    });
+  }
+
 
 }

@@ -46,7 +46,7 @@ export class HomeComponent implements OnInit {
     // this.edgarContent = this.edgarArchiveService.get(value)
     this.edgarArchiveService.getEdgarCompanyKeys(value).subscribe(
       res => {
-        this.edgarContent = XbrlUtility.processXsdDoc(res);
+        this.edgarContent = XbrlUtility.processPreDoc(res);
       },
       error => console.log(error)
     );;
