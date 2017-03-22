@@ -48,7 +48,8 @@ export class HomeComponent implements OnInit {
       res => {
         // this.edgarContent = XbrlUtility.processXsdDoc(res);
         // this.edgarContent = XbrlUtility.processPreDoc(res);
-        this.edgarContent = XbrlUtility.processDefDoc(res);
+        // this.edgarContent = XbrlUtility.processDefDoc(res);
+        this.edgarContent = XbrlUtility.processCalDoc(res);
       },
       error => console.log(error)
     );;

@@ -113,7 +113,40 @@ export class XbrlUtility {
     };
   }
 
-
+  public static get CAL_TAX(): {tags: any, r_tag_atts: any, c_tag_atts: any, l_tag_atts: any, ca_tag_atts: any} { return {
+      tags: {
+        r_tag: 'roleRef',
+        c_tag: 'calculationLink',
+        l_tag: 'loc',
+        ca_tag: 'calculationArc'
+      },
+      r_tag_atts: [
+        'roleURI',
+        'href', // 'xlink:href'
+        'type', // 'xlink:type'
+      ],
+      c_tag_atts: [
+        'role', //xlink:role
+        'type', // 'xlink:type'
+        'title', // 'xlink:title'
+      ],
+      l_tag_atts: [
+        'href', // 'xlink:href'
+        'label', // 'xlink:label'
+        'type', // 'xlink:type'
+      ],
+      ca_tag_atts: [
+        'order',
+        'weight',
+        'arcrole', // 'xlink:arcrole'
+        'from', // 'xlink:from'
+        'to', // 'xlink:to',
+        'type', // 'xlink:type'
+        'priority',
+        'use',
+      ]
+    };
+  }
 
   public static processDoc(doc: XMLDocument, fn: (doc: XMLDocument, ns_href: string, ns_prefix: string, nss: {}) => {}): any {
     let ns_href, ns_prefix, nss, returnObj;
@@ -358,11 +391,53 @@ console.log('rolesParse', JSON.stringify(rolesParse));
           obj = XbrlUtility.getNodeAtts(dlinkParse, XbrlUtility.DEF_TAX.d_tag_atts, ns_href, ns_prefix, nss);
         }
         obj.locs = XbrlUtility.getNodeTagsAtts(dlinkParse, XbrlUtility.DEF_TAX.tags.l_tag, XbrlUtility.DEF_TAX.l_tag_atts, ns_href, ns_prefix, nss)
-        obj.defarcs = XbrlUtility.getNodeTagsAtts(dlinkParse, XbrlUtility.DEF_TAX.tags.pa_tag, XbrlUtility.DEF_TAX.pa_tag_atts, ns_href, ns_prefix, nss)
+        obj.defarcs = XbrlUtility.getNodeTagsAtts(dlinkParse, XbrlUtility.DEF_TAX.tags.pa_tag, XbrlUtility.DEF_TAX.da_tag_atts, ns_href, ns_prefix, nss)
         if (obj) dlinks.push(obj);
       };
       returnObj.dlinks = dlinks;
     // @pre_h = nil if @pre_h["roles"].blank? || @pre_h["dlinks"].blank?
+
+
+// console.log('elements', JSON.stringify(elements));
+// console.log('returnObj', JSON.stringify(returnObj));
+      return returnObj
+    });
+  }
+
+  public static processCalDoc(doc: XMLDocument): any {
+    return XbrlUtility.processDoc(doc, function(doc, ns_href, ns_prefix, nss) {
+      let returnObj  =  {roles: [], clinks: []};
+      let rolesParse = XbrlUtility.parseTag(XbrlUtility.CAL_TAX.tags.r_tag, ns_href, ns_prefix, nss, doc, true);
+console.log('rolesParse', JSON.stringify(rolesParse));
+
+
+      let roles      = [];
+      for (let i = 0; i < rolesParse.length; i++) {
+        let roleParse = rolesParse[i];
+        if (roleParse) {
+          let obj = XbrlUtility.getNodeAtts(roleParse, XbrlUtility.CAL_TAX.r_tag_atts, ns_href, ns_prefix, nss);
+          if (obj) roles.push(obj);
+        }
+      };
+      returnObj.roles = roles;
+// console.log('roles', JSON.stringify(roles));
+
+      let linksParse = XbrlUtility.parseTag(XbrlUtility.CAL_TAX.tags.c_tag, ns_href, ns_prefix, nss, doc, true);
+      let links      = [];
+      for (let i = 0; i < linksParse.length; i++) {
+        let linkParse = linksParse[i];
+
+
+        let obj = {locs: [], calarcs: []};
+        if (linkParse) {
+          obj = XbrlUtility.getNodeAtts(linkParse, XbrlUtility.CAL_TAX.c_tag_atts, ns_href, ns_prefix, nss);
+        }
+        obj.locs = XbrlUtility.getNodeTagsAtts(linkParse, XbrlUtility.CAL_TAX.tags.l_tag, XbrlUtility.CAL_TAX.l_tag_atts, ns_href, ns_prefix, nss)
+        obj.calarcs = XbrlUtility.getNodeTagsAtts(linkParse, XbrlUtility.CAL_TAX.tags.pa_tag, XbrlUtility.CAL_TAX.ca_tag_atts, ns_href, ns_prefix, nss)
+        if (obj) links.push(obj);
+      };
+      returnObj.clinks = links;
+    // @cal_h = nil if @cal_h["roles"].blank? || @cal_h["clinks"].blank?
 
 
 // console.log('elements', JSON.stringify(elements));
