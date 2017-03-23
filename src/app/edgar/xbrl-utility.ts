@@ -148,6 +148,148 @@ export class XbrlUtility {
     };
   }
 
+  public static get LAB_TAX(): {tags: any, r_tag_atts: any, lab_tag_atts: any, l_tag_atts: any, la_tag_atts: any} { return {
+      tags: {
+        r_tag: 'roleRef',
+        lab_tag: 'label',
+        l_tag: 'loc',
+        la_tag: 'labelArc'
+      },
+      r_tag_atts: [
+        'roleURI',
+        'href', // 'xlink:href'
+        'type', // 'xlink:type'
+      ],
+      lab_tag_atts: [
+        'id',
+        'label', // xlink:label
+        'role', //xlink:role
+        'type', // 'xlink:type'
+        'lang', // 'xml:lang'
+        'text', // ?
+      ],
+      l_tag_atts: [
+        'href', // 'xlink:href'
+        'label', // 'xlink:label'
+        'type', // 'xlink:type'
+      ],
+      la_tag_atts: [
+        'order',
+        'arcrole', // 'xlink:arcrole'
+        'from', // 'xlink:from'
+        'to', // 'xlink:to',
+        'type', // 'xlink:type'
+      ]
+    };
+    // loc href maps to xsd; loc label maps to labelArc from; labelArc to maps to label label
+    // roleRef dont seem to be come in in the lab files
+  }
+
+  public static get INS_TAX(): {tags: any, r_tag_atts: any, c_tag_atts: any, l_tag_atts: any, ca_tag_atts: any} { return {
+      tags: {
+        r_tag: 'roleRef',
+        c_tag: 'calculationLink',
+        l_tag: 'loc',
+        ca_tag: 'calculationArc'
+      },
+      r_tag_atts: [
+        'roleURI',
+        'href', // 'xlink:href'
+        'type', // 'xlink:type'
+      ],
+      c_tag_atts: [
+        'role', //xlink:role
+        'type', // 'xlink:type'
+        'title', // 'xlink:title'
+      ],
+      l_tag_atts: [
+        'href', // 'xlink:href'
+        'label', // 'xlink:label'
+        'type', // 'xlink:type'
+      ],
+      ca_tag_atts: [
+        'order',
+        'weight',
+        'arcrole', // 'xlink:arcrole'
+        'from', // 'xlink:from'
+        'to', // 'xlink:to',
+        'type', // 'xlink:type'
+        'priority',
+        'use',
+      ]
+    };
+  }
+
+    // c_tag = "context" # "xbrli:context"
+    // c_id_att = "id"
+    // ent_tag = "entity" # "xbrli:entity"
+    // identifier_tag = "identifier" # "xbrli:identifier"
+    // identifier_scheme_att = "scheme"
+    // identifier_text = ""
+    // p_tag = "period" # "xbrli:period"
+    // psd_tag = "startDate" # "xbrli:startDate"
+    // psd_text = ""
+    // ped_tag = "endDate" # "xbrli:endDate"
+    // ped_text = ""
+    // pi_tag = "instant" # "xbrli:instant"
+    // pi_text = ""
+    // seg_tag = "segment" # "xbrli:segment"
+    // expm_tag = "explicitMember" # "xbrldi:explicitMember"
+    // expmd_att = "dimension"
+    // expm_text = ""
+    // scenario_tag = "scenario"
+    // scenario_child = ""
+
+    // u_tag = "unit" # "xbrli:unit"
+    // uid_att = "id"
+    // um_tag = "measure" # "xbrli:measure"
+    // um_text = ""
+    // ud_tag = "divide" # "xbrli:divide"
+    // udn_tag = "unitNumerator" # "xbrli:unitNumerator"
+    // udnm_tag = "measure" # "xbrli:measure"
+    // udnm_text = ""
+    // udd_tag = "unitDenominator" # "xbrli:unitDenominator"
+    // uddm_tag = "measure" # "xbrli:measure"
+    // uddm_text = ""
+
+    // i_tags = "..."
+    // icr_att = "contextRef"
+    // id_att = "decimals"
+    // ii_att = "id"
+    // iur_att = "unitRef"
+    // i_nil_att = "nil"
+    // i_lang_att = "lang" #xml:lang 
+    // i_text = ""
+
+    // l_tag = "loc" # "link:loc"
+    // l_href_att = "href" # "xlink:href"
+    // l_label_att = "label" # "xlink:label"
+    // l_type_att = "type" # "xlink:type"
+    // l_atts = %w(href label type)
+
+    // fa_tag = "footnoteArc" # "link:footnoteArc"
+    // fa_order_att = "order"
+    // fa_arcrole_att = "arcrole" # "xlink:arcrole"
+    // fa_from_att = "from" # "xlink:from"
+    // fa_to_att = "to" # "xlink:to"
+    // fa_type_att = "type" # "xlink:type"
+    // fa_atts = %w(order arcrole from to type)
+
+    // f_tag = "footnote" # "link:footnote"
+    // f_label_att = "label" # "xlink:label"
+    // f_role_att = "role" # "xlink:role"
+    // f_footnote_type_att = "type" # "xlink:type"
+    // f_lang_att = "lang" # "xml:lang"
+    // f_text = ""
+    // f_atts = %w(label role footnote_type lang)
+
+    // #item names map to xsd elements, with first underscore changed to colon; 
+    // #item unitRefs map internally to unit id
+    // #item contextRefs map interanlly to context ids
+    // #xbrldi:explicitMember dimension under contexts maps to ?;
+    // # explicitMember text (colon needs to be changed to underscore) maps to xsd element id where it is in the company's namespace
+    // #entity is cik
+
   public static processDoc(doc: XMLDocument, fn: (doc: XMLDocument, ns_href: string, ns_prefix: string, nss: {}) => {}): any {
     let ns_href, ns_prefix, nss, returnObj;
     ({ns_href, ns_prefix, nss} = XbrlUtility.getNamespace(doc));
@@ -445,5 +587,204 @@ console.log('rolesParse', JSON.stringify(rolesParse));
       return returnObj
     });
   }
+
+  public static processLabDoc(doc: XMLDocument): any {
+    return XbrlUtility.processDoc(doc, function(doc, ns_href, ns_prefix, nss) {
+      let returnObj  =  {roles: [], labels: [], locs: [], labarcs: []};
+      let rolesParse = XbrlUtility.parseTag(XbrlUtility.LAB_TAX.tags.r_tag, ns_href, ns_prefix, nss, doc, true);
+console.log('rolesParse', JSON.stringify(rolesParse));
+
+
+      let roles      = [];
+      for (let i = 0; i < rolesParse.length; i++) {
+        let roleParse = rolesParse[i];
+        if (roleParse) {
+          let obj = XbrlUtility.getNodeAtts(roleParse, XbrlUtility.LAB_TAX.r_tag_atts, ns_href, ns_prefix, nss);
+          if (obj) roles.push(obj);
+        }
+      };
+      returnObj.roles = roles;
+// console.log('roles', JSON.stringify(roles));
+
+      let linksParse = XbrlUtility.parseTag(XbrlUtility.LAB_TAX.tags.lab_tag, ns_href, ns_prefix, nss, doc, true);
+      let links      = [];
+      for (let i = 0; i < linksParse.length; i++) {
+        let linkParse = linksParse[i];
+
+
+        let obj = {locs: [], calarcs: []};
+        if (linkParse) {
+          obj = XbrlUtility.getNodeAtts(linkParse, XbrlUtility.LAB_TAX.lab_tag_atts, ns_href, ns_prefix, nss);
+        }
+        obj.locs = XbrlUtility.getNodeTagsAtts(linkParse, XbrlUtility.LAB_TAX.tags.l_tag, XbrlUtility.LAB_TAX.l_tag_atts, ns_href, ns_prefix, nss)
+        obj.calarcs = XbrlUtility.getNodeTagsAtts(linkParse, XbrlUtility.LAB_TAX.tags.pa_tag, XbrlUtility.LAB_TAX.la_tag_atts, ns_href, ns_prefix, nss)
+        if (obj) links.push(obj);
+      };
+      returnObj.clinks = links;
+    // @cal_h = nil if @cal_h["roles"].blank? || @cal_h["clinks"].blank?
+
+
+// console.log('elements', JSON.stringify(elements));
+// console.log('returnObj', JSON.stringify(returnObj));
+      return returnObj
+    });
+  }
+
+
+
+  //   @lab_h["roles"] = []
+  //   roles = parse_tag(r_tag, ns_href, doc, TRUE)
+  //   roles.each do |role|
+  //     @lab_h["roles"] << Hash[r_atts.map {|att| ["#{att}", get_edgar_attribute(role, eval("r_#{att}_att")) || "" ] }]
+  //   end
+
+  //   @lab_h["labels"] = []
+  //   lablinks = parse_tag(lab_tag, ns_href, doc, TRUE)
+  //   lablinks.each do |lablink|
+  //     @lab_h["labels"] << Hash[lab_atts.map {|att| ["#{att}", get_edgar_attribute(lablink, eval("lab_#{att}_att")) || ""] }].merge({ "text" => begin lablink.text.strip || "" rescue "" end })
+  //   end
+
+
+  //   @lab_h["locs"] = []
+  //   ls = parse_tag(l_tag, ns_href, doc, TRUE)
+  //   ls.each do |l|
+  //     @lab_h["locs"] << Hash[l_atts.map {|att| ["#{att}", get_edgar_attribute(l, eval("l_#{att}_att")) || "" ] }]
+  //   end
+
+  //   @lab_h["labarcs"] = []
+  //   las = parse_tag(la_tag, ns_href, doc, TRUE)
+  //   las.each do |la|
+  //     @lab_h["labarcs"] << Hash[la_atts.map {|att| ["#{att}", get_edgar_attribute(la, eval("la_#{att}_att")) || "" ] }]
+  //   end
+  //   @lab_h = nil if @lab_h["labels"].blank? || @lab_h["locs"].blank? || @lab_h["labarcs"].blank? 
+  //   return @lab_h
+  // end
+
+  // def self.process_ins_file(url)
+  //   @ins_h = {}
+
+  //   doc, ns_href, ns_prefix = process_edgar_url(url)
+
+
+  //   @ins_h["contexts"] = []
+  //   cs = parse_ins_tag(c_tag, ns_href, doc, TRUE)
+  //   cs.each do |c|
+  //     @c_h = {}
+  //     @c_h["xbrl_id"] = get_edgar_attribute(c, c_id_att)
+
+  //     identifier = parse_ins_tag_chain([ent_tag, identifier_tag], ns_href, c, FALSE).first
+  //     @c_h["entity_identifier_scheme"] = get_edgar_attribute(identifier, identifier_scheme_att)
+  //     @c_h["entity_identifier_text"] = begin identifier.text.strip || "" rescue "" end
+
+  //     @c_h["segments"] = []
+  //     segs = parse_ins_tag_chain([ent_tag, seg_tag, expm_tag], ns_href, c, FALSE)
+  //     @s_h = {}
+  //     segs.each do |seg|
+  //       @s_h = {}
+  //       @s_h["segment_explicit_member_dimension"] = get_edgar_attribute(seg, expmd_att)
+  //       @s_h["segment_explicit_member_text"] = begin seg.text.strip || "" rescue "" end
+  //       @c_h["segments"] << @s_h
+  //     end
+  //     if @s_h["segment_explicit_member_dimension"].blank?
+  //       deprecated_segments = parse_ins_tag_chain([ent_tag, seg_tag], ns_href, c, FALSE)
+  //       unless deprecated_segments.blank?
+  //         @children = []
+  //         deprecated_segments.children.each do |child|
+  //           prefix = begin child.namespace.prefix || "" rescue "" end
+  //           name = begin child.name || "" rescue "" end  
+  //           value = begin child.text.strip || "" rescue "" end
+  //           @namespaced_name = name
+  //           unless prefix.blank?
+  //             @namespaced_name = prefix + ":" + name
+  //           end
+  //           unless @namespaced_name.blank? || (@namespaced_name == "text" && value.blank?)
+  //             @deprecated_segment_method = TRUE
+  //             @child = {}
+  //             @child = begin {"deprecated_segment_name" => @namespaced_name, "deprecated_segment_value" => value} || {} rescue {} end
+  //             @children << @child
+  //           end
+  //         end
+  //         @c_h["segments"] << @children
+  //       end
+  //     end
+
+  //     period = parse_ins_tag(p_tag, ns_href, c, FALSE).first
+  //     @c_h["start_date"] = begin parse_ins_tag(psd_tag, ns_href, period, FALSE).first.text.strip || "" rescue "" end
+  //     @c_h["end_date"] = begin parse_ins_tag(ped_tag, ns_href, period, FALSE).first.text.strip || "" rescue "" end
+  //     @c_h["instant_date"] = begin parse_ins_tag(pi_tag, ns_href, period, FALSE).first.text.strip || "" rescue "" end
+
+  //     scenarios = parse_ins_tag(scenario_tag, ns_href, c, FALSE)
+  //     @scenario_a = []
+  //     scenarios.each do |scenario|
+  //       @children = []
+  //       scenario.children.each do |child|
+  //         prefix = begin child.namespace.prefix || "" rescue "" end
+  //         name = begin child.name || "" rescue "" end  
+  //         value = begin child.text.strip || "" rescue "" end
+  //         @namespaced_name = name
+  //         unless prefix.blank?
+  //           @namespaced_name = prefix + ":" + name
+  //         end
+  //         unless @namespaced_name == "text" && value.blank?
+  //           @child = []
+  //           @child = [@namespaced_name, value]
+  //           @child.reject!(&:empty?)
+  //           @children << @child
+  //         end
+  //       end
+  //       @children.flatten!
+  //       @content = ""
+  //       @content = @children.join(",")
+  //       @scenario_a << @content
+  //     end
+  //     @c_h["scenarios"] = @scenario_a.join(",")
+
+  //     @ins_h["contexts"] << @c_h
+  //   end
+
+  //   # Categorize contexts by lack of sgements and scenarios and with them
+  //   @ins_h["contexts_plain"] = []
+  //   @ins_h["contexts_segments"] = []
+  //   @ins_h["contexts_scenarios"] = []
+  //   @ins_h["contexts_plain"], @ins_h["contexts_segments"], @ins_h["contexts_scenarios"] = sort_contexts(@ins_h["contexts"], {deprecated_segment_method: @deprecated_segment_method})
+
+  //   @ins_h["units"] = []
+  //   us = parse_ins_tag(u_tag, ns_href, doc, TRUE)
+
+  //   us.each do |u|
+  //     u_h = {}
+  //     u_h["xbrl_id"] = get_edgar_attribute(u, uid_att)
+  //     u_h["plain_measure"] = begin parse_ins_tag(um_tag, ns_href, u, FALSE).first.text.strip || "" rescue "" end
+  //     u_h["divide_numerator_measure"] = begin parse_ins_tag_chain([ud_tag, udn_tag, udnm_tag], ns_href, u, FALSE).first.text.strip || "" rescue "" end
+  //     u_h["divide_denominator_measure"] = begin parse_ins_tag_chain([ud_tag, udd_tag, uddm_tag], ns_href, u, FALSE).first.text.strip || "" rescue "" end
+  //     @ins_h["units"] << u_h
+  //   end
+
+  //  #item parsing doesnt occur here, but in EdgarBuilder
+
+  //   @ins_h["foot_locs"] = []
+  //   ls = parse_ins_tag(l_tag, ns_href, doc, TRUE)
+  //   ls.each do |l|
+  //     @ins_h["foot_locs"] << Hash[l_atts.map {|att| ["#{att}", get_edgar_attribute(l, eval("l_#{att}_att")) || "" ] }]
+  //   end
+
+  //   @ins_h["foot_arcs"] = []
+  //   fas = parse_ins_tag(fa_tag, ns_href, doc, TRUE)
+  //   fas.each do |fa|
+  //     @ins_h["foot_arcs"] << Hash[fa_atts.map {|att| ["#{att}", get_edgar_attribute(fa, eval("fa_#{att}_att")) || "" ] }]
+  //   end
+
+  //   @ins_h["foots"] = []
+  //   fs = parse_ins_tag(f_tag, ns_href, doc, TRUE)
+  //   fs.each do |f|
+  //     @ins_h["foots"] << Hash[f_atts.map {|att| ["#{att}", get_edgar_attribute(f, eval("f_#{att}_att")) || "" ] }].merge({"text" => begin f.text.strip || "" rescue "" end })
+  //   end
+  //   @ins_h["footnotes"] = []
+  //   @ins_h["footnotes"] = begin EdgarBuilder::construct_footnotes(@ins_h) || [] rescue [] end
+
+  //   @ins_h["doc"] = begin doc rescue "" end
+  //   @ins_h = nil if @ins_h["doc"].blank?
+  //   return @ins_h
+  // end
 
 }
