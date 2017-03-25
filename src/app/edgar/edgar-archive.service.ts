@@ -35,10 +35,10 @@ export class EdgarArchiveService {
   // edgarArchiveFileUrl: string = 'https://www.sec.gov/Archives/edgar/data';
   // edgarArchiveFileUrl: string = 'https://www.sec.gov/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xml';
   // edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xml';
-  // edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xsd';
+  edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xsd';
   // edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_pre.xml';
   // edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_def.xml';
-  edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_cal.xml';
+  // edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_cal.xml';
   // edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_lab.xml';
   // https://www.sec.gov/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xml
 

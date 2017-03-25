@@ -39,6 +39,44 @@ export class XbrlUtility {
     };
   }
 
+  public static get XSD_STRUCTURE(): {atts?: [any], textContent?: string, tags: any} {
+    return {
+      tags: {
+        'roleType': {
+          rename: 'roles',
+          atts: [
+            'roleURI',
+          ],
+          textContent: false,
+          tags: {
+            'definition': {
+              rename: 'def',
+              textContent: true,
+            },
+            'usedOn': {
+              rename: 'uses',
+              textContent: true,
+            },
+          },
+        },
+        'element': {
+          rename: 'elements',
+          atts: [
+            'id',
+            'name',
+            'nillable',
+            'substitutionGroup',
+            'type',
+            'periodType', // 'xbrli:periodType'
+            'abstract',
+            'balance', // 'xbrli:balance'
+          ],
+          textContent: false,
+        },
+      },
+    };
+  }
+
   public static get PRE_TAX(): {tags: any, r_tag_atts: any, p_tag_atts: any, l_tag_atts: any, pa_tag_atts: any} { return {
       tags: {
         r_tag: 'roleRef',
@@ -69,7 +107,7 @@ export class XbrlUtility {
         'to', // 'xlink:to',
         'type', // 'xlink:type'
         'priority',
-        'use',
+        'use'
       ]
       // roleRef href connects to xsd at #; roleRef roleURI connects to pLink xlink:xrole
       // loc href conncects to xsd; loc xlink:label connects to pArc; pArc connects to loc xlink:labels
@@ -78,10 +116,11 @@ export class XbrlUtility {
     };
   }
 
-  public static get PRE_STRUCTURE(): {atts?: [any], textContent?: string, tags: [any]} {
+  public static get PRE_STRUCTURE(): {atts?: [any], textContent?: string, tags: any} {
     return {
-      tags: [
+      tags: {
         'roleRef': {
+          rename: 'roles',
           atts: [
             'roleURI',
             'href', // 'xlink:href'
@@ -90,14 +129,16 @@ export class XbrlUtility {
           textContent: false,
         },
         'presentationLink': {
+          rename: 'plinks',
           atts: [
             'role', //xlink:role
             'type', // 'xlink:type'
             'title', // 'xlink:title'
           ],
           textContent: false,
-          tags: [
+          tags: {
             'loc': {
+              rename: 'locs',
               atts: [
                 'href', // 'xlink:href'
                 'label', // 'xlink:label'
@@ -106,6 +147,7 @@ export class XbrlUtility {
               textContent: false,
             },
             'presentationArc': {
+              rename: 'prearcs',
               atts: [
                 'order',
                 'preferredLabel',
@@ -117,10 +159,10 @@ export class XbrlUtility {
                 'use',
               ],
               textContent: false,
-            }
-          ],
-        }
-      ],
+            },
+          },
+        },
+      },
     };
   }
 
@@ -423,10 +465,10 @@ console.log('nss', JSON.stringify(nss));
 //                   no_namespace_doc = doc.remove_namespaces!
 //                   @r = no_namespace_doc.css("/#{tag}")
 
-  public static getNodeAtts(node, atts: any, ns_href, ns_prefix, nss): any {
+  public static getNodeAtts(node, atts: any, ns_href, ns_prefix, nss, obj?: any): any {
     if (node && atts) {
 // console.log('atts: ', JSON.stringify(atts));
-      let obj = {};
+      let returnObj = obj || {};
 // console.log('nsUris: ', nss);
       let nsUris = Object.keys(nss);
       (atts || []).forEach(function(att) {
@@ -439,8 +481,10 @@ console.log('nss', JSON.stringify(nss));
             if (attVal !== null) break
           };
         }
-        obj[att] = attVal;
+        returnObj[att] = attVal;
       });
+      return returnObj
+    } else {
       return obj
     }
   }
@@ -452,9 +496,9 @@ console.log('nss', JSON.stringify(nss));
 
   public static getNodeTagsAtts(node, tag: string, tagAtts: [string], textContent: boolean, ns_href, ns_prefix, nss,
   fn?: (node: any, ns_href: string, ns_prefix: string, nss: {}, obj: {}) => [any]): any {
-    if (node && tag && tagAtts) {
+    if (node && tag) {
       let parse = XbrlUtility.parseTag(tag, ns_href, ns_prefix, nss, node, false);
-      let objs      = [];
+      let objs = [];
       for (let i = 0; i < parse.length; i++) {
         let parseI = parse[i];
         if (parseI) {
@@ -462,7 +506,7 @@ console.log('nss', JSON.stringify(nss));
           if (textContent) {
             nestedObj.textContent = ((parseI || {}).textContent || '').trim();
           }
-          nestedObj = XbrlUtility.getNodeAtts(parseI, tagAtts, ns_href, ns_prefix, nss);
+          nestedObj = XbrlUtility.getNodeAtts(parseI, tagAtts, ns_href, ns_prefix, nss, nestedObj);
           if (fn) {
             nestedObj = fn(parseI, ns_href, ns_prefix, nss, nestedObj);
           }
@@ -473,45 +517,64 @@ console.log('nss', JSON.stringify(nss));
     }
   }
 
+  public static processStructure(doc: XMLDocument, ns_href: string, ns_prefix: string, nss: {}, structure: {rename?, atts?, textContent?, tags?}, obj: {any}): any {
+    let tags = Object.keys(structure.tags || {}) || [];
+    for (let i = 0; i < tags.length; i++) {
+      let tag = tags[i];
+      let tagStructure = structure.tags[tag];
+      let name = tagStructure.rename || tag;
+      let nestedTagsObj = tagStructure.tags;
+      if (nestedTagsObj) {
+        obj[name] = XbrlUtility.getNodeTagsAtts(doc, tag, tagStructure.atts, tagStructure.textContent, ns_href, ns_prefix, nss, function(node, ns_href, ns_prefix, nss, nestedObj): any {
+          return XbrlUtility.processStructure(node, ns_href, ns_prefix, nss, {tags: nestedTagsObj}, nestedObj);
+        });
+      } else {
+        obj[name] = XbrlUtility.getNodeTagsAtts(doc, tag, tagStructure.atts, tagStructure.textContent, ns_href, ns_prefix, nss);
+      }
+    }
+    return obj
+  }
+
 
   // {roles: [uri: string, def: string, use: string], elements: [any]}
   public static processXsdDoc(doc: XMLDocument): any {
     return XbrlUtility.processDoc(doc, function(doc, ns_href, ns_prefix, nss) {
       let returnObj  =  {roles: [], elements: []};
-      let rolesParse = XbrlUtility.parseTag(XbrlUtility.XSD_TAX.tags.r_tag, ns_href, ns_prefix, nss, doc, true);
-console.log('rolesParse', JSON.stringify(rolesParse));
-      let roles      = [];
-      for (let i = 0; i < rolesParse.length; i++) {
-        let role = rolesParse[i];
-        let uses = [];
-        let useParse = XbrlUtility.parseTag(XbrlUtility.XSD_TAX.tags.use_tag, ns_href, ns_prefix, nss, role, false);
-        for (let useParseI = 0; useParseI < useParse.length; useParseI++) {
-          let useI = useParse[useParseI];
-          uses.push(((useI || {}).textContent || '').trim());
-          // uses.push(((useI || {}).nodeValue || '').trim());
-        }
-        if (role) {
-          roles.push({
-            uri: role.getAttribute('roleURI') || '',
-            def: ((XbrlUtility.parseTag(XbrlUtility.XSD_TAX.tags.def_tag, ns_href, ns_prefix, nss, role, false)[0] || {}).textContent || '').trim(),
-            // def: ((XbrlUtility.parseTag(XbrlUtility.XSD_TAX.tags.def_tag, ns_href, ns_prefix, nss, role, false)[0] || {}).nodeValue || '').trim(),
-            uses: uses,
-          });
+      returnObj = XbrlUtility.processStructure(doc, ns_href, ns_prefix, nss, XbrlUtility.XSD_STRUCTURE, returnObj);
+//       let rolesParse = XbrlUtility.parseTag(XbrlUtility.XSD_TAX.tags.r_tag, ns_href, ns_prefix, nss, doc, true);
+// console.log('rolesParse', JSON.stringify(rolesParse));
+//       let roles      = [];
+//       for (let i = 0; i < rolesParse.length; i++) {
+//         let role = rolesParse[i];
+//         let uses = [];
+//         let useParse = XbrlUtility.parseTag(XbrlUtility.XSD_TAX.tags.use_tag, ns_href, ns_prefix, nss, role, false);
+//         for (let useParseI = 0; useParseI < useParse.length; useParseI++) {
+//           let useI = useParse[useParseI];
+//           uses.push(((useI || {}).textContent || '').trim());
+//           // uses.push(((useI || {}).nodeValue || '').trim());
+//         }
+//         if (role) {
+//           roles.push({
+//             uri: role.getAttribute('roleURI') || '',
+//             def: ((XbrlUtility.parseTag(XbrlUtility.XSD_TAX.tags.def_tag, ns_href, ns_prefix, nss, role, false)[0] || {}).textContent || '').trim(),
+//             // def: ((XbrlUtility.parseTag(XbrlUtility.XSD_TAX.tags.def_tag, ns_href, ns_prefix, nss, role, false)[0] || {}).nodeValue || '').trim(),
+//             uses: uses,
+//           });
           
-        }
-      };
-      returnObj.roles = roles;
-// console.log('roles', JSON.stringify(roles));
-      let elementsParse = XbrlUtility.parseTag(XbrlUtility.XSD_TAX.tags.e_tag, ns_href, ns_prefix, nss, doc, true);
-      let elements = [];
-      for (let i = 0; i < elementsParse.length; i++) {
-        let element = elementsParse[i];
-        if (element) {
-          let eObj = XbrlUtility.getNodeAtts(element, XbrlUtility.XSD_TAX.e_tag_atts, ns_href, ns_prefix, nss);
-          if (eObj) elements.push(eObj);
-        }
-      };
-      returnObj.elements = elements;
+//         }
+//       };
+//       returnObj.roles = roles;
+// // console.log('roles', JSON.stringify(roles));
+//       let elementsParse = XbrlUtility.parseTag(XbrlUtility.XSD_TAX.tags.e_tag, ns_href, ns_prefix, nss, doc, true);
+//       let elements = [];
+//       for (let i = 0; i < elementsParse.length; i++) {
+//         let element = elementsParse[i];
+//         if (element) {
+//           let eObj = XbrlUtility.getNodeAtts(element, XbrlUtility.XSD_TAX.e_tag_atts, ns_href, ns_prefix, nss);
+//           if (eObj) elements.push(eObj);
+//         }
+//       };
+//       returnObj.elements = elements;
 // console.log('elements', JSON.stringify(elements));
 // console.log('returnObj', JSON.stringify(returnObj));
       return returnObj
@@ -521,37 +584,38 @@ console.log('rolesParse', JSON.stringify(rolesParse));
   public static processPreDoc(doc: XMLDocument): any {
     return XbrlUtility.processDoc(doc, function(doc, ns_href, ns_prefix, nss) {
       let returnObj  =  {roles: [], plinks: []};
-      let rolesParse = XbrlUtility.parseTag(XbrlUtility.PRE_TAX.tags.r_tag, ns_href, ns_prefix, nss, doc, true);
-console.log('rolesParse', JSON.stringify(rolesParse));
+      returnObj = XbrlUtility.processStructure(doc, ns_href, ns_prefix, nss, XbrlUtility.PRE_STRUCTURE, returnObj);
+//       let rolesParse = XbrlUtility.parseTag(XbrlUtility.PRE_TAX.tags.r_tag, ns_href, ns_prefix, nss, doc, true);
+// console.log('rolesParse', JSON.stringify(rolesParse));
 
 
-      let roles      = [];
-      for (let i = 0; i < rolesParse.length; i++) {
-        let roleParse = rolesParse[i];
-        if (roleParse) {
-          let obj = XbrlUtility.getNodeAtts(roleParse, XbrlUtility.PRE_TAX.r_tag_atts, ns_href, ns_prefix, nss);
-          if (obj) roles.push(obj);
-        }
-      };
-      returnObj.roles = roles;
-// console.log('roles', JSON.stringify(roles));
+//       let roles      = [];
+//       for (let i = 0; i < rolesParse.length; i++) {
+//         let roleParse = rolesParse[i];
+//         if (roleParse) {
+//           let obj = XbrlUtility.getNodeAtts(roleParse, XbrlUtility.PRE_TAX.r_tag_atts, ns_href, ns_prefix, nss);
+//           if (obj) roles.push(obj);
+//         }
+//       };
+//       returnObj.roles = roles;
+// // console.log('roles', JSON.stringify(roles));
 
-      let plinksParse = XbrlUtility.parseTag(XbrlUtility.PRE_TAX.tags.p_tag, ns_href, ns_prefix, nss, doc, true);
-      let plinks      = [];
-      for (let i = 0; i < plinksParse.length; i++) {
-        let plinkParse = plinksParse[i];
+//       let plinksParse = XbrlUtility.parseTag(XbrlUtility.PRE_TAX.tags.p_tag, ns_href, ns_prefix, nss, doc, true);
+//       let plinks      = [];
+//       for (let i = 0; i < plinksParse.length; i++) {
+//         let plinkParse = plinksParse[i];
 
 
-        let obj = {locs: [], prearcs: []};
-        if (plinkParse) {
-          obj = XbrlUtility.getNodeAtts(plinkParse, XbrlUtility.PRE_TAX.p_tag_atts, ns_href, ns_prefix, nss);
-        }
-        obj.locs = XbrlUtility.getNodeTagsAtts(plinkParse, XbrlUtility.PRE_TAX.tags.l_tag, XbrlUtility.PRE_TAX.l_tag_atts, false, ns_href, ns_prefix, nss)
-        obj.prearcs = XbrlUtility.getNodeTagsAtts(plinkParse, XbrlUtility.PRE_TAX.tags.pa_tag, XbrlUtility.PRE_TAX.pa_tag_atts, false, ns_href, ns_prefix, nss)
-        if (obj) plinks.push(obj);
-      };
-      returnObj.plinks = plinks;
-    // @pre_h = nil if @pre_h["roles"].blank? || @pre_h["plinks"].blank?
+//         let obj = {locs: [], prearcs: []};
+//         if (plinkParse) {
+//           obj = XbrlUtility.getNodeAtts(plinkParse, XbrlUtility.PRE_TAX.p_tag_atts, ns_href, ns_prefix, nss);
+//         }
+//         obj.locs = XbrlUtility.getNodeTagsAtts(plinkParse, XbrlUtility.PRE_TAX.tags.l_tag, XbrlUtility.PRE_TAX.l_tag_atts, false, ns_href, ns_prefix, nss)
+//         obj.prearcs = XbrlUtility.getNodeTagsAtts(plinkParse, XbrlUtility.PRE_TAX.tags.pa_tag, XbrlUtility.PRE_TAX.pa_tag_atts, false, ns_href, ns_prefix, nss)
+//         if (obj) plinks.push(obj);
+//       };
+//       returnObj.plinks = plinks;
+//     // @pre_h = nil if @pre_h["roles"].blank? || @pre_h["plinks"].blank?
 
 
 // console.log('elements', JSON.stringify(elements));
