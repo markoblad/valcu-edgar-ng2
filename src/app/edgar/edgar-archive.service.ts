@@ -3,7 +3,7 @@ import { Headers, Http, Response } from '@angular/http';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/Rx';
 import 'rxjs/add/observable/throw';
-
+import { XbrlUtility } from '../edgar';
 
 @Injectable()
 export class EdgarArchiveService {
@@ -34,12 +34,13 @@ export class EdgarArchiveService {
 
   // edgarArchiveFileUrl: string = 'https://www.sec.gov/Archives/edgar/data';
   // edgarArchiveFileUrl: string = 'https://www.sec.gov/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xml';
-  // edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xml';
-  edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xsd';
+  edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xml';
+  // edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xsd';
   // edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_pre.xml';
   // edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_def.xml';
   // edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_cal.xml';
   // edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_lab.xml';
+  // edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_ins.xml';
   // https://www.sec.gov/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xml
 
   edgarCompanyKeysObj: any = {};
@@ -62,7 +63,7 @@ console.log("getting: ", `${this.edgarArchiveFileUrl}`);
     return this.http.get(`${this.edgarArchiveFileUrl}`, this.headers)
     .map(this.checkForError)
     .catch(err => Observable.throw(err))
-    .map(this.toXMLDocumentSelection);
+    .map(this.toParsedXBRL);
   }
 
   post(path, body): Observable<any> {
@@ -111,11 +112,17 @@ console.log("getting: ", `${this.edgarArchiveFileUrl}`);
     return (content);
   }
 
-  private toXMLDocumentSelection(resp: Response) {
+  public static toXMLDocumentSelection(resp: Response) {
     let txt = resp.text();
     let doc = new DOMParser().parseFromString(txt, 'application/xml');
-    let selection = (<Element>doc.lastChild);
+    let selection = (<XMLDocument>doc.lastChild);
     return (selection);
+  }
+
+  private toParsedXBRL(resp: Response) {
+    let doc = EdgarArchiveService.toXMLDocumentSelection(resp);
+    // return XbrlUtility.processTypeDoc(doc, XbrlUtility.LAB_STRUCTURE);
+    return XbrlUtility.processTypeDoc(doc, XbrlUtility.INS_STRUCTURE);
   }
 
   private checkForError(resp: Response): Response {

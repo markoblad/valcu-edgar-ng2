@@ -6,7 +6,6 @@ import {
 import { AppState } from '../app.service';
 import { Title } from './title';
 import { XLargeDirective } from './x-large';
-import { XbrlUtility } from '../edgar';
 import { EdgarArchiveService } from '../edgar';
 
 @Component({
@@ -26,7 +25,7 @@ import { EdgarArchiveService } from '../edgar';
 export class HomeComponent implements OnInit {
   // Set our default values
   public localState = { value: '' };
-  public edgarContent: any = null;
+  public edgarContents: any = [];
   // TypeScript public modifiers
   constructor(
     public appState: AppState,
@@ -46,11 +45,7 @@ export class HomeComponent implements OnInit {
     // this.edgarContent = this.edgarArchiveService.get(value)
     this.edgarArchiveService.getEdgarCompanyKeys(value).subscribe(
       res => {
-        this.edgarContent = XbrlUtility.processXsdDoc(res);
-        // this.edgarContent = XbrlUtility.processPreDoc(res);
-        // this.edgarContent = XbrlUtility.processDefDoc(res);
-        // this.edgarContent = XbrlUtility.processCalDoc(res);
-        // this.edgarContent = XbrlUtility.processLabDoc(res);
+        this.edgarContents.push(res);
       },
       error => console.log(error)
     );;

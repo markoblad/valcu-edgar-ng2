@@ -32,7 +32,7 @@
 
     <pre>this.localState = {{ localState | json }}</pre>
     <hr>
-    <pre>this.edgarContent = {{ edgarContent | json }}</pre>
+    <pre *ngFor="let edgarContent of edgarContents">this.edgarContents = {{ edgarContent | json }}</pre>
 
   </div>
 
