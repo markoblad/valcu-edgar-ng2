@@ -44,10 +44,10 @@ export class HomeComponent implements OnInit {
     this.localState.value = '';
     // this.edgarContent = this.edgarArchiveService.get(value)
     this.edgarArchiveService.getEdgarCompanyKeys(value).subscribe(
-      res => {
+      (res) => {
         this.edgarContents.push(res);
       },
-      error => console.log(error)
-    );;
+      (error) => console.log(error)
+    );
   }
 }
