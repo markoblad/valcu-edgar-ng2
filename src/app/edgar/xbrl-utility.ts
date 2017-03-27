@@ -395,7 +395,7 @@ export class XbrlUtility {
     let nsPrefix;
     let nss;
     ({nsHref, nsPrefix, nss} = XbrlUtility.getNamespace(doc));
-    console.log('doc', doc);
+    // console.log('doc', doc);
     let returnObj = fn(doc, nsHref, nsPrefix, nss);
     return returnObj;
   }
@@ -417,13 +417,13 @@ export class XbrlUtility {
     let nss = {};
     XbrlUtility.INS_nsPrefixES.forEach((ns) => {
       let uri = doc.lookupNamespaceURI(ns);
-      console.log('ns: ', ns);
-      console.log('ns uri: ', uri);
+      // console.log('ns: ', ns);
+      // console.log('ns uri: ', uri);
       if (uri) { nss[ns] = uri; }
     });
-    console.log('nsHref', nsHref);
-    console.log('nsPrefix', nsPrefix);
-    console.log('nss', JSON.stringify(nss));
+    // console.log('nsHref', nsHref);
+    // console.log('nsPrefix', nsPrefix);
+    // console.log('nss', JSON.stringify(nss));
     return {nsHref, nsPrefix, nss};
   }
 
@@ -491,9 +491,9 @@ export class XbrlUtility {
 
   public static getNodeAtts(node, atts: any, nsHref, nsPrefix, nss, obj?: any): any {
     if (node && atts) {
-// console.log('atts: ', JSON.stringify(atts));
+      // console.log('atts: ', JSON.stringify(atts));
       let returnObj = obj || {};
-// console.log('nsUris: ', nss);
+      // console.log('nsUris: ', nss);
       let nsUris = Object.keys(nss);
       (atts || []).forEach((att) => {
         let attVal = node.getAttribute(att);
