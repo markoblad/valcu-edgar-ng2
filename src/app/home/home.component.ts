@@ -6,6 +6,8 @@ import {
 import { AppState } from '../app.service';
 import { Title } from './title';
 import { XLargeDirective } from './x-large';
+import { XbrlUtility } from '../edgar';
+import { XbrlService } from '../edgar';
 import { EdgarArchiveService } from '../edgar';
 
 @Component({
@@ -30,7 +32,8 @@ export class HomeComponent implements OnInit {
   constructor(
     public appState: AppState,
     public title: Title,
-    public edgarArchiveService: EdgarArchiveService
+    public edgarArchiveService: EdgarArchiveService,
+    public xbrlService: XbrlService
   ) {}
 
   public ngOnInit() {
@@ -45,7 +48,9 @@ export class HomeComponent implements OnInit {
     // this.edgarContent = this.edgarArchiveService.get(value)
     this.edgarArchiveService.getEdgarCompanyKeys(value).subscribe(
       (res) => {
-        this.edgarContents.push(res);
+        this.xbrlService.xbrls.push(res);
+        this.xbrlService.roles = XbrlUtility.getXbrlsRoles(res);
+
       },
       (error) => console.log(error)
     );

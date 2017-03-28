@@ -29,6 +29,7 @@ import { AboutComponent } from './about';
 import { NoContentComponent } from './no-content';
 import { XLargeDirective } from './home/x-large';
 import { XbrlUtility } from './edgar';
+import { XbrlService } from './edgar';
 import { EdgarArchiveService } from './edgar';
 
 import '../styles/styles.scss';
@@ -68,6 +69,7 @@ type StoreType = {
     ENV_PROVIDERS,
     APP_PROVIDERS,
     XbrlUtility,
+    XbrlService,
     EdgarArchiveService
   ]
 })

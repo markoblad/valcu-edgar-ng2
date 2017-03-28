@@ -385,6 +385,17 @@ export class XbrlUtility {
     //  #item parsing doesnt occur here, but in EdgarBuilder
   }
 
+  public static get XBRL_TYPE_TO_STRUCTURE(): {xsd, pre, def, cal, lab, ins} {
+    return {
+      xsd: XbrlUtility.XSD_STRUCTURE,
+      pre: XbrlUtility.PRE_STRUCTURE,
+      def: XbrlUtility.DEF_STRUCTURE,
+      cal: XbrlUtility.CAL_STRUCTURE,
+      lab: XbrlUtility.LAB_STRUCTURE,
+      ins: XbrlUtility.INS_STRUCTURE,
+    };
+  }
+
   public static justTextTransform(objs) { return ((objs || [])[0] || {}).textContent; }
 
   public static arrayedTextTransform(objs) { return (objs || []).map((i) => (i || {}).textContent ); }
@@ -400,10 +411,10 @@ export class XbrlUtility {
     return returnObj;
   }
 
-  public static processTypeDoc(doc: XMLDocument, structure): any {
+  public static processTypeDoc(doc: XMLDocument, type): any {
     return XbrlUtility.processDoc(doc, (returnedDoc, nsHref, nsPrefix, nss) => {
-      let returnObj  =  {roles: [], elements: []};
-      returnObj = XbrlUtility.processStructure(returnedDoc, nsHref, nsPrefix, nss, structure, returnObj);
+      let returnObj  =  {type, roles: [], elements: []};
+      returnObj = XbrlUtility.processStructure(returnedDoc, nsHref, nsPrefix, nss, XbrlUtility.XBRL_TYPE_TO_STRUCTURE[type], returnObj);
       // @pre_h = nil if @pre_h["roles"].blank? || @pre_h["dlinks"].blank?
       // @cal_h = nil if @cal_h["roles"].blank? || @cal_h["clinks"].blank?
       // @lab_h = nil if @lab_h["labels"].blank? || @lab_h["locs"].blank? || @lab_h["labarcs"].blank?
@@ -561,6 +572,26 @@ export class XbrlUtility {
       }
     }
     return obj;
+  }
+
+  public static getXbrlRoles(parsedXbrl): [string] {
+    if (parsedXbrl.type === 'xsd') {
+      return parsedXbrl.roles.map((i) => i.roleURI);
+    } else if (parsedXbrl.type === 'pre') {
+      return parsedXbrl.presentationLinks.map((i) => i.role);
+    } else if (parsedXbrl.type === 'def') {
+      return parsedXbrl.definitionLinks.map((i) => i.role);
+    } else if (parsedXbrl.type === 'cal') {
+      return parsedXbrl.calculationLinks.map((i) => i.role);
+    }
+  }
+
+  public static getXbrlsRoles(parsedXbrls): any {
+    let roles = [];
+    parsedXbrls.forEach((parsedXbrl) => {
+      roles.push(XbrlUtility.getXbrlRoles(parsedXbrl));
+    });
+    return roles;
   }
 
   public static isBlank(obj: any): boolean {

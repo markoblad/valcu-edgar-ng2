@@ -27,28 +27,28 @@ export class EdgarArchiveService {
   // https://www.sec.gov/Archives/edgar/data/0001371128/000121390016011346/0001213900-16-011346-index.htm
   public edgarArchiveFiles: any = [
     {
+      type: 'xsd',
       url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xsd',
-      structure: XbrlUtility.XSD_STRUCTURE,
     },
     {
+      type: 'pre',
       url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_pre.xml',
-      structure: XbrlUtility.PRE_STRUCTURE,
     },
     {
+      type: 'def',
       url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_def.xml',
-      structure: XbrlUtility.DEF_STRUCTURE,
     },
     {
+      type: 'cal',
       url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_cal.xml',
-      structure: XbrlUtility.CAL_STRUCTURE,
     },
     {
+      type: 'lab',
       url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_lab.xml',
-      structure: XbrlUtility.LAB_STRUCTURE,
     },
     {
+      type: 'ins',
       url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xml',
-      structure: XbrlUtility.INS_STRUCTURE,
     },
   ];
 
@@ -113,9 +113,9 @@ export class EdgarArchiveService {
       observableBatch.push(this.http.get(`${obj.url}`, this.headers)
         .map(this.checkForError)
         .catch((err) => Observable.throw(err))
-        .map((resp) => this.toParsedXBRL(resp, obj.structure))
+        .map((resp) => this.toParsedXBRL(resp, obj.type))
       );
-    })
+    });
     return Observable.forkJoin(observableBatch);
   }
 
@@ -165,12 +165,9 @@ export class EdgarArchiveService {
     return (content);
   }
 
-  private toParsedXBRL(resp: Response, structure) {
+  private toParsedXBRL(resp: Response, type) {
     let doc = EdgarArchiveService.toXMLDocumentSelection(resp);
-    return XbrlUtility.processTypeDoc(doc, structure);
-    // return XbrlUtility.processTypeDoc(doc, XbrlUtility.PRE_STRUCTURE);
-    // return XbrlUtility.processTypeDoc(doc, XbrlUtility.LAB_STRUCTURE);
-    // return XbrlUtility.processTypeDoc(doc, XbrlUtility.INS_STRUCTURE);
+    return XbrlUtility.processTypeDoc(doc, type);
   }
 
   private checkForError(resp: Response): Response {
