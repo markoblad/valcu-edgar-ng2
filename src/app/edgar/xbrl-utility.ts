@@ -1,5 +1,100 @@
 import { Injectable } from '@angular/core';
 
+export interface XbrlToInstanceInterface {
+  context: string;
+  value: string;
+  decimals: string;
+  xbrlId: string;
+  unit: string;
+  nil: string;
+  language: string;
+}
+
+export interface XbrlLabelInterface {
+  labelArcFrom: string;
+  labelArcTo: string;
+  labelArcOrder: string;
+  labelArcArcrole: string;
+  labelArcType: string;
+  labelRole: string;
+  labelValue: string;
+  labelLanguage: string;
+  labelID: string;
+}
+
+export interface XbrlStatementItemInterface {
+  toHref: string;
+  toPreferredLabel: string;
+  preFromHref: string;
+  preOrder: string;
+  preArcrole: string;
+  preType: string;
+  prePriority: string;
+  preUse: string;
+  defFromHref: string;
+  defOrder: string;
+  defArcrole: string;
+  defType: string;
+  defClosed: string;
+  defContextElement: string;
+  defTargetRole: string;
+  calFromHref: string;
+  calOrder: string;
+  calArcrole: string;
+  calType: string;
+  calPriority: string;
+  calUse: string;
+  calWeight: string;
+  xsdToID: string;
+  xsdToName: string;
+  xsdToNillable: string;
+  xsdToSubstitutionGroup: string;
+  xsdToType: string;
+  xsdToPeriodType: string;
+  xsdToAbstract: string;
+  xsdToBalance: string;
+  toInstances: [XbrlToInstanceInterface];
+  labels: [XbrlLabelInterface];
+}
+
+export interface XbrlSegmentInterface {
+  segmentExplicitMemberDimension?: string;
+  segmentExplicitMemberText?: string;
+  // OR
+  deprecatedSegmentName?: string;
+  deprecatedSegmentValue?: string;
+}
+
+export interface XbrlContextInterface {
+  xbrlId: null;
+  entityIdentifierScheme: null;
+  entityIdentifierText: null;
+  segments: [XbrlSegmentInterface];
+  scenarios: null;
+  startDate: null;
+  endDate: null;
+  instantDate: null;
+}
+
+export interface XbrlUnitInterface {
+  xbrlId: string;
+  plainMeasure: string;
+  divideNumeratorMeasure: string;
+  divideDenominatorMeasure: string;
+}
+
+export interface XbrlStatementInterface {
+  role: string;
+  roleDefinition: string;
+  roleUse: string;
+  preLinkType: string;
+  defLinkType: string;
+  calLinkType: string;
+  items: [XbrlStatementItemInterface];
+  contexts: [XbrlContextInterface];
+  units: [XbrlUnitInterface];
+}
+
 @Injectable()
 export class XbrlUtility {
 
@@ -589,9 +684,9 @@ export class XbrlUtility {
   public static getXbrlsRoles(parsedXbrls): any {
     let roles = [];
     parsedXbrls.forEach((parsedXbrl) => {
-      roles.push(XbrlUtility.getXbrlRoles(parsedXbrl));
+      roles = roles.concat(XbrlUtility.getXbrlRoles(parsedXbrl));
     });
-    return roles;
+    return roles.filter((v, i, a) => a.indexOf(v) === i);
   }
 
   public static isBlank(obj: any): boolean {
