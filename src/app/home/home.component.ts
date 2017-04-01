@@ -48,11 +48,18 @@ export class HomeComponent implements OnInit {
     // this.edgarContent = this.edgarArchiveService.get(value)
     this.edgarArchiveService.getEdgarCompanyKeys(value).subscribe(
       (res) => {
-        this.xbrlService.xbrls.push(res);
-        this.xbrlService.roles = XbrlUtility.getXbrlsRoles(res);
-
+        res.map((xbrl) => {
+          this.xbrlService.xbrls[xbrl.type] = xbrl;
+        });
+        let roles = XbrlUtility.getXbrlsRoles(res);
+        this.xbrlService.roles = roles;
+        this.xbrlService.xbrlStatements = roles.map((role) => XbrlUtility.constructXbrlStatement(role, this.xbrlService.xbrls));
       },
       (error) => console.log(error)
     );
+  }
+
+  public clearXbrls() {
+    this.xbrlService.clearXbrls();
   }
 }

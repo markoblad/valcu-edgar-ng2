@@ -23,6 +23,12 @@
 
       <button>Submit Value</button>
     </form>
+
+    <form (ngSubmit)="clearXbrls()" autocomplete="off">
+      <button>Clear Xbrl</button>
+    </form>
+
+    
     <!--
         <input type="text" [value]="localState.value" (input)="localState.value = $event.target.value" autofocus>
         Rather than wiring up two-way data-binding ourselves with [value] and (input)
@@ -35,7 +41,9 @@
     <pre *ngFor="let role of this.xbrlService.roles">this.xbrlService.roles = {{ role | json }}</pre>
     <hr>
 
-    <pre *ngFor="let edgarContent of this.xbrlService.xbrls">this.edgarContents = {{ edgarContent | json }}</pre>
+    <pre>xbrlService.xbrlStatements = {{ xbrlService.xbrlStatements | json }}</pre>
+    <hr>
+    <pre>xbrlService.xbrls = {{ xbrlService.xbrls | json }}</pre>
 
   </div>
 

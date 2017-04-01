@@ -1,5 +1,14 @@
 import { Injectable } from '@angular/core';
 
+export interface XbrlReportInterface {
+  xsd?: any;
+  pre?: any;
+  def?: any;
+  cal?: any;
+  lab?: any;
+  ins?: any;
+}
+
 export interface XbrlToInstanceInterface {
   context: string;
   value: string;
@@ -24,13 +33,15 @@ export interface XbrlLabelInterface {
 
 export interface XbrlStatementItemInterface {
   toHref: string;
-  toPreferredLabel: string;
+
+  prePreferredLabel: string;
   preFromHref: string;
   preOrder: string;
   preArcrole: string;
   preType: string;
   prePriority: string;
   preUse: string;
+
   defFromHref: string;
   defOrder: string;
   defArcrole: string;
@@ -38,6 +49,7 @@ export interface XbrlStatementItemInterface {
   defClosed: string;
   defContextElement: string;
   defTargetRole: string;
+
   calFromHref: string;
   calOrder: string;
   calArcrole: string;
@@ -45,6 +57,7 @@ export interface XbrlStatementItemInterface {
   calPriority: string;
   calUse: string;
   calWeight: string;
+
   xsdToID: string;
   xsdToName: string;
   xsdToNillable: string;
@@ -53,6 +66,7 @@ export interface XbrlStatementItemInterface {
   xsdToPeriodType: string;
   xsdToAbstract: string;
   xsdToBalance: string;
+
   toInstances: [XbrlToInstanceInterface];
   labels: [XbrlLabelInterface];
 }
@@ -85,14 +99,15 @@ export interface XbrlUnitInterface {
 
 export interface XbrlStatementInterface {
   role: string;
-  roleDefinition: string;
-  roleUse: string;
-  preLinkType: string;
-  defLinkType: string;
-  calLinkType: string;
-  items: [XbrlStatementItemInterface];
-  contexts: [XbrlContextInterface];
-  units: [XbrlUnitInterface];
+  roleDefinition?: string;
+  roleUse?: string;
+  preLinkTypes?: string[];
+  defLinkTypes?: string[];
+  calLinkTypes?: string[];
+  // items?: XbrlStatementItemInterface[];
+  items?: any[];
+  contexts?: XbrlContextInterface[];
+  units?: XbrlUnitInterface[];
 }
 
 @Injectable()
@@ -100,15 +115,55 @@ export class XbrlUtility {
 
   // constructor() {}
 
-  public static get nsPrefixES(): [string] {
+  public static get NSPREFIXES(): [string] {
     // return ['ns', 'link', 'xsd', 'xs'];
     return ['ns', 'link', 'xlink', 'xsd', 'xs'];
   }
 
-  public static get INS_nsPrefixES(): [string] {
+  public static get INS_NSPREFIXES(): [string] {
     return ['ns', 'xbrli', 'link', 'xlink', 'xbrldi', 'xsd', 'xs'];
     // xbrldt
   }
+
+  public static get LOC_STRUCTURE(): {rename?: string, atts?: [any], transformFn?: Function} {
+    return {
+      rename: 'locs',
+      atts: [
+        'href', // 'xlink:href'
+        'label', // 'xlink:label'
+        'type', // 'xlink:type'
+      ],
+      transformFn: XbrlUtility.objsArrayToObjObjsByLabelTransform,
+    };
+  }
+
+  public static get ROLE_REF_STRUCTURE(): {rename?: string, atts?: [any]} {
+    return {
+      rename: 'roles',
+      atts: [
+        'roleURI',
+        'href', // 'xlink:href'
+        'type', // 'xlink:type'
+      ],
+    };
+  }
+
+  public static get LINK_ATTS(): [string] {
+    return [
+      'role', // xlink:role
+      'type', // 'xlink:type'
+      'title', // 'xlink:title'
+    ];
+  }
+
+  // xsdToID: string;
+  // xsdToName: string;
+  // xsdToNillable: string;
+  // xsdToSubstitutionGroup: string;
+  // xsdToType: string;
+  // xsdToPeriodType: string;
+  // xsdToAbstract: string;
+  // xsdToBalance: string;
 
   public static get XSD_STRUCTURE(): {atts?: [any], textContent?: string, tags: any} {
     return {
@@ -151,35 +206,26 @@ export class XbrlUtility {
     };
   }
 
+//   preOrder: string;
+// label
+//   preArcrole: string;
+//   preFromHref: string;
+// to
+//   preType: string;
+//   prePriority: string;
+//   preUse: string;
+
   public static get PRE_STRUCTURE(): {atts?: [any], textContent?: string, tags: any} {
     return {
       tags: {
-        roleRef: {
-          rename: 'roles',
-          atts: [
-            'roleURI',
-            'href', // 'xlink:href'
-            'type', // 'xlink:type'
-          ],
-        },
+        roleRef: XbrlUtility.ROLE_REF_STRUCTURE,
         presentationLink: {
           rename: 'presentationLinks',
-          atts: [
-            'role', // xlink:role
-            'type', // 'xlink:type'
-            'title', // 'xlink:title'
-          ],
+          atts: XbrlUtility.LINK_ATTS,
           tags: {
-            loc: {
-              rename: 'locs',
-              atts: [
-                'href', // 'xlink:href'
-                'label', // 'xlink:label'
-                'type', // 'xlink:type'
-              ],
-            },
+            loc: XbrlUtility.LOC_STRUCTURE,
             presentationArc: {
-              rename: 'presentationArcs',
+              rename: 'arcs',
               atts: [
                 'order',
                 'preferredLabel',
@@ -192,6 +238,7 @@ export class XbrlUtility {
               ],
             },
           },
+          transformFn: XbrlUtility.linksLocsArcsInterleaveTransform,
         },
       },
       // roleRef href connects to xsd at #; roleRef roleURI connects to pLink xlink:xrole
@@ -201,35 +248,26 @@ export class XbrlUtility {
     };
   }
 
+//   defOrder: string;
+//   defArcrole: string;
+//   defFromHref: string;
+// to
+//   defType: string;
+//   defClosed: string;
+//   defContextElement: string;
+//   defTargetRole: string;
+
   public static get DEF_STRUCTURE(): {atts?: [any], textContent?: string, tags: any} {
     return {
       tags: {
-        roleRef: {
-          rename: 'roles',
-          atts: [
-            'roleURI',
-            'href', // 'xlink:href'
-            'type', // 'xlink:type'
-          ],
-        },
+        roleRef: XbrlUtility.ROLE_REF_STRUCTURE,
         definitionLink: {
           rename: 'definitionLinks',
-          atts: [
-            'role', // xlink:role
-            'type', // 'xlink:type'
-            'title', // 'xlink:title'
-          ],
+          atts: XbrlUtility.LINK_ATTS,
           tags: {
-            loc: {
-              rename: 'locs',
-              atts: [
-                'href', // 'xlink:href'
-                'label', // 'xlink:label'
-                'type', // 'xlink:type'
-              ],
-            },
+            loc: XbrlUtility.LOC_STRUCTURE,
             definitionArc: {
-              rename: 'definitionArcs',
+              rename: 'arcs',
               atts: [
                 'order',
                 'arcrole', // 'xlink:arcrole'
@@ -242,40 +280,32 @@ export class XbrlUtility {
               ],
             },
           },
+          transformFn: XbrlUtility.linksLocsArcsInterleaveTransform,
         },
       },
     };
   }
 
+//   calOrder: string;
+//   calWeight: string;
+//   calArcrole: string;
+//   calFromHref: string;
+// to
+//   calType: string;
+//   calPriority: string;
+//   calUse: string;
+
   public static get CAL_STRUCTURE(): {atts?: [any], textContent?: string, tags: any} {
     return {
       tags: {
-        roleRef: {
-          rename: 'roles',
-          atts: [
-            'roleURI',
-            'href', // 'xlink:href'
-            'type', // 'xlink:type'
-          ],
-        },
+        roleRef: XbrlUtility.ROLE_REF_STRUCTURE,
         calculationLink: {
           rename: 'calculationLinks',
-          atts: [
-            'role', // xlink:role
-            'type', // 'xlink:type'
-            'title', // 'xlink:title'
-          ],
+          atts: XbrlUtility.LINK_ATTS,
           tags: {
-            loc: {
-              rename: 'locs',
-              atts: [
-                'href', // 'xlink:href'
-                'label', // 'xlink:label'
-                'type', // 'xlink:type'
-              ],
-            },
+            loc: XbrlUtility.LOC_STRUCTURE,
             calculationArc: {
-              rename: 'calculationArcs',
+              rename: 'arcs',
               atts: [
                 'order',
                 'weight',
@@ -288,6 +318,7 @@ export class XbrlUtility {
               ],
             },
           },
+          transformFn: XbrlUtility.linksLocsArcsInterleaveTransform,
         },
       },
     };
@@ -296,14 +327,7 @@ export class XbrlUtility {
   public static get LAB_STRUCTURE(): {atts?: [any], textContent?: string, tags: any} {
     return {
       tags: {
-        roleRef: {
-          rename: 'roles',
-          atts: [
-            'roleURI',
-            'href', // 'xlink:href'
-            'type', // 'xlink:type'
-          ],
-        },
+        roleRef: XbrlUtility.ROLE_REF_STRUCTURE,
         label: {
           rename: 'labels',
           atts: [
@@ -315,16 +339,9 @@ export class XbrlUtility {
           ],
           textContent: true,
         },
-        loc: {
-          rename: 'locs',
-          atts: [
-            'href', // 'xlink:href'
-            'label', // 'xlink:label'
-            'type', // 'xlink:type'
-          ],
-        },
+        loc: XbrlUtility.LOC_STRUCTURE,
         labelArc: {
-          rename: 'labelArcs',
+          rename: 'arcs',
           atts: [
             'order',
             'arcrole', // 'xlink:arcrole'
@@ -333,6 +350,7 @@ export class XbrlUtility {
             'type', // 'xlink:type'
           ],
         },
+        transformFn: XbrlUtility.linksLocsArcsInterleaveTransform,
       },
       // loc href maps to xsd; loc label maps to labelArc from; labelArc to maps to label label
       // roleRef dont seem to be come in in the lab files
@@ -426,14 +444,7 @@ export class XbrlUtility {
             },
           },
         },
-        loc: { // link:loc
-          rename: 'locs',
-          atts: [
-            'href', // 'xlink:href'
-            'label', // 'xlink:label'
-            'type', // 'xlink:type'
-          ],
-        },
+        loc: XbrlUtility.LOC_STRUCTURE,
         footnoteArc: { // link:footnoteArc
           rename: 'footnoteArcs',
           atts: [
@@ -494,7 +505,25 @@ export class XbrlUtility {
   public static justTextTransform(objs) { return ((objs || [])[0] || {}).textContent; }
 
   public static arrayedTextTransform(objs) { return (objs || []).map((i) => (i || {}).textContent ); }
+
   public static firstArrayItemTransform(objs) { return (objs || [])[0]; }
+
+  public static objsArrayToObjObjsTransform(objs, key) { let obj = {}; (objs || []).map((i) => obj[i[key]] = i); return obj; }
+
+  public static objsArrayToObjObjsByLabelTransform(objs) { return XbrlUtility.objsArrayToObjObjsTransform(objs, 'label'); }
+
+  public static linksLocsArcsInterleaveTransform(linkObjs, linkKey) {
+    return (linkObjs || []).map((linkObj) => {
+        let locs = linkObj.locs || {};
+        let arcs = linkObj.arcs || [];
+        arcs.map((arc) => {
+          arc.toHref = (locs[arc.to] || {}).href;
+          arc.fromHref = (locs[arc.from] || {}).href;
+        });
+        // linkObj.arcs = arcs;
+        return linkObj;
+      });
+  }
 
   public static processDoc(doc: XMLDocument, fn: (doc: XMLDocument, nsHref: string, nsPrefix: string, nss: {}) => {}): any {
     let nsHref;
@@ -521,7 +550,7 @@ export class XbrlUtility {
     let nsHref: string = doc.lookupNamespaceURI(null);
     let nsPrefix = doc.lookupPrefix(nsHref);
     let nss = {};
-    XbrlUtility.INS_nsPrefixES.forEach((ns) => {
+    XbrlUtility.INS_NSPREFIXES.forEach((ns) => {
       let uri = doc.lookupNamespaceURI(ns);
       // console.log('ns: ', ns);
       // console.log('ns uri: ', uri);
@@ -682,15 +711,75 @@ export class XbrlUtility {
   }
 
   public static getXbrlsRoles(parsedXbrls): any {
-    let roles = [];
+    let roles: string[] = [];
     parsedXbrls.forEach((parsedXbrl) => {
       roles = roles.concat(XbrlUtility.getXbrlRoles(parsedXbrl));
     });
-    return roles.filter((v, i, a) => a.indexOf(v) === i);
+    return XbrlUtility.uniqueCompact(roles);
+  }
+
+  public static unique(array?: any[]): any[] {
+    return (array || []).filter((v, i, a) => a.indexOf(v) === i);
+  }
+
+  public static uniqueCompact(array?: any[]): any {
+    return (array || []).filter((v, i, a) => a.indexOf(v) === i && a !== null);
   }
 
   public static isBlank(obj: any): boolean {
     return obj === null || obj === undefined || (typeof obj === 'object' && Object.keys(obj).length === 0) || (typeof obj !== 'object' && obj.length === 0);
+  }
+
+  public static constructXbrlStatement(role: string, xbrlReport: XbrlReportInterface = {}): XbrlStatementInterface {
+    let xbrlStatement: XbrlStatementInterface = {
+      role,
+      roleDefinition: null,
+      items: null,
+      contexts: null,
+      units: null,
+    };
+
+    let xsdRole = ((xbrlReport.xsd || {}).roles || []).find((i) => (i || {}).roleURI === role );
+
+    let presentationArcs: any[] = (((xbrlReport || {}).pre || {}).presentationLinks || []).filter((i) => (i || {}).role  === role);
+    xbrlStatement.preLinkTypes = presentationArcs.map((i) => i.type);
+
+    let definitionArcs: any[] = (((xbrlReport || {}).pre || {}).definitionLinks || []).filter((i) => (i || {}).role  === role);
+    xbrlStatement.defLinkTypes = definitionArcs.map((i) => i.type);
+
+    let calculationArcs: any[] = (((xbrlReport || {}).pre || {}).calculationLinks || []).filter((i) => (i || {}).role  === role);
+    xbrlStatement.calLinkTypes = calculationArcs.map((i) => i.type);
+
+    xbrlStatement.roleDefinition = (xsdRole || {}).definition || presentationArcs.title || definitionArcs.title || calculationArcs.title;
+    xbrlStatement.roleUse = (xsdRole || {}).usedOn;
+
+    xbrlStatement.items = presentationArcs;
+
+  //   @pre.each do |pre|
+  //     unless pre.blank? || pre["prearcs"].blank?
+  //       pre["prearcs"].each do |i|
+  //         from_href = begin pre["locs"].select {|l| l["label"] == i["from"] }.first["href"] || "" rescue "" end
+  //         to_href = begin pre["locs"].select {|l| l["label"] == i["to"] }.first["href"] || "" rescue "" end
+
+  //         @pre_h = {}
+  //         @pre_h = {
+  //           "to_href" => begin to_href rescue "" end,
+  //           "to_preferred_label" => begin i["preferred_label"] rescue "" end,
+
+  //           "pre_from_href" => begin from_href rescue "" end,
+  //           "pre_order" => begin i["order"] || "" rescue "" end,
+  //           "pre_arcrole" => begin i["arcrole"] || "" rescue "" end,
+  //           "pre_type" => begin i["type"] || "" rescue "" end,
+  //           "pre_priority" => begin i["priority"] || "" rescue "" end,
+  //           "pre_use" => begin i["use"] || "" rescue "" end
+  //         }
+  //         item_clone = @item_template.clone
+  //         @item_a << item_clone.merge(@pre_h)
+
+  //       end
+  //     end
+  //   end
+    return xbrlStatement;
   }
 
   // def self.construct_statement(role, data)
@@ -800,72 +889,6 @@ export class XbrlUtility {
   //   @role = role
 
   //   begin
-  //     @pre = []
-  //     unless data["pre"].blank? || data["pre"]["plinks"].blank?
-  //       @pre = data["pre"]["plinks"].select {|plink| plink["role"] == @role } #find all presentationlinks with "role" == @role
-  //     end
-  //   rescue Exception => e
-  //     @pre = []
-  //     str = "Error in EdgarBuilder::construct_statement trying to assign pre presentationLinks to @pre for #{@role}."
-  //     ValcuErrorHandling::log_and_show_rescue({calling_object: "EdgarBuilder", calling_method: __method__, description: str,
-  //     message: e.message.truncate(10000, :separator => ' '), backtrace: e.backtrace.inspect.truncate(10000, :separator => ' '), log_file: LOG_FILE, addressed: 'f'})
-  //   end
-  //   @pre_link_type = ""
-  //   unless @pre.blank?
-  //     begin
-  //       @pre_link_type = @pre.collect {|pre| pre["type"] || "" }.uniq.compact.join(', ')
-  //     rescue Exception => e
-  //       @pre_link_type = ""
-  //       str = "Error in EdgarBuilder::construct_statement trying to assign presentationLink type to @pre_link_type for #{@role}."
-  //       ValcuErrorHandling::log_and_show_rescue({calling_object: "EdgarBuilder", calling_method: __method__, description: str,
-  //       message: e.message.truncate(10000, :separator => ' '), backtrace: e.backtrace.inspect.truncate(10000, :separator => ' '), log_file: LOG_FILE, addressed: 'f'})
-  //     end
-  //   end
-  //   begin
-  //     @def = []
-  //     unless data["def"].blank? || data["def"]["dlinks"].blank?
-  //       @def = data["def"]["dlinks"].select {|dlink| dlink["role"] == @role } #find all definitionlinks with "role" == @role
-  //     end
-  //   rescue Exception => e
-  //     @def = []
-  //     str = "Error in EdgarBuilder::construct_statement trying to assign def definitionLinks to @def for #{@role}."
-  //     ValcuErrorHandling::log_and_show_rescue({calling_object: "EdgarBuilder", calling_method: __method__, description: str,
-  //     message: e.message.truncate(10000, :separator => ' '), backtrace: e.backtrace.inspect.truncate(10000, :separator => ' '), log_file: LOG_FILE, addressed: 'f'})
-  //   end
-  //   @def_link_type = ""
-  //   unless @def.blank?
-  //     begin
-  //       @def_link_type = @def.collect {|def_item| def_item["type"] || "" }.uniq.compact.join(', ')
-  //     rescue Exception => e
-  //       @def_link_type = ""
-  //       str = "Error in EdgarBuilder::construct_statement trying to assign definitionLink type to @def_link_type for #{@role}."
-  //       ValcuErrorHandling::log_and_show_rescue({calling_object: "EdgarBuilder", calling_method: __method__, description: str,
-  //       message: e.message.truncate(10000, :separator => ' '), backtrace: e.backtrace.inspect.truncate(10000, :separator => ' '), log_file: LOG_FILE, addressed: 'f'})
-  //     end
-  //   end
-  //   begin
-  //     @cal = []
-  //     unless data["cal"].blank? || data["cal"]["clinks"].blank?
-  //       @cal = data["cal"]["clinks"].select {|clink| clink["role"] == @role } #find all calculationlinks with "role" == @role
-  //     end
-  //   rescue Exception => e
-  //     @cal = []
-  //     str = "Error in EdgarBuilder::construct_statement trying to assign cal calculationLinks to @cal for #{@role}."
-  //     ValcuErrorHandling::log_and_show_rescue({calling_object: "EdgarBuilder", calling_method: __method__, description: str,
-  //     message: e.message.truncate(10000, :separator => ' '), backtrace: e.backtrace.inspect.truncate(10000, :separator => ' '), log_file: LOG_FILE, addressed: 'f'})
-  //   end
-  //   @cal_link_type = ""
-  //   unless @cal.blank?
-  //     begin
-  //       @cal_link_type = @cal.collect {|cal| cal["type"] || "" }.uniq.compact.join(', ')
-  //     rescue Exception => e
-  //       @cal_link_type = ""
-  //       str = "Error in EdgarBuilder::construct_statement trying to assign calculationLink type to @cal_link_type for #{@role}."
-  //       ValcuErrorHandling::log_and_show_rescue({calling_object: "EdgarBuilder", calling_method: __method__, description: str,
-  //       message: e.message.truncate(10000, :separator => ' '), backtrace: e.backtrace.inspect.truncate(10000, :separator => ' '), log_file: LOG_FILE, addressed: 'f'})
-  //     end
-  //   end
-  //   begin
   //     @xsd = []
   //     @xsd = data["xsd"]["elements"] || []
   //   rescue Exception => e
@@ -874,40 +897,7 @@ export class XbrlUtility {
   //     ValcuErrorHandling::log_and_show_rescue({calling_object: "EdgarBuilder", calling_method: __method__, description: str,
   //     message: e.message.truncate(10000, :separator => ' '), backtrace: e.backtrace.inspect.truncate(10000, :separator => ' '), log_file: LOG_FILE, addressed: 'f'})
   //   end
-  //   @role_definition = ""
-  //   begin
-  //     @role_definition = data["xsd"]["roles"].select {|role| role["uri"] == @role }.first["def"] || ""
-  //     raise ArgumentError, "@role_definition is blank in xsd file." if @role_definition.blank?
-  //   rescue
-  //     begin
-  //       @role_definition = @pre["title"] || ""
-  //       raise ArgumentError, "@role_definition is blank in pre file." if @role_definition.blank?
-  //     rescue
-  //       begin
-  //         @role_definition = @def["title"] || ""
-  //         raise ArgumentError, "@role_definition is blank in def file." if @role_definition.blank?
-  //       rescue
-  //         begin
-  //           @role_definition = @cal["title"] || ""
-  //           raise ArgumentError, "@role_definition is blank in cal file." if @role_definition.blank?
-  //         rescue
-  //           @role_definition = ""
-  //         end
-  //       end
-  //     end
-  //     # str = "Error in EdgarBuilder::construct_statement trying to assign xsd role def to @role_definition for #{@role}."
-  //     # ValcuErrorHandling::log_and_show_rescue({calling_object: "EdgarBuilder", calling_method: __method__, description: str,
-  //     # message: e.message.truncate(10000, :separator => ' '), backtrace: e.backtrace.inspect.truncate(10000, :separator => ' '), log_file: LOG_FILE, addressed: 'f'})
-  //   end
-  //   @role_use = ""
-  //   begin
-  //     @role_use = data["xsd"]["roles"].select {|role| role["uri"] == @role }.first["use"] || ""
-  //   rescue Exception => e
-  //     @role_use = ""
-  //     # str = "Error in EdgarBuilder::construct_statement trying to assign xsd use to @role_use for #{@role}."
-  //     # ValcuErrorHandling::log_and_show_rescue({calling_object: "EdgarBuilder", calling_method: __method__, description: str,
-  //     # message: e.message.truncate(10000, :separator => ' '), backtrace: e.backtrace.inspect.truncate(10000, :separator => ' '), log_file: LOG_FILE, addressed: 'f'})
-  //   end
+
   //   begin
   //     @lab_labels = []
   //     @lab_labels = data["lab"]["labels"] || []
@@ -946,46 +936,6 @@ export class XbrlUtility {
   //   end
 
   //   @item_a = []
-
-  //   @item_template = {
-  //     "to_href" => "",
-
-  //     "to_preferred_label" => "",
-  //     "pre_from_href" => "",
-  //     "pre_order" => "",
-  //     "pre_arcrole" => "",
-  //     "pre_type" => "",
-  //     "pre_priority" => "",
-  //     "pre_use" => "",
-
-  //     "def_from_href" => [],
-  //     "def_order" => [],
-  //     "def_arcrole" => [],
-  //     "def_type" => [],
-  //     "def_closed" => [],
-  //     "def_context_element" => [],
-  //     "def_target_role" => [],
-
-  //     "cal_from_href" => "",
-  //     "cal_order" => "",
-  //     "cal_arcrole" => "",
-  //     "cal_type" => "",
-  //     "cal_priority" => "",
-  //     "cal_use" => "",
-  //     "cal_weight" => "",
-
-  //     "xsd_to_id" => "",
-  //     "xsd_to_name" => "",
-  //     "xsd_to_nillable" => "",
-  //     "xsd_to_substitution_group" => "",
-  //     "xsd_to_type" => "",
-  //     "xsd_to_period_type" => "",
-  //     "xsd_to_abstract" => "",
-  //     "xsd_to_balance" => "",
-
-  //     "to_instances" => [],
-  //     "labels" => []
-  //   }
 
   //   # puts DateTime.now.utc.to_s + " - EdgarBuilder::construct_statement finished initiating variables for #{@role}; starting pre construction."
 

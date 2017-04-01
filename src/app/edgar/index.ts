@@ -1,3 +1,3 @@
 export { EdgarArchiveService } from './edgar-archive.service';
-export { XbrlUtility } from './xbrl-utility';
+export * from './xbrl-utility';
 export { XbrlService } from './xbrl.service';
