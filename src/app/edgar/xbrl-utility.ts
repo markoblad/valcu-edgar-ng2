@@ -1,5 +1,14 @@
 import { Injectable } from '@angular/core';
 
+export interface XbrlStructureInterface {
+  rename?: string;
+  atts?: string[];
+  textContent?: boolean;
+  tags?: any;
+  transformFn?: Function;
+  attSelectors?: any;
+}
+
 export interface XbrlReportInterface {
   xsd?: any;
   pre?: any;
@@ -125,7 +134,7 @@ export class XbrlUtility {
     // xbrldt
   }
 
-  public static get LOC_STRUCTURE(): {rename?: string, atts?: [any], transformFn?: Function} {
+  public static get LOC_STRUCTURE(): XbrlStructureInterface {
     return {
       rename: 'locs',
       atts: [
@@ -133,11 +142,11 @@ export class XbrlUtility {
         'label', // 'xlink:label'
         'type', // 'xlink:type'
       ],
-      transformFn: XbrlUtility.objsArrayToObjObjsByLabelTransform,
+      transformFn: XbrlUtility.objsArrayToObjObjsByLabelHrefTransform,
     };
   }
 
-  public static get ROLE_REF_STRUCTURE(): {rename?: string, atts?: [any]} {
+  public static get ROLE_REF_STRUCTURE(): XbrlStructureInterface {
     return {
       rename: 'roles',
       atts: [
@@ -165,7 +174,7 @@ export class XbrlUtility {
   // xsdToAbstract: string;
   // xsdToBalance: string;
 
-  public static get XSD_STRUCTURE(): {atts?: [any], textContent?: string, tags: any} {
+  public static get XSD_STRUCTURE(): XbrlStructureInterface {
     return {
       tags: {
         roleType: {
@@ -175,7 +184,7 @@ export class XbrlUtility {
           ],
           tags: {
             definition: {
-              rename: 'def',
+              // rename: 'def',
               textContent: true,
               transformFn: XbrlUtility.justTextTransform,
             },
@@ -198,6 +207,7 @@ export class XbrlUtility {
             'abstract',
             'balance', // 'xbrli:balance'
           ],
+          transformFn: XbrlUtility.objsArrayToObjObjsByIdTransform,
         },
       },
     // loc hrefs from # map to xsd element ids; loc hrefs starting from # may be duplicative of loc labels but sometimes labels have a random number appended
@@ -215,7 +225,7 @@ export class XbrlUtility {
 //   prePriority: string;
 //   preUse: string;
 
-  public static get PRE_STRUCTURE(): {atts?: [any], textContent?: string, tags: any} {
+  public static get PRE_STRUCTURE(): XbrlStructureInterface {
     return {
       tags: {
         roleRef: XbrlUtility.ROLE_REF_STRUCTURE,
@@ -257,7 +267,7 @@ export class XbrlUtility {
 //   defContextElement: string;
 //   defTargetRole: string;
 
-  public static get DEF_STRUCTURE(): {atts?: [any], textContent?: string, tags: any} {
+  public static get DEF_STRUCTURE(): XbrlStructureInterface {
     return {
       tags: {
         roleRef: XbrlUtility.ROLE_REF_STRUCTURE,
@@ -295,7 +305,7 @@ export class XbrlUtility {
 //   calPriority: string;
 //   calUse: string;
 
-  public static get CAL_STRUCTURE(): {atts?: [any], textContent?: string, tags: any} {
+  public static get CAL_STRUCTURE(): XbrlStructureInterface {
     return {
       tags: {
         roleRef: XbrlUtility.ROLE_REF_STRUCTURE,
@@ -324,7 +334,7 @@ export class XbrlUtility {
     };
   }
 
-  public static get LAB_STRUCTURE(): {atts?: [any], textContent?: string, tags: any} {
+  public static get LAB_STRUCTURE(): XbrlStructureInterface {
     return {
       tags: {
         roleRef: XbrlUtility.ROLE_REF_STRUCTURE,
@@ -338,6 +348,7 @@ export class XbrlUtility {
             'lang', // 'xml:lang'
           ],
           textContent: true,
+          transformFn: XbrlUtility.objsArrayToObjObjsByLabelTransform,
         },
         loc: XbrlUtility.LOC_STRUCTURE,
         labelArc: {
@@ -350,14 +361,14 @@ export class XbrlUtility {
             'type', // 'xlink:type'
           ],
         },
-        transformFn: XbrlUtility.linksLocsArcsInterleaveTransform,
       },
+      transformFn: XbrlUtility.linkLabelsLocsArcsInterleaveTransform,
       // loc href maps to xsd; loc label maps to labelArc from; labelArc to maps to label label
       // roleRef dont seem to be come in in the lab files
     };
   }
 
-  public static get INS_STRUCTURE(): {atts?: [any], textContent?: string, tags: any} {
+  public static get INS_STRUCTURE(): XbrlStructureInterface {
     return {
       tags: {
         context: { // xbrli:context
@@ -410,7 +421,8 @@ export class XbrlUtility {
               rename: 'scenarios',
               textContent: true,
             }
-          }
+          },
+          transformFn: XbrlUtility.objsArrayToObjObjsByIdTransform,
         },
         unit: { // xbrli:unit
           rename: 'units',
@@ -443,6 +455,7 @@ export class XbrlUtility {
               },
             },
           },
+          transformFn: XbrlUtility.objsArrayToObjObjsByIdTransform,
         },
         loc: XbrlUtility.LOC_STRUCTURE,
         footnoteArc: { // link:footnoteArc
@@ -465,19 +478,34 @@ export class XbrlUtility {
             'lang', // 'xml:lang'
           ],
         },
-        // @ins_h["footnotes"] = begin EdgarBuilder::construct_footnotes(@ins_h) || [] rescue [] end
-        // '...': {
-        //   textContent: true,
-        //   atts: [
-        //     'contextRef',
-        //     'decimals',
-        //     'id',
-        //     'unitRef',
-        //     'nil',
-        //     'lang', //'xml:lang'
-        //   ],
-        // },
       },
+      attSelectors: {
+        contextRef: {
+          rename: 'instances',
+          atts: [
+            'contextRef',
+            'decimals',
+            'id',
+            'unitRef',
+            'nil',
+            'lang', // 'xml:lang'
+          ],
+          textContent: true,
+          transformFn: XbrlUtility.objsArrayToObjObjsByLocalNameContextTransform,
+        },
+      },
+      // @ins_h["footnotes"] = begin EdgarBuilder::construct_footnotes(@ins_h) || [] rescue [] end
+      // '...': {
+      //   textContent: true,
+      //   atts: [
+      //     'contextRef',
+      //     'decimals',
+      //     'id',
+      //     'unitRef',
+      //     'nil',
+      //     'lang', //'xml:lang'
+      //   ],
+      // },
       // @ins_h["doc"] = begin doc rescue "" end
       // @ins_h = nil if @ins_h["doc"].blank?
     };
@@ -502,27 +530,49 @@ export class XbrlUtility {
     };
   }
 
-  public static justTextTransform(objs) { return ((objs || [])[0] || {}).textContent; }
+  public static justTextTransform(objs: any []) { return ((objs || [])[0] || {}).textContent; }
 
-  public static arrayedTextTransform(objs) { return (objs || []).map((i) => (i || {}).textContent ); }
+  public static arrayedTextTransform(objs: any []) { return (objs || []).map((i) => (i || {}).textContent ); }
 
-  public static firstArrayItemTransform(objs) { return (objs || [])[0]; }
+  public static firstArrayItemTransform(objs: any []) { return (objs || [])[0]; }
 
-  public static objsArrayToObjObjsTransform(objs, key) { let obj = {}; (objs || []).map((i) => obj[i[key]] = i); return obj; }
+  public static objsArrayToObjObjsTransform(objs: any[], keyOrFn: any) { let obj = {}; (objs || []).map((i) => obj[typeof keyOrFn === 'function' ? keyOrFn(i) : i[keyOrFn]] = i); return obj; }
 
-  public static objsArrayToObjObjsByLabelTransform(objs) { return XbrlUtility.objsArrayToObjObjsTransform(objs, 'label'); }
+  public static objsArrayToObjObjsMultipleIndexedTransform(objs: any[], keys: any[]) { let obj = {}; (objs || []).map((i) => { keys.map((key) => obj[i[key]] = i); }); return obj; }
 
-  public static linksLocsArcsInterleaveTransform(linkObjs, linkKey) {
-    return (linkObjs || []).map((linkObj) => {
-        let locs = linkObj.locs || {};
-        let arcs = linkObj.arcs || [];
-        arcs.map((arc) => {
-          arc.toHref = (locs[arc.to] || {}).href;
-          arc.fromHref = (locs[arc.from] || {}).href;
-        });
-        // linkObj.arcs = arcs;
-        return linkObj;
-      });
+  public static objsArrayToObjObjsByLabelTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, 'label'); }
+
+  public static objsArrayToObjObjsByIdTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, 'id'); }
+
+  public static objsArrayToObjObjsByLocalNameContextTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, (i) => (i.localName || '') + '__' + (i.contextRef || '')); }
+
+  public static objsArrayToObjObjsByLabelHrefTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsMultipleIndexedTransform(objs, ['label', 'href']); }
+
+  public static linkLocsArcsInterleaveTransform(linkObj) {
+    let locs = linkObj.locs || {};
+    let arcs = linkObj.arcs || [];
+    arcs.map((arc) => {
+      arc.toHref = (locs[arc.to] || {}).href;
+      arc.fromHref = (locs[arc.from] || {}).href;
+    });
+    // linkObj.arcs = arcs;
+    return linkObj;
+  }
+
+  public static linkLabelsLocsArcsInterleaveTransform(linkObj) {
+    // let labels = linkObj.locs || {};
+    let locs = linkObj.locs || {};
+    let arcs = linkObj.arcs || [];
+    arcs.map((arc) => {
+      arc.toHref = arc.to;
+      arc.fromHref = (locs[arc.from] || {}).href;
+    });
+    // linkObj.arcs = arcs;
+    return linkObj;
+  }
+
+  public static linksLocsArcsInterleaveTransform(linkObjs) {
+    return (linkObjs || []).map((linkObj) => XbrlUtility.linkLocsArcsInterleaveTransform(linkObj));
   }
 
   public static processDoc(doc: XMLDocument, fn: (doc: XMLDocument, nsHref: string, nsPrefix: string, nss: {}) => {}): any {
@@ -537,7 +587,7 @@ export class XbrlUtility {
 
   public static processTypeDoc(doc: XMLDocument, type): any {
     return XbrlUtility.processDoc(doc, (returnedDoc, nsHref, nsPrefix, nss) => {
-      let returnObj  =  {type, roles: [], elements: []};
+      let returnObj  =  {type, roles: []};
       returnObj = XbrlUtility.processStructure(returnedDoc, nsHref, nsPrefix, nss, XbrlUtility.XBRL_TYPE_TO_STRUCTURE[type], returnObj);
       // @pre_h = nil if @pre_h["roles"].blank? || @pre_h["dlinks"].blank?
       // @cal_h = nil if @cal_h["roles"].blank? || @cal_h["clinks"].blank?
@@ -653,10 +703,10 @@ export class XbrlUtility {
     return node.getAttributeNS(nsHref, att);
   }
 
-  public static getNodeTagsAtts(node, tag: string, tagAtts: [string], textContent: boolean, transformFn: (untransformedObj: any) => any, nsHref, nsPrefix, nss,
+  public static getNodeTagsAtts(node, tag: string, attSelector: string, atts: [string], textContent: boolean, transformFn: (untransformedObj: any) => any, nsHref, nsPrefix, nss,
                                 fn?: (node: any, nsHref: string, nsPrefix: string, nss: {}, obj: {}) => [any]): any {
-    if (node && tag) {
-      let parse = XbrlUtility.parseTag(tag, nsHref, nsPrefix, nss, node, false);
+    if (node && (tag || attSelector)) {
+      let parse = attSelector ?  node.querySelectorAll('[' + attSelector + ']') : XbrlUtility.parseTag(tag, nsHref, nsPrefix, nss, node, false);
       let objs = [];
       for (let i in Object.keys(parse)) {
         if (i.length > 0) {
@@ -665,10 +715,11 @@ export class XbrlUtility {
             let nestedObj = <any> {};
             // nestedObj.tagName = ((parseI || {}).tagName || '').trim();
             nestedObj.nodeName = ((parseI || {}).nodeName || '').trim();
+            nestedObj.localName = ((parseI || {}).localName || '').trim();
             if (textContent) {
               nestedObj.textContent = ((parseI || {}).textContent || '').trim();
             }
-            nestedObj = XbrlUtility.getNodeAtts(parseI, tagAtts, nsHref, nsPrefix, nss, nestedObj);
+            nestedObj = XbrlUtility.getNodeAtts(parseI, atts, nsHref, nsPrefix, nss, nestedObj);
             if (fn) {
               nestedObj = fn(parseI, nsHref, nsPrefix, nss, nestedObj);
             }
@@ -680,22 +731,40 @@ export class XbrlUtility {
     }
   }
 
-  public static processStructure(doc: XMLDocument, nsHref: string, nsPrefix: string, nss: {}, structure: {rename?, atts?, textContent?, tags?}, obj: {any}): any {
+  public static processStructure(doc: XMLDocument, nsHref: string, nsPrefix: string, nss: {}, structure: XbrlStructureInterface, obj: {any}): any {
     let tags = Object.keys(structure.tags || {}) || [];
+    let attSelectors = Object.keys(structure.attSelectors || {}) || [];
+
+    // .tagName
     for (let i in Object.keys(tags)) {
       if (i.length > 0) {
         let tag = tags[i];
-        let tagStructure = structure.tags[tag];
-        let name = tagStructure.rename || tag;
-        let nestedTagsObj = tagStructure.tags;
-        let nodeTagResults = XbrlUtility.getNodeTagsAtts(doc, tag, tagStructure.atts, tagStructure.textContent, tagStructure.transformFn, nsHref, nsPrefix, nss,
+        let nodeStructure = structure.tags[tag];
+        let name = nodeStructure.rename || tag;
+        let nestedTagsObj = nodeStructure.tags;
+        let nestedAttSelectorsObj = nodeStructure.attSelectors;
+        let nodeTagResults = XbrlUtility.getNodeTagsAtts(doc, tag, null, nodeStructure.atts, nodeStructure.textContent, nodeStructure.transformFn, nsHref, nsPrefix, nss,
         nestedTagsObj ? (node, rNsHref, rNsPrefix, rNss, nestedObj): any => {
-          return XbrlUtility.processStructure(node, rNsHref, rNsPrefix, rNss, {tags: nestedTagsObj}, nestedObj);
+          return XbrlUtility.processStructure(node, rNsHref, rNsPrefix, rNss, {tags: nestedTagsObj, attSelectors: nestedAttSelectorsObj}, nestedObj);
         } : null);
         if (!XbrlUtility.isBlank(nodeTagResults)) { obj[name] = nodeTagResults; }
       }
     }
-    return obj;
+    for (let i in attSelectors) {
+      if (i.length > 0) {
+        let attSelector = attSelectors[i];
+        let nodeStructure = structure.attSelectors[attSelector];
+        let nestedTagsObj = nodeStructure.tags;
+        let nestedAttSelectorsObj = nodeStructure.attSelectors;
+        let nodeTagResults = XbrlUtility.getNodeTagsAtts(doc, null, attSelector, nodeStructure.atts, nodeStructure.textContent, nodeStructure.transformFn, nsHref, nsPrefix, nss,
+        nestedTagsObj ? (node, rNsHref, rNsPrefix, rNss, nestedObj): any => {
+          return XbrlUtility.processStructure(node, rNsHref, rNsPrefix, rNss, {tags: nestedTagsObj, attSelectors: nestedAttSelectorsObj}, nestedObj);
+        } : null);
+        let name = nodeStructure.rename || attSelector;
+        if (!XbrlUtility.isBlank(nodeTagResults)) { obj[name] = nodeTagResults; }
+      }
+    }
+    return structure.transformFn ? structure.transformFn(obj) : obj;
   }
 
   public static getXbrlRoles(parsedXbrl): [string] {
@@ -730,6 +799,8 @@ export class XbrlUtility {
     return obj === null || obj === undefined || (typeof obj === 'object' && Object.keys(obj).length === 0) || (typeof obj !== 'object' && obj.length === 0);
   }
 
+  public static splitXbrlHref(href): string { return (href || '').replace(/(.*?_)/, ''); }
+
   public static constructXbrlStatement(role: string, xbrlReport: XbrlReportInterface = {}): XbrlStatementInterface {
     let xbrlStatement: XbrlStatementInterface = {
       role,
@@ -740,20 +811,21 @@ export class XbrlUtility {
     };
 
     let xsdRole = ((xbrlReport.xsd || {}).roles || []).find((i) => (i || {}).roleURI === role );
+    // let xsdElement = ((xbrlReport.xsd || {}).elements || []).find((i) => (i || {}).id === a.toHref.split('#').last );
 
     let presentationArcs: any[] = (((xbrlReport || {}).pre || {}).presentationLinks || []).filter((i) => (i || {}).role  === role);
     xbrlStatement.preLinkTypes = presentationArcs.map((i) => i.type);
 
-    let definitionArcs: any[] = (((xbrlReport || {}).pre || {}).definitionLinks || []).filter((i) => (i || {}).role  === role);
+    let definitionArcs: any[] = (((xbrlReport || {}).def || {}).definitionLinks || []).filter((i) => (i || {}).role  === role);
     xbrlStatement.defLinkTypes = definitionArcs.map((i) => i.type);
 
-    let calculationArcs: any[] = (((xbrlReport || {}).pre || {}).calculationLinks || []).filter((i) => (i || {}).role  === role);
+    let calculationArcs: any[] = (((xbrlReport || {}).cal || {}).calculationLinks || []).filter((i) => (i || {}).role  === role);
     xbrlStatement.calLinkTypes = calculationArcs.map((i) => i.type);
 
-    xbrlStatement.roleDefinition = (xsdRole || {}).definition || presentationArcs.title || definitionArcs.title || calculationArcs.title;
+    xbrlStatement.roleDefinition = (xsdRole || {}).definition; // || presentationArcs.title || definitionArcs.title || calculationArcs.title;
     xbrlStatement.roleUse = (xsdRole || {}).usedOn;
 
-    xbrlStatement.items = presentationArcs;
+    xbrlStatement.items = definitionArcs;
 
   //   @pre.each do |pre|
   //     unless pre.blank? || pre["prearcs"].blank?
@@ -889,43 +961,6 @@ export class XbrlUtility {
   //   @role = role
 
   //   begin
-  //     @xsd = []
-  //     @xsd = data["xsd"]["elements"] || []
-  //   rescue Exception => e
-  //     @xsd = []
-  //     str = "Error in EdgarBuilder::construct_statement trying to assign xsd elements to @xsd for #{@role}."
-  //     ValcuErrorHandling::log_and_show_rescue({calling_object: "EdgarBuilder", calling_method: __method__, description: str,
-  //     message: e.message.truncate(10000, :separator => ' '), backtrace: e.backtrace.inspect.truncate(10000, :separator => ' '), log_file: LOG_FILE, addressed: 'f'})
-  //   end
-
-  //   begin
-  //     @lab_labels = []
-  //     @lab_labels = data["lab"]["labels"] || []
-  //   rescue Exception => e
-  //     @lab_labels = []
-  //     str = "Error in EdgarBuilder::construct_statement trying to assign lab labels to @lab_labels for #{@role}."
-  //     ValcuErrorHandling::log_and_show_rescue({calling_object: "EdgarBuilder", calling_method: __method__, description: str,
-  //     message: e.message.truncate(10000, :separator => ' '), backtrace: e.backtrace.inspect.truncate(10000, :separator => ' '), log_file: LOG_FILE, addressed: 'f'})
-  //   end
-  //   begin
-  //     @lab_locs = []
-  //     @lab_locs = data["lab"]["locs"] || []
-  //   rescue Exception => e
-  //     @lab_locs = []
-  //     str = "Error in EdgarBuilder::construct_statement trying to assign lab locators to @lab_locs for #{@role}."
-  //     ValcuErrorHandling::log_and_show_rescue({calling_object: "EdgarBuilder", calling_method: __method__, description: str,
-  //     message: e.message.truncate(10000, :separator => ' '), backtrace: e.backtrace.inspect.truncate(10000, :separator => ' '), log_file: LOG_FILE, addressed: 'f'})
-  //   end
-  //   begin
-  //     @lab_labarcs = []
-  //     @lab_labarcs = data["lab"]["labarcs"] || []
-  //   rescue Exception => e
-  //     @lab_labarcs = []
-  //     str = "Error in EdgarBuilder::construct_statement trying to assign lab labarcs to @lab_labarcs for #{@role}."
-  //     ValcuErrorHandling::log_and_show_rescue({calling_object: "EdgarBuilder", calling_method: __method__, description: str,
-  //     message: e.message.truncate(10000, :separator => ' '), backtrace: e.backtrace.inspect.truncate(10000, :separator => ' '), log_file: LOG_FILE, addressed: 'f'})
-  //   end
-  //   begin
   //     @ins = {}
   //     @ins = data["ins"] || {}
   //   rescue Exception => e
@@ -964,22 +999,12 @@ export class XbrlUtility {
   //     end
   //   end
 
-  //   # puts DateTime.now.utc.to_s + " - EdgarBuilder::construct_statement finished pre construction; starting def construction."
-
   //   @def.each do |def_item|
   //     unless def_item.blank? || def_item["defarcs"].blank?
   //       def_item["defarcs"].each do |i|
   //         from_href = def_item["locs"].select {|l| l["label"] == i["from"] }.first["href"] || ""
   //         to_href = def_item["locs"].select {|l| l["label"] == i["to"] }.first["href"] || ""
 
-  //         @def_h = {}
-  //         @def_h["def_from_href"] = []
-  //         @def_h["def_order"] = []
-  //         @def_h["def_arcrole"] = []
-  //         @def_h["def_type"] = []
-  //         @def_h["def_closed"] = []
-  //         @def_h["def_context_element"] = []
-  //         @def_h["def_target_role"] = []
   //         @def_h = {
   //           "def_from_href" => [from_href] || [],
   //           "to_href" => to_href,
@@ -990,99 +1015,27 @@ export class XbrlUtility {
   //           "def_context_element" => [i["context_element"]] || [],
   //           "def_target_role" => [i["target_role"]] || []
   //         }
-  //         @matches = []
   //         @matches = @item_a.select {|a| a["to_href"] == to_href }
-  //         if !@matches.blank? && @matches.count == 1
-  //           @item_a.map! do |a|
-  //             if (a["to_href"] == to_href)
-  //               def_from_hrefs = []
-  //               def_from_hrefs = a["def_from_href"] + [from_href]
-  //               a["def_from_href"] = def_from_hrefs || []
-  //               def_orders = []
-  //               def_orders = a["def_order"] + [i["order"]]
-  //               a["def_order"] = def_orders || []
-  //               def_arcroles = []
-  //               def_arcroles = a["def_arcrole"] + [i["arcrole"]]
-  //               a["def_arcrole"] = def_arcroles || []
-  //               def_types = []
-  //               def_types = a["def_type"] + [i["type"]]
-  //               a["def_type"] = def_types || []
-  //               def_closeds = []
-  //               def_closeds = a["def_closed"] + [i["closed"]]
-  //               a["def_closed"] = def_closeds || []
-  //               def_context_elements = []
-  //               def_context_elements = a["def_context_element"] + [i["context_element"]]
-  //               a["def_context_element"] = def_context_elements || []
-  //               def_target_roles = []
-  //               def_target_roles = a["def_target_role"] + [i["target_role"]]
-  //               a["def_target_role"] = def_target_roles || []
-  //               a
-  //             else
-  //               a
-  //             end
-  //           end
-  //         elsif !@matches.blank? && @matches.count > 1
+  //         if !@matches.blank?
   //           @item_a.map! do |a|
   //             if (a["to_href"] == to_href && a["pre_from_href"] == from_href)
-  //               def_from_hrefs = []
-  //               def_from_hrefs = a["def_from_href"] + [from_href]
-  //               a["def_from_href"] = def_from_hrefs || []
-  //               def_orders = []
-  //               def_orders = a["def_order"] + [i["order"]]
-  //               a["def_order"] = def_orders || []
-  //               def_arcroles = []
-  //               def_arcroles = a["def_arcrole"] + [i["arcrole"]]
-  //               a["def_arcrole"] = def_arcroles || []
-  //               def_types = []
-  //               def_types = a["def_type"] + [i["type"]]
-  //               a["def_type"] = def_types || []
-  //               def_closeds = []
-  //               def_closeds = a["def_closed"] + [i["closed"]]
-  //               a["def_closed"] = def_closeds || []
-  //               def_context_elements = []
-  //               def_context_elements = a["def_context_element"] + [i["context_element"]]
-  //               a["def_context_element"] = def_context_elements || []
-  //               def_target_roles = []
-  //               def_target_roles = a["def_target_role"] + [i["target_role"]]
-  //               a["def_target_role"] = def_target_roles || []
-  //               a
   //             elsif (a["to_href"] == to_href)
-  //               def_from_hrefs = []
-  //               def_from_hrefs = a["def_from_href"] + [from_href]
-  //               a["def_from_href"] = def_from_hrefs || []
-  //               def_orders = []
-  //               def_orders = a["def_order"] + [i["order"]]
-  //               a["def_order"] = def_orders || []
-  //               def_arcroles = []
-  //               def_arcroles = a["def_arcrole"] + [i["arcrole"]]
-  //               a["def_arcrole"] = def_arcroles || []
-  //               def_types = []
-  //               def_types = a["def_type"] + [i["type"]]
-  //               a["def_type"] = def_types || []
-  //               def_closeds = []
-  //               def_closeds = a["def_closed"] + [i["closed"]]
-  //               a["def_closed"] = def_closeds || []
-  //               def_context_elements = []
-  //               def_context_elements = a["def_context_element"] + [i["context_element"]]
-  //               a["def_context_element"] = def_context_elements || []
-  //               def_target_roles = []
-  //               def_target_roles = a["def_target_role"] + [i["target_role"]]
-  //               a["def_target_role"] = def_target_roles || []
+  //               a["def_from_href"] += [from_href]
+  //               a["def_order"] += [i["order"]]
+  //               a["def_arcrole"] += [i["arcrole"]]
+  //               a["def_type"] += [i["type"]]
+  //               a["def_closed"] += [i["closed"]]
+  //               a["def_context_element"] += [i["context_element"]]
+  //               a["def_target_role"] += [i["target_role"]]
   //               a
   //             else
   //               a
   //             end
   //           end
-  //         else
-  //           item_clone = {}
-  //           item_clone = @item_template.clone
-  //           @item_a << item_clone.merge(@def_h)
   //         end
   //       end
   //     end
   //   end
-
-  //   # puts DateTime.now.utc.to_s + " - EdgarBuilder::construct_statement finished def construction; starting cal construction."
 
   //   @cal.each do |cal|
   //     unless cal.blank? || cal["calarcs"].blank?
@@ -1119,8 +1072,6 @@ export class XbrlUtility {
   //       end
   //     end
   //   end
-
-  //   # puts DateTime.now.utc.to_s + " - EdgarBuilder::construct_statement finished cal construction; starting dimension collection."
 
   //   used_context_xbrl_ids = []
   //   used_context_xbrl_ids = create_context_pool(@item_a, {contexts_plain: @ins["contexts_plain"], contexts_segments: @ins["contexts_segments"], contexts_scenarios: @ins["contexts_scenarios"]})
