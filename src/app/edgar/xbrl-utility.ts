@@ -114,7 +114,7 @@ export interface XbrlStatementInterface {
   defLinkTypes?: string[];
   calLinkTypes?: string[];
   // items?: XbrlStatementItemInterface[];
-  items?: any[];
+  items?: any;
   contexts?: XbrlContextInterface[];
   units?: XbrlUnitInterface[];
 }
@@ -491,7 +491,7 @@ export class XbrlUtility {
             'lang', // 'xml:lang'
           ],
           textContent: true,
-          transformFn: XbrlUtility.objsArrayToObjObjsByLocalNameContextTransform,
+          transformFn: XbrlUtility.objsArrayToObjObjsByNodeNameContextTransform,
         },
       },
       // @ins_h["footnotes"] = begin EdgarBuilder::construct_footnotes(@ins_h) || [] rescue [] end
@@ -544,7 +544,9 @@ export class XbrlUtility {
 
   public static objsArrayToObjObjsByIdTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, 'id'); }
 
-  public static objsArrayToObjObjsByLocalNameContextTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, (i) => (i.localName || '') + '__' + (i.contextRef || '')); }
+  public static objsArrayToObjObjsByNodeNameContextTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, (i) =>
+    (i.nodeName || '').replace(':', '_') + '__' + (i.contextRef || '')
+  ); }
 
   public static objsArrayToObjObjsByLabelHrefTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsMultipleIndexedTransform(objs, ['label', 'href']); }
 
@@ -801,6 +803,23 @@ export class XbrlUtility {
 
   public static splitXbrlHref(href): string { return (href || '').replace(/(.*?_)/, ''); }
 
+  public static growTree(to: string, arcs: any[] = []): any {
+    let tree: any = {};
+    arcs.forEach((arc) => {
+      if (to === arc.from) {
+        let branch = XbrlUtility.growTree(arc.to, arcs);
+        if (branch) { tree[arc.to] = branch; }
+      }
+    });
+    if (!XbrlUtility.isBlank(tree)) {
+      let returnTree = {};
+      returnTree[to] = tree;
+      return returnTree;
+    } else {
+      return null;
+    }
+  }
+
   public static constructXbrlStatement(role: string, xbrlReport: XbrlReportInterface = {}): XbrlStatementInterface {
     let xbrlStatement: XbrlStatementInterface = {
       role,
@@ -813,44 +832,52 @@ export class XbrlUtility {
     let xsdRole = ((xbrlReport.xsd || {}).roles || []).find((i) => (i || {}).roleURI === role );
     // let xsdElement = ((xbrlReport.xsd || {}).elements || []).find((i) => (i || {}).id === a.toHref.split('#').last );
 
-    let presentationArcs: any[] = (((xbrlReport || {}).pre || {}).presentationLinks || []).filter((i) => (i || {}).role  === role);
-    xbrlStatement.preLinkTypes = presentationArcs.map((i) => i.type);
+    let presentationLinks: any[] = (((xbrlReport || {}).pre || {}).presentationLinks || []).filter((i) => (i || {}).role  === role);
+    xbrlStatement.preLinkTypes = presentationLinks.map((i) => i.type);
+    // xbrlStatement.preLinkTypes = XbrlUtility.uniqueCompact(presentationLinks.map((i) => i.type));
 
-    let definitionArcs: any[] = (((xbrlReport || {}).def || {}).definitionLinks || []).filter((i) => (i || {}).role  === role);
-    xbrlStatement.defLinkTypes = definitionArcs.map((i) => i.type);
+    let definitionLinks: any[] = (((xbrlReport || {}).def || {}).definitionLinks || []).filter((i) => (i || {}).role  === role);
+    xbrlStatement.defLinkTypes = definitionLinks.map((i) => i.type);
+    // xbrlStatement.defLinkTypes = XbrlUtility.uniqueCompact(definitionLinks.map((i) => i.type));
 
-    let calculationArcs: any[] = (((xbrlReport || {}).cal || {}).calculationLinks || []).filter((i) => (i || {}).role  === role);
-    xbrlStatement.calLinkTypes = calculationArcs.map((i) => i.type);
+    let calculationLinks: any[] = (((xbrlReport || {}).cal || {}).calculationLinks || []).filter((i) => (i || {}).role  === role);
+    xbrlStatement.calLinkTypes = calculationLinks.map((i) => i.type);
+    // xbrlStatement.calLinkTypes = XbrlUtility.uniqueCompact(calculationArcs.map((i) => i.type));
 
     xbrlStatement.roleDefinition = (xsdRole || {}).definition; // || presentationArcs.title || definitionArcs.title || calculationArcs.title;
     xbrlStatement.roleUse = (xsdRole || {}).usedOn;
 
-    xbrlStatement.items = definitionArcs;
+    let presentationLinkTrees = [];
+    presentationLinks.forEach((presentationLink) => {
+      let arcs = presentationLink.arcs;
+      (arcs || []).forEach((arc) => {
+        // if (XbrlUtility.isBlank(arc.from)) {
+          let presentationLinkTree = XbrlUtility.growTree(arc.to, arcs);
+          if (presentationLinkTree) {
+            presentationLinkTrees.push(presentationLinkTree);
+          }
+        // }
+      });
+    });
+    xbrlStatement.presentationLinkTrees = presentationLinkTrees;
 
-  //   @pre.each do |pre|
-  //     unless pre.blank? || pre["prearcs"].blank?
-  //       pre["prearcs"].each do |i|
-  //         from_href = begin pre["locs"].select {|l| l["label"] == i["from"] }.first["href"] || "" rescue "" end
-  //         to_href = begin pre["locs"].select {|l| l["label"] == i["to"] }.first["href"] || "" rescue "" end
+    let items = {};
+    ([['presentation', presentationLinks], ['definition', definitionLinks], ['calculation', calculationLinks]]).forEach((pair) => {
+      let str = pair[0];
+      let links = pair[1];
+      links.forEach((link) => {
+        ((link || {}).arcs || []).forEach((arc) => {
+  //           if (a["to_href"] == to_href || EdgarItemSchema.split_href(a["to_href"]) == EdgarItemSchema.split_href(to_href)) && a["cal_from_href"].blank? // cal
+          let item = items[arc.toHref] || {};
+          let existingArcs = item[str + 'Arcs'] || [];
+          existingArcs.push(arc);
+          item[str + 'Arcs'] = existingArcs;
+          items[arc.toHref] = item;
+        });
+      });
+    });
+    xbrlStatement.items = items;
 
-  //         @pre_h = {}
-  //         @pre_h = {
-  //           "to_href" => begin to_href rescue "" end,
-  //           "to_preferred_label" => begin i["preferred_label"] rescue "" end,
-
-  //           "pre_from_href" => begin from_href rescue "" end,
-  //           "pre_order" => begin i["order"] || "" rescue "" end,
-  //           "pre_arcrole" => begin i["arcrole"] || "" rescue "" end,
-  //           "pre_type" => begin i["type"] || "" rescue "" end,
-  //           "pre_priority" => begin i["priority"] || "" rescue "" end,
-  //           "pre_use" => begin i["use"] || "" rescue "" end
-  //         }
-  //         item_clone = @item_template.clone
-  //         @item_a << item_clone.merge(@pre_h)
-
-  //       end
-  //     end
-  //   end
     return xbrlStatement;
   }
 
@@ -972,107 +999,6 @@ export class XbrlUtility {
 
   //   @item_a = []
 
-  //   # puts DateTime.now.utc.to_s + " - EdgarBuilder::construct_statement finished initiating variables for #{@role}; starting pre construction."
-
-  //   @pre.each do |pre|
-  //     unless pre.blank? || pre["prearcs"].blank?
-  //       pre["prearcs"].each do |i|
-  //         from_href = begin pre["locs"].select {|l| l["label"] == i["from"] }.first["href"] || "" rescue "" end
-  //         to_href = begin pre["locs"].select {|l| l["label"] == i["to"] }.first["href"] || "" rescue "" end
-
-  //         @pre_h = {}
-  //         @pre_h = {
-  //           "to_href" => begin to_href rescue "" end,
-  //           "to_preferred_label" => begin i["preferred_label"] rescue "" end,
-
-  //           "pre_from_href" => begin from_href rescue "" end,
-  //           "pre_order" => begin i["order"] || "" rescue "" end,
-  //           "pre_arcrole" => begin i["arcrole"] || "" rescue "" end,
-  //           "pre_type" => begin i["type"] || "" rescue "" end,
-  //           "pre_priority" => begin i["priority"] || "" rescue "" end,
-  //           "pre_use" => begin i["use"] || "" rescue "" end
-  //         }
-  //         item_clone = @item_template.clone
-  //         @item_a << item_clone.merge(@pre_h)
-
-  //       end
-  //     end
-  //   end
-
-  //   @def.each do |def_item|
-  //     unless def_item.blank? || def_item["defarcs"].blank?
-  //       def_item["defarcs"].each do |i|
-  //         from_href = def_item["locs"].select {|l| l["label"] == i["from"] }.first["href"] || ""
-  //         to_href = def_item["locs"].select {|l| l["label"] == i["to"] }.first["href"] || ""
-
-  //         @def_h = {
-  //           "def_from_href" => [from_href] || [],
-  //           "to_href" => to_href,
-  //           "def_order" => [i["order"]] || [],
-  //           "def_arcrole" => [i["arcrole"]] || [],
-  //           "def_type" => [i["type"]] || [],
-  //           "def_closed" => [i["closed"]] || [],
-  //           "def_context_element" => [i["context_element"]] || [],
-  //           "def_target_role" => [i["target_role"]] || []
-  //         }
-  //         @matches = @item_a.select {|a| a["to_href"] == to_href }
-  //         if !@matches.blank?
-  //           @item_a.map! do |a|
-  //             if (a["to_href"] == to_href && a["pre_from_href"] == from_href)
-  //             elsif (a["to_href"] == to_href)
-  //               a["def_from_href"] += [from_href]
-  //               a["def_order"] += [i["order"]]
-  //               a["def_arcrole"] += [i["arcrole"]]
-  //               a["def_type"] += [i["type"]]
-  //               a["def_closed"] += [i["closed"]]
-  //               a["def_context_element"] += [i["context_element"]]
-  //               a["def_target_role"] += [i["target_role"]]
-  //               a
-  //             else
-  //               a
-  //             end
-  //           end
-  //         end
-  //       end
-  //     end
-  //   end
-
-  //   @cal.each do |cal|
-  //     unless cal.blank? || cal["calarcs"].blank?
-  //       cal["calarcs"].each do |i|
-  //         from_href = cal["locs"].detect {|l| l["label"] == i["from"] }["href"] || ""
-  //         to_href = cal["locs"].detect {|l| l["label"] == i["to"] }["href"] || ""
-
-  //         @cal_h = {}
-  //         @cal_h = {
-  //           "cal_from_href" => from_href,
-  //           "to_href" => to_href,
-  //           "cal_order" => i["order"] || "",
-  //           "cal_arcrole" => i["arcrole"] || "",
-  //           "cal_type" => i["type"] || "",
-  //           "cal_priority" => i["priority"] || "",
-  //           "cal_use" => i["use"] || "",
-  //           "cal_weight" => i["weight"] || ""
-  //         }
-
-  //         @found = 0
-  //         @item_a.map! do |a|
-  //           if (a["to_href"] == to_href || EdgarItemSchema.split_href(a["to_href"]) == EdgarItemSchema.split_href(to_href)) && a["cal_from_href"].blank?
-  //             @found = 1
-  //             a.merge!(@cal_h)
-  //           else
-  //             a
-  //           end
-  //         end
-  //         if @found == 0
-  //           item_clone = {}
-  //           item_clone = @item_template.clone
-  //           @item_a << item_clone.merge(@cal_h)
-  //         end
-  //       end
-  //     end
-  //   end
-
   //   used_context_xbrl_ids = []
   //   used_context_xbrl_ids = create_context_pool(@item_a, {contexts_plain: @ins["contexts_plain"], contexts_segments: @ins["contexts_segments"], contexts_scenarios: @ins["contexts_scenarios"]})
 
@@ -1128,10 +1054,6 @@ export class XbrlUtility {
   //   @context_refs = []
   //   @units = []
   //   @labels = []
-  //   # html_reg_ex = </?\w+((\s+\w+(\s*=\s*(?:".*?"|'.*?'|[^'">\s]+))?)+\s*|\s*)/?>
-  //   # html_reg_ex = "/<\/?[^>]*>/"
-
-  //   # puts DateTime.now.utc.to_s + " - EdgarBuilder::construct_statement finished root generation; starting instance and label gathering."
 
   //   @item_a.map! do |a|
   //     #generate a pre_from_href for each that is blank
