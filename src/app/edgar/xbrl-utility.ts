@@ -805,19 +805,35 @@ export class XbrlUtility {
 
   public static growTree(to: string, arcs: any[] = []): any {
     let tree: any = {};
+    let arcsPool = arcs.slice(0);
     arcs.forEach((arc) => {
       if (to === arc.from) {
-        let branch = XbrlUtility.growTree(arc.to, arcs);
+        let index = arcsPool.indexOf(arc);
+        if (index > -1) { arcsPool.splice(index, 1); }
+        let branch = XbrlUtility.growTree(arc.to, arcsPool);
         if (branch) { tree[arc.to] = branch; }
+        // console.log('branch: ', JSON.stringify(branch));
       }
     });
-    if (!XbrlUtility.isBlank(tree)) {
-      let returnTree = {};
-      returnTree[to] = tree;
-      return returnTree;
-    } else {
-      return null;
-    }
+    // console.log('tree: ', JSON.stringify(tree));
+    return tree;
+  }
+
+  public static constructTrees(links: any[] = []): any {
+    let trees = [];
+    links.forEach((link) => {
+      let arcs = link.arcs;
+      let froms = XbrlUtility.uniqueCompact(arcs.map((i) => i.from));
+      let tos = XbrlUtility.uniqueCompact(arcs.map((i) => i.to));
+      let rootFroms = froms.filter((i) => tos.indexOf(i) < 0);
+      (rootFroms || []).forEach((rootFrom) => {
+        let branch = XbrlUtility.growTree(rootFrom, arcs);
+        let tree = {};
+        tree[rootFrom] = branch;
+        trees.push(tree);
+      });
+    });
+    return trees;
   }
 
   public static constructXbrlStatement(role: string, xbrlReport: XbrlReportInterface = {}): XbrlStatementInterface {
@@ -834,6 +850,7 @@ export class XbrlUtility {
 
     let presentationLinks: any[] = (((xbrlReport || {}).pre || {}).presentationLinks || []).filter((i) => (i || {}).role  === role);
     xbrlStatement.preLinkTypes = presentationLinks.map((i) => i.type);
+
     // xbrlStatement.preLinkTypes = XbrlUtility.uniqueCompact(presentationLinks.map((i) => i.type));
 
     let definitionLinks: any[] = (((xbrlReport || {}).def || {}).definitionLinks || []).filter((i) => (i || {}).role  === role);
@@ -847,24 +864,11 @@ export class XbrlUtility {
     xbrlStatement.roleDefinition = (xsdRole || {}).definition; // || presentationArcs.title || definitionArcs.title || calculationArcs.title;
     xbrlStatement.roleUse = (xsdRole || {}).usedOn;
 
-    let presentationLinkTrees = [];
-    presentationLinks.forEach((presentationLink) => {
-      let arcs = presentationLink.arcs;
-      (arcs || []).forEach((arc) => {
-        // if (XbrlUtility.isBlank(arc.from)) {
-          let presentationLinkTree = XbrlUtility.growTree(arc.to, arcs);
-          if (presentationLinkTree) {
-            presentationLinkTrees.push(presentationLinkTree);
-          }
-        // }
-      });
-    });
-    xbrlStatement.presentationLinkTrees = presentationLinkTrees;
-
     let items = {};
     ([['presentation', presentationLinks], ['definition', definitionLinks], ['calculation', calculationLinks]]).forEach((pair) => {
       let str = pair[0];
       let links = pair[1];
+      xbrlStatement[str + 'LinkTrees'] = XbrlUtility.constructTrees(links);
       links.forEach((link) => {
         ((link || {}).arcs || []).forEach((arc) => {
   //           if (a["to_href"] == to_href || EdgarItemSchema.split_href(a["to_href"]) == EdgarItemSchema.split_href(to_href)) && a["cal_from_href"].blank? // cal
