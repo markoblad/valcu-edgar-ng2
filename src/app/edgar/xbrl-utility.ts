@@ -142,7 +142,8 @@ export class XbrlUtility {
         'label', // 'xlink:label'
         'type', // 'xlink:type'
       ],
-      transformFn: XbrlUtility.objsArrayToObjObjsByLabelHrefTransform,
+      // transformFn: XbrlUtility.objsArrayToObjObjsByLabelHrefTransform,
+      transformFn: XbrlUtility.objsArrayToObjObjsByLabelTransform,
     };
   }
 
@@ -491,7 +492,8 @@ export class XbrlUtility {
             'lang', // 'xml:lang'
           ],
           textContent: true,
-          transformFn: XbrlUtility.objsArrayToObjObjsByNodeNameContextTransform,
+          // transformFn: XbrlUtility.objsArrayToObjObjsByNodeNameContextTransform,
+          transformFn: XbrlUtility.objsArrayToObjObjsObjsByNodeNameContextTransform,
         },
       },
       // @ins_h["footnotes"] = begin EdgarBuilder::construct_footnotes(@ins_h) || [] rescue [] end
@@ -538,6 +540,18 @@ export class XbrlUtility {
 
   public static objsArrayToObjObjsTransform(objs: any[], keyOrFn: any) { let obj = {}; (objs || []).map((i) => obj[typeof keyOrFn === 'function' ? keyOrFn(i) : i[keyOrFn]] = i); return obj; }
 
+  public static objsArrayToObjObjsObjsTransform(objs: any[], firstKeyOrFn: any, secondKeyOrFn: any) {
+    let obj = {};
+    (objs || []).map((i) => {
+      let firstKey = typeof firstKeyOrFn === 'function' ? firstKeyOrFn(i) : i[firstKeyOrFn];
+      let secondKey = typeof secondKeyOrFn === 'function' ? secondKeyOrFn(i) : i[secondKeyOrFn];
+      let exitingObj = obj[firstKey] || {};
+      exitingObj[secondKey] = i;
+      obj[firstKey] = exitingObj;
+    });
+    return obj;
+  }
+
   public static objsArrayToObjObjsMultipleIndexedTransform(objs: any[], keys: any[]) { let obj = {}; (objs || []).map((i) => { keys.map((key) => obj[i[key]] = i); }); return obj; }
 
   public static objsArrayToObjObjsByLabelTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, 'label'); }
@@ -547,6 +561,9 @@ export class XbrlUtility {
   public static objsArrayToObjObjsByNodeNameContextTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, (i) =>
     (i.nodeName || '').replace(':', '_') + '__' + (i.contextRef || '')
   ); }
+  // public static objsArrayToObjObjsObjsByNodeNameContextTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsObjsTransform(objs, 'nodeName', 'contextRef'); }
+  public static objsArrayToObjObjsObjsByNodeNameContextTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsObjsTransform(objs, (i) =>
+    (i.nodeName || '').replace(':', '_'), 'contextRef'); }
 
   public static objsArrayToObjObjsByLabelHrefTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsMultipleIndexedTransform(objs, ['label', 'href']); }
 
@@ -803,37 +820,62 @@ export class XbrlUtility {
 
   public static splitXbrlHref(href): string { return (href || '').replace(/(.*?_)/, ''); }
 
-  public static growTree(to: string, arcs: any[] = []): any {
+  public static growTree(from: string, arcs: any[] = [], instances: any): any {
     let tree: any = {};
     let arcsPool = arcs.slice(0);
     arcs.forEach((arc) => {
-      if (to === arc.from) {
+      if (from === arc.from) {
+        let newArc = JSON.parse(JSON.stringify(arc));
         let index = arcsPool.indexOf(arc);
         if (index > -1) { arcsPool.splice(index, 1); }
-        let branch = XbrlUtility.growTree(arc.to, arcsPool);
-        if (branch) { tree[arc.to] = branch; }
+        let to = arc.to;
+        let instanceTo = (arc.toHref || '').split('#')[1];
+        let itemInstances = (instances || {})[instanceTo];
+        if (!XbrlUtility.isBlank(itemInstances)) { newArc.instances = itemInstances; }
+        let branch = XbrlUtility.growTree(to, arcsPool, instances);
+        if (!XbrlUtility.isBlank(branch)) { newArc.branch = branch; }
+        tree[to] = newArc;
         // console.log('branch: ', JSON.stringify(branch));
       }
     });
     // console.log('tree: ', JSON.stringify(tree));
+    // return XbrlUtility.isBlank(tree) ? null : tree;
     return tree;
   }
 
-  public static constructTrees(links: any[] = []): any {
+  public static constructTrees(links: any[] = [], instances: any): any {
     let trees = [];
     links.forEach((link) => {
+      // trees = trees.concat(XbrlUtility.constructTree(link));
       let arcs = link.arcs;
-      let froms = XbrlUtility.uniqueCompact(arcs.map((i) => i.from));
-      let tos = XbrlUtility.uniqueCompact(arcs.map((i) => i.to));
-      let rootFroms = froms.filter((i) => tos.indexOf(i) < 0);
-      (rootFroms || []).forEach((rootFrom) => {
-        let branch = XbrlUtility.growTree(rootFrom, arcs);
-        let tree = {};
-        tree[rootFrom] = branch;
-        trees.push(tree);
-      });
+      trees.push(XbrlUtility.constructTree(arcs, instances));
     });
     return trees;
+  }
+
+  public static constructTree(arcs: any[] = [], instances: any): any {
+    let trees = [];
+    let froms = XbrlUtility.uniqueCompact(arcs.map((i) => i.from));
+    let tos = XbrlUtility.uniqueCompact(arcs.map((i) => i.to));
+    let rootFroms = froms.filter((i) => tos.indexOf(i) < 0);
+    // let rootFrom = rootFroms[0];
+    // if (rootFroms.length > 0) {
+    //   console.log('rootFroms: ', JSON.stringify(rootFroms));
+    // }
+    let tree = {};
+    (rootFroms || []).forEach((rootFrom) => {
+      let arc = arcs.find((i) => (i || {}).from === rootFrom);
+      let newArc = JSON.parse(JSON.stringify(arc));
+      let instanceTo = (arc.fromHref || '').split('#')[1];
+      let itemInstances = (instances || {})[instanceTo];
+      if (!XbrlUtility.isBlank(itemInstances)) { newArc.instances = itemInstances; }
+      let branch = XbrlUtility.growTree(rootFrom, arcs, instances);
+      if (!XbrlUtility.isBlank(branch)) { newArc.branch = branch; }
+      tree[rootFrom] = newArc;
+      // trees.push(tree);
+    });
+    // return trees;
+    return tree;
   }
 
   public static constructXbrlStatement(role: string, xbrlReport: XbrlReportInterface = {}): XbrlStatementInterface {
@@ -868,15 +910,45 @@ export class XbrlUtility {
     ([['presentation', presentationLinks], ['definition', definitionLinks], ['calculation', calculationLinks]]).forEach((pair) => {
       let str = pair[0];
       let links = pair[1];
-      xbrlStatement[str + 'LinkTrees'] = XbrlUtility.constructTrees(links);
+
+      // if (str === 'definition') {
+      //   let updatedLinks = [];
+      //   links.map(
+      //     (link) => {
+      //       let updatedArcs = [];
+      //       link.arcs.map(
+      //         (arc) => {
+      //           if (
+      //             arc.from === 'loc_us-gaap_PropertyPlantAndEquipmentLineItems_0' &&
+      //             arc.to === 'loc_us-gaap_ScheduleOfPropertyPlantAndEquipmentTable_1'
+      //           ) {
+      //             arc.to = 'loc_us-gaap_PropertyPlantAndEquipmentLineItems_0';
+      //             arc.from = 'loc_us-gaap_ScheduleOfPropertyPlantAndEquipmentTable_1';
+      //           }
+      //           updatedArcs.push(arc);
+      //         }
+      //       );
+      //       link.arcs = updatedArcs;
+      //       updatedLinks.push(link);
+      //     }
+      //   );
+      //   links = updatedLinks;
+      // }
+      let trees = XbrlUtility.constructTrees(links, xbrlReport.ins.instances);
+      xbrlStatement[str + 'LinkTrees'] = trees;
+      let arcs = [];
+      links.map((link) => arcs = arcs.concat(link.arcs));
+      if (trees.length > 1) {
+        xbrlStatement[str + 'CompositeLinkTree'] = XbrlUtility.constructTree(arcs, xbrlReport.ins.instances);
+      }
       links.forEach((link) => {
         ((link || {}).arcs || []).forEach((arc) => {
   //           if (a["to_href"] == to_href || EdgarItemSchema.split_href(a["to_href"]) == EdgarItemSchema.split_href(to_href)) && a["cal_from_href"].blank? // cal
-          let item = items[arc.toHref] || {};
+          let item = items[arc.to] || {};
           let existingArcs = item[str + 'Arcs'] || [];
           existingArcs.push(arc);
           item[str + 'Arcs'] = existingArcs;
-          items[arc.toHref] = item;
+          items[arc.to] = item;
         });
       });
     });
@@ -1005,55 +1077,6 @@ export class XbrlUtility {
 
   //   used_context_xbrl_ids = []
   //   used_context_xbrl_ids = create_context_pool(@item_a, {contexts_plain: @ins["contexts_plain"], contexts_segments: @ins["contexts_segments"], contexts_scenarios: @ins["contexts_scenarios"]})
-
-  //   # puts DateTime.now.utc.to_s + " - EdgarBuilder::construct_statement finished dimension collection; starting root generation."
-
-  //   # generate items for future use in building tree
-  //   to_href_item_list = []
-  //   to_href_item_list = @item_a.collect { |item| item["to_href"] }
-  //   @possible_root_pre_from_hrefs = []
-  //   @possible_root_pre_from_hrefs = @item_a.collect {|item| item["pre_from_href"] unless to_href_item_list.include?(item["pre_from_href"]) }
-  //   unless @possible_root_pre_from_hrefs.blank?
-  //     @possible_root_pre_from_hrefs.uniq!
-  //   end
-  //   unless @possible_root_pre_from_hrefs.blank?
-  //     @possible_root_pre_from_hrefs.compact!
-  //   end
-  //   @generated_items = []
-  //   if @possible_root_pre_from_hrefs.blank?
-  //     @full_pre_from_href_list = []
-  //     @full_pre_from_href_list = @item_a.collect {|item| item["pre_from_href"] }
-  //     unless @full_pre_from_href_list.blank?
-  //       @full_pre_from_href_list.uniq!
-  //     end
-  //     unless @full_pre_from_href_list.blank?
-  //       @full_pre_from_href_list.compact!
-  //     end
-  //     unless @full_pre_from_href_list.blank?
-  //       @full_pre_from_href_list.each do |pre_from_href|
-  //         item_clone = {}
-  //         item_clone = @item_template.clone
-  //         @generated_items << item_clone.merge(
-  //         {
-  //           "pre_from_href" => "valcu_generated_pre_from_href",
-  //           "to_href" => pre_from_href
-  //         })
-  //       end
-  //     end
-  //   else
-  //     @possible_root_pre_from_hrefs.each do |possible_root_pre_from_href|
-  //       unless possible_root_pre_from_href.blank?
-  //         item_clone = {}
-  //         item_clone = @item_template.clone
-  //         @generated_items << item_clone.merge(
-  //         {
-  //           "pre_from_href" => "valcu_generated_pre_from_href",
-  //           "to_href" => possible_root_pre_from_href
-  //         })
-  //       end
-  //     end
-  //   end
-  //   @item_a += @generated_items
 
   //   @context_refs = []
   //   @units = []
