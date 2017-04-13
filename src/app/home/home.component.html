@@ -9,6 +9,24 @@
   </div>
 
   <hr>
+  <div>
+    <ngx-charts-bar-horizontal
+      class='chart-container'
+      [view]='view'
+      [scheme]='colorScheme'
+      [results]='single'
+      [gradient]='gradient'
+      [xAxis]='showXAxis'
+      [yAxis]='showYAxis'
+      [legend]='showLegend'
+      [showXAxisLabel]='showXAxisLabel'
+      [showYAxisLabel]='showYAxisLabel'
+      [xAxisLabel]='xAxisLabel'
+      [yAxisLabel]='yAxisLabel'
+      (select)='onSelect($event)'>
+    </ngx-charts-bar-horizontal>
+  </div>
+  <hr>
 
   <div>
     <h4>Local State</h4>

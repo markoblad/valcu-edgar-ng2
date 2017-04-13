@@ -31,6 +31,8 @@ import { XLargeDirective } from './home/x-large';
 import { XbrlUtility } from './edgar';
 import { XbrlService } from './edgar';
 import { EdgarArchiveService } from './edgar';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { NgxChartsModule } from '@swimlane/ngx-charts';
 
 import '../styles/styles.scss';
 import '../styles/headings.css';
@@ -61,6 +63,8 @@ type StoreType = {
   ],
   imports: [ // import Angular's modules
     BrowserModule,
+    BrowserAnimationsModule,
+    NgxChartsModule,
     FormsModule,
     HttpModule,
     RouterModule.forRoot(ROUTES, { useHash: true, preloadingStrategy: PreloadAllModules })
