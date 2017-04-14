@@ -131,6 +131,20 @@ export class HomeComponent implements OnInit {
         let roles = XbrlUtility.getXbrlsRoles(res);
         this.xbrlService.roles = roles;
         this.xbrlService.xbrlStatements = roles.map((role) => XbrlUtility.constructXbrlStatement(role, this.xbrlService.xbrls));
+        let newMulti = []
+        this.xbrlService.xbrlStatements.find((i) => !XbrlUtility.isBlank(i.calculationLinkTrees))
+        .calculationLinkTrees.map((calculationLinkTree) => {
+          let rootKey = Object.keys(calculationLinkTree)[0] || {};
+          let branch = calculationLinkTree[rootKey].branch || {};
+          let branchesKeys = Object.keys(branch);
+          let series = branchesKeys.map((branchesKey) => { return {name: (((branch[branchesKey] || {}).instances || {}).Context_As_Of_31_Dec_2015T00_00_00_TO_31_Dec_2015T00_00_00 || {}).localName, value: parseInt((((branch[branchesKey] || {}).instances || {}).Context_As_Of_31_Dec_2015T00_00_00_TO_31_Dec_2015T00_00_00 || {}).textContent || 0)}});
+          newMulti.push({
+            name: rootKey,
+            series: series
+          }); 
+        });
+console.log('newMulti: ', JSON.stringify(newMulti));
+        this.multi = newMulti;
       },
       (error) => console.log(error)
     );
