@@ -26,6 +26,7 @@ import { APP_RESOLVER_PROVIDERS } from './app.resolver';
 import { AppState, InternalStateType } from './app.service';
 import { HomeComponent } from './home';
 import { AboutComponent } from './about';
+import { VChartComponent } from './v-chart';
 import { NoContentComponent } from './no-content';
 import { XLargeDirective } from './home/x-large';
 import { XbrlUtility } from './edgar';
@@ -58,6 +59,7 @@ type StoreType = {
     AppComponent,
     AboutComponent,
     HomeComponent,
+    VChartComponent,
     NoContentComponent,
     XLargeDirective
   ],

@@ -10,21 +10,11 @@
 
   <hr>
   <div>
-    <ngx-charts-bar-horizontal-stacked
-      class='chart-container'
-      [view]="view"
-      [scheme]="colorScheme"
-      [results]="multi"
-      [gradient]="gradient"
-      [xAxis]="showXAxis"
-      [yAxis]="showYAxis"
-      [legend]="showLegend"
-      [showXAxisLabel]="showXAxisLabel"
-      [showYAxisLabel]="showYAxisLabel"
-      [xAxisLabel]="xAxisLabel"
-      [yAxisLabel]="yAxisLabel"
-      (select)="onSelect($event)">
-    </ngx-charts-bar-horizontal-stacked>
+    <v-chart
+      [vChartType]="'barHorizontalStacked'"
+      [multi]="multi"
+    >
+    </v-chart>
   </div>
   <hr>
 
@@ -53,15 +43,16 @@
         we can use Angular's [(ngModel)] syntax
         <input type="text" name="textInput" [(ngModel)]="localState.value" autofocus>
       -->
+    <div *ngIf="false">
+      <pre>this.localState = {{ localState | json }}</pre>
+      <hr>
+      <pre *ngFor="let role of this.xbrlService.roles">this.xbrlService.roles = {{ role | json }}</pre>
+      <hr>
 
-    <pre>this.localState = {{ localState | json }}</pre>
-    <hr>
-    <pre *ngFor="let role of this.xbrlService.roles">this.xbrlService.roles = {{ role | json }}</pre>
-    <hr>
-
-    <pre>xbrlService.xbrlStatements = {{ xbrlService.xbrlStatements | json }}</pre>
-    <hr>
-    <pre>xbrlService.xbrls = {{ xbrlService.xbrls | json }}</pre>
+      <pre>xbrlService.xbrlStatements = {{ xbrlService.xbrlStatements | json }}</pre>
+      <hr>
+      <pre>xbrlService.xbrls = {{ xbrlService.xbrls | json }}</pre>
+    </div>
 
   </div>
 
