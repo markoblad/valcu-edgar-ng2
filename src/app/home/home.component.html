@@ -9,9 +9,18 @@
   </div>
 
   <hr>
+  <div *ngFor="let singleData of singleDatas">
+    <v-chart
+      [vChartType]="'barHorizontal'"
+      [single]="singleData"
+    >
+    </v-chart>
+    <hr>
+  </div>
+
   <div *ngFor="let multiData of multiDatas">
     <v-chart
-      [vChartType]="'barHorizontalStacked'"
+      [vChartType]="'barHorizontalGrouped'"
       [multi]="multiData"
     >
     </v-chart>

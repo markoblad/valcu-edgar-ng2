@@ -1,4 +1,20 @@
 <div [ngSwitch]="vChartType">
+  <ngx-charts-bar-horizontal
+    *ngSwitchCase="'barHorizontal'"
+    class='chart-container'
+    [view]="view"
+    [scheme]="colorScheme"
+    [results]="single"
+    [gradient]="gradient"
+    [xAxis]="showXAxis"
+    [yAxis]="showYAxis"
+    [legend]="showLegend"
+    [showXAxisLabel]="showXAxisLabel"
+    [showYAxisLabel]="showYAxisLabel"
+    [xAxisLabel]="xAxisLabel"
+    [yAxisLabel]="yAxisLabel"
+    (select)="onSelect($event)">
+  </ngx-charts-bar-horizontal>
   <ngx-charts-bar-horizontal-stacked
     *ngSwitchCase="'barHorizontalStacked'"
     class='chart-container'
@@ -15,5 +31,21 @@
     [yAxisLabel]="yAxisLabel"
     (select)="onSelect($event)">
   </ngx-charts-bar-horizontal-stacked>
+  <ngx-charts-bar-horizontal-2d
+    *ngSwitchCase="'barHorizontalGrouped'"
+    class='chart-container'
+    [view]="view"
+    [scheme]="colorScheme"
+    [results]="multi"
+    [gradient]="gradient"
+    [xAxis]="showXAxis"
+    [yAxis]="showYAxis"
+    [legend]="showLegend"
+    [showXAxisLabel]="showXAxisLabel"
+    [showYAxisLabel]="showYAxisLabel"
+    [xAxisLabel]="xAxisLabel"
+    [yAxisLabel]="yAxisLabel"
+    (select)="onSelect($event)">
+  </ngx-charts-bar-horizontal-2d>
 </div>
 

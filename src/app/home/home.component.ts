@@ -32,7 +32,8 @@ export class HomeComponent implements OnInit {
   public edgarContents: any = [];
   // TypeScript public modifiers
 
-  multiDatas: any[] = [];
+  public singleDatas: any[] = [];
+  public multiDatas: any[] = [];
 
   constructor(
     public appState: AppState,
@@ -59,20 +60,30 @@ export class HomeComponent implements OnInit {
         let roles = XbrlUtility.getXbrlsRoles(res);
         this.xbrlService.roles = roles;
         this.xbrlService.xbrlStatements = roles.map((role) => XbrlUtility.constructXbrlStatement(role, this.xbrlService.xbrls));
+
         this.xbrlService.xbrlStatements.filter((xbrlStatement) => !XbrlUtility.isBlank(xbrlStatement.calculationLinkTrees)).map((xbrlStatement) => {
           let newMultiData = [];
+          let newSingleData = [];
           xbrlStatement.calculationLinkTrees.map((calculationLinkTree) => {
+            console.log('Object.keys(calculationLinkTree): ', JSON.stringify(Object.keys(calculationLinkTree)));
             let rootKey = Object.keys(calculationLinkTree)[0];
-            let branch = calculationLinkTree[rootKey].branch || {};
+            let root = calculationLinkTree[rootKey] || {};
+            let branch = root.branch || {};
             let branchesKeys = Object.keys(branch) || [];
-            let series = branchesKeys.map((branchesKey) => { return {name: (((branch[branchesKey] || {}).instances || {}).Context_As_Of_31_Dec_2015T00_00_00_TO_31_Dec_2015T00_00_00 || {}).localName || "", value: parseInt((((branch[branchesKey] || {}).instances || {}).Context_As_Of_31_Dec_2015T00_00_00_TO_31_Dec_2015T00_00_00 || {}).textContent || 0)}});
-            newMultiData.push({
-              name: rootKey,
-              series: series
-            }); 
+            let series = branchesKeys.map((branchesKey) => { return {
+              name: (((branch[branchesKey] || {}).instances || {}).Context_As_Of_31_Dec_2015T00_00_00_TO_31_Dec_2015T00_00_00 || {}).localName || '',
+              value: parseInt((((branch[branchesKey] || {}).instances || {}).Context_As_Of_31_Dec_2015T00_00_00_TO_31_Dec_2015T00_00_00 || {}).textContent || 0, 10)
+            }; });
+            newSingleData = newSingleData.concat(series);
+            newMultiData.push({name: rootKey, series});
           });
-  console.log('newMulti: ', JSON.stringify(newMultiData));
-          this.multiDatas.push(newMultiData);
+          console.log('newMulti: ', JSON.stringify(newMultiData));
+          if (!XbrlUtility.isBlank(newSingleData)) {
+            this.singleDatas.push(newSingleData);
+          }
+          if (!XbrlUtility.isBlank(newMultiData)) {
+            this.multiDatas.push(newMultiData);
+          }
         });
       },
       (error) => console.log(error)

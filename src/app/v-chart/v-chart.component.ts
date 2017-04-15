@@ -12,8 +12,8 @@ import { NgxChartsModule } from '@swimlane/ngx-charts';
   // where, in this case, selector is the string 'v-chart'
   selector: 'v-chart',  // <v-chart></v-chart>
   // We need to tell Angular's Dependency Injection which providers are in our app.
-  providers: [
-  ],
+  // providers: [
+  // ],
   // Our list of styles in our component. We may add more to compose many styles together
   styleUrls: [ './v-chart.component.css' ],
   // Every Angular template is first compiled by the browser before Angular runs it's compiler
@@ -22,10 +22,10 @@ import { NgxChartsModule } from '@swimlane/ngx-charts';
 export class VChartComponent implements OnInit {
 
   @Input()
-  vChartType: string = "barHorizontalStacked";
+  public vChartType: string = 'barHorizontalStacked';
 
   @Input()
-  single: any[] = [
+  public single: any[] = [
     // {
     //   'name': 'Germany',
     //   'value': 8940000
@@ -41,7 +41,7 @@ export class VChartComponent implements OnInit {
   ];
 
   @Input()
-  multi: any[] = [
+  public multi: any[] = [
     // {
     //   'name': 'Germany',
     //   'series': [
@@ -87,43 +87,47 @@ export class VChartComponent implements OnInit {
 
   @Input()
   // view: any[] = [700, 400];
-  view: any[] = [1200, 800];
+  public view: any[] = [1200, 800];
 
   // options
   @Input()
-  showXAxis = true;
+  public showXAxis = true;
 
   @Input()
-  showYAxis = true;
+  public showYAxis = true;
 
   @Input()
-  gradient = false;
+  public gradient = false;
 
   @Input()
-  showLegend = true;
+  public showLegend = true;
 
   @Input()
-  showXAxisLabel = true;
+  public showXAxisLabel = true;
 
   @Input()
-  xAxisLabel = 'Country';
+  public xAxisLabel = 'Country';
 
   @Input()
-  showYAxisLabel = true;
+  public showYAxisLabel = true;
 
   @Input()
-  yAxisLabel = 'Population';
+  public yAxisLabel = 'Population';
 
   @Input()
-  colorScheme = {
+  public colorScheme = {
     domain: ['#5AA454', '#A10A28', '#C7B42C', '#AAAAAA']
   };
 
-  constructor(
-  ) {}
+  // constructor(
+  // ) {}
 
   public ngOnInit() {
     console.log('hello `VChart` component');
     // this.title.getData().subscribe(data => this.data = data);
+  }
+
+  public onSelect(event) {
+    console.log(event);
   }
 }
