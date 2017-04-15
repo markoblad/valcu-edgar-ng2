@@ -9,14 +9,14 @@
   </div>
 
   <hr>
-  <div>
+  <div *ngFor="let multiData of multiDatas">
     <v-chart
       [vChartType]="'barHorizontalStacked'"
-      [multi]="multi"
+      [multi]="multiData"
     >
     </v-chart>
+    <hr>
   </div>
-  <hr>
 
   <div>
     <h4>Local State</h4>

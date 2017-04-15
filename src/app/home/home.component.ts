@@ -32,49 +32,7 @@ export class HomeComponent implements OnInit {
   public edgarContents: any = [];
   // TypeScript public modifiers
 
-  multi: any[] = [
-    {
-      'name': 'Germany',
-      'series': [
-        {
-          'name': '2010',
-          'value': 7300000
-        },
-        {
-          'name': '2011',
-          'value': 8940000
-        }
-      ]
-    },
-
-    {
-      'name': 'USA',
-      'series': [
-        {
-          'name': '2010',
-          'value': 7870000
-        },
-        {
-          'name': '2011',
-          'value': 8270000
-        }
-      ]
-    },
-
-    {
-      'name': 'France',
-      'series': [
-        {
-          'name': '2010',
-          'value': 5000002
-        },
-        {
-          'name': '2011',
-          'value': 5800000
-        }
-      ]
-    }
-  ];
+  multiDatas: any[] = [];
 
   constructor(
     public appState: AppState,
@@ -101,20 +59,21 @@ export class HomeComponent implements OnInit {
         let roles = XbrlUtility.getXbrlsRoles(res);
         this.xbrlService.roles = roles;
         this.xbrlService.xbrlStatements = roles.map((role) => XbrlUtility.constructXbrlStatement(role, this.xbrlService.xbrls));
-        let newMulti = []
-        this.xbrlService.xbrlStatements.find((i) => !XbrlUtility.isBlank(i.calculationLinkTrees))
-        .calculationLinkTrees.map((calculationLinkTree) => {
-          let rootKey = Object.keys(calculationLinkTree)[0] || {};
-          let branch = calculationLinkTree[rootKey].branch || {};
-          let branchesKeys = Object.keys(branch);
-          let series = branchesKeys.map((branchesKey) => { return {name: (((branch[branchesKey] || {}).instances || {}).Context_As_Of_31_Dec_2015T00_00_00_TO_31_Dec_2015T00_00_00 || {}).localName, value: parseInt((((branch[branchesKey] || {}).instances || {}).Context_As_Of_31_Dec_2015T00_00_00_TO_31_Dec_2015T00_00_00 || {}).textContent || 0)}});
-          newMulti.push({
-            name: rootKey,
-            series: series
-          }); 
+        this.xbrlService.xbrlStatements.filter((xbrlStatement) => !XbrlUtility.isBlank(xbrlStatement.calculationLinkTrees)).map((xbrlStatement) => {
+          let newMultiData = [];
+          xbrlStatement.calculationLinkTrees.map((calculationLinkTree) => {
+            let rootKey = Object.keys(calculationLinkTree)[0];
+            let branch = calculationLinkTree[rootKey].branch || {};
+            let branchesKeys = Object.keys(branch) || [];
+            let series = branchesKeys.map((branchesKey) => { return {name: (((branch[branchesKey] || {}).instances || {}).Context_As_Of_31_Dec_2015T00_00_00_TO_31_Dec_2015T00_00_00 || {}).localName || "", value: parseInt((((branch[branchesKey] || {}).instances || {}).Context_As_Of_31_Dec_2015T00_00_00_TO_31_Dec_2015T00_00_00 || {}).textContent || 0)}});
+            newMultiData.push({
+              name: rootKey,
+              series: series
+            }); 
+          });
+  console.log('newMulti: ', JSON.stringify(newMultiData));
+          this.multiDatas.push(newMultiData);
         });
-console.log('newMulti: ', JSON.stringify(newMulti));
-        this.multi = newMulti;
       },
       (error) => console.log(error)
     );
