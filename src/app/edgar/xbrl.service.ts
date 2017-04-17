@@ -9,7 +9,7 @@ export class XbrlService {
   public xbrls: XbrlReportInterface = {};
   public selectedXbrl: any;
   public roles: any = [];
-  public xbrlStatements: any = [];
+  public xbrlStatements: any = {};
 
   // constructor() {}
 
@@ -17,7 +17,7 @@ export class XbrlService {
     this.xbrls = {};
     this.selectedXbrl = null;
     this.roles = [];
-    this.xbrlStatements = [];
+    this.xbrlStatements = {};
   }
 
 }

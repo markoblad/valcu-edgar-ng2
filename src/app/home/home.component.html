@@ -52,15 +52,27 @@
         we can use Angular's [(ngModel)] syntax
         <input type="text" name="textInput" [(ngModel)]="localState.value" autofocus>
       -->
-    <div *ngIf="false">
+    <div *ngIf="true">
       <pre>this.localState = {{ localState | json }}</pre>
       <hr>
-      <pre *ngFor="let role of this.xbrlService.roles">this.xbrlService.roles = {{ role | json }}</pre>
-      <hr>
+      <button *ngFor="let role of this.xbrlService.roles" (click)="selectXbrlStatement(role)">{{role}}</button>
 
-      <pre>xbrlService.xbrlStatements = {{ xbrlService.xbrlStatements | json }}</pre>
+      <table *ngIf="selectedXbrlStatement">
+        <tr>
+          <td>Line</td>
+          <td *ngFor="let contextRef of xbrlStatement.contextRefs">{{contextRefToHeader(contextRef) | json}}</td>
+        </tr>
+        <tr *ngFor="let rectangleKey of rectangleKeys">
+    
+          
+          <td>{{repeat('│   ', rectangle[rectangleKey].level - 1)}}<span *ngIf="rectangle[rectangleKey].level !== 0">{{rectangle[rectangleKey].lastChild ? '└──' : '├──'}}&nbsp;</span>{{rectangleKey}}</td>
+          <td *ngFor="let contextRef of xbrlStatement.contextRefs" [innerHTML]="(((rectangle[rectangleKey] || {}).instances || {})[contextRef] || {}).textContent"></td>
+        </tr>
+      </table>
+      <pre *ngIf="true">xbrlStatement = {{ xbrlStatement | json }}</pre>
+      <pre *ngIf="false">xbrlService.xbrlStatements = {{ xbrlService.xbrlStatements | json }}</pre>
       <hr>
-      <pre>xbrlService.xbrls = {{ xbrlService.xbrls | json }}</pre>
+      <pre *ngIf="false">xbrlService.xbrls = {{ xbrlService.xbrls | json }}</pre>
     </div>
 
   </div>

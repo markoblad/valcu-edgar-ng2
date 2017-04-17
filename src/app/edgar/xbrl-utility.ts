@@ -115,8 +115,9 @@ export interface XbrlStatementInterface {
   calLinkTypes?: string[];
   // items?: XbrlStatementItemInterface[];
   items?: any;
-  contexts?: XbrlContextInterface[];
-  units?: XbrlUnitInterface[];
+  contexts?: [XbrlContextInterface];
+  contextRefs?: [string];
+  units?: [XbrlUnitInterface];
 }
 
 @Injectable()
@@ -878,6 +879,47 @@ export class XbrlUtility {
     return tree;
   }
 
+  public static getContextRefs(tree: any): [string] {
+    let contextRefs = [];
+    Object.keys(tree).forEach((rootKey) => {
+      let root = tree[rootKey];
+      contextRefs = contextRefs.concat(Object.keys(root.instances || {}));
+      let branch = root.branch;
+      if (branch) {
+        contextRefs = contextRefs.concat(XbrlUtility.getContextRefs(branch));
+      }
+    });
+    return XbrlUtility.uniqueCompact(contextRefs);
+  }
+
+  public static getContextRefHeading(contextRef: string, contexts: any): string {
+    let context = ((contexts || {})[contextRef] || {});
+    let period = context.period || {};
+    let date = period.instant ? period.instant : ((period.startDate || 'NA') + ' to ' + (period.endDate || 'NA'));
+    let entity = (context.entity || [])[0] || {};
+    let identifierTextContent = ((entity.identifier || [])[0] || {}).textContent;
+    let segmentTextContent = ((entity.segments || [])[0] || {}).textContent;
+    let segmentExplicitMemberTextContent = (((((entity.segments || [])[0] || {}).explicitMember || [])[0]) || {}).textContent;
+    let heading = XbrlUtility.uniqueCompact([date, identifierTextContent, segmentTextContent, segmentExplicitMemberTextContent]).join(', ');
+    // return heading
+    return context
+  }
+
+  public static rectangularizeTree(tree: any, rectangle: any = {}, level: number = 0): any {
+    let keys = Object.keys(tree || {});
+    let lastIndex = keys.length - 1;
+    keys.forEach((key, index) => {
+      let treeItem = tree[key] || {};
+      let instances = treeItem.instances;
+      let lastChild = index === lastIndex;
+      rectangle[key] = {instances, level, lastChild};
+      let branch = (treeItem || {}).branch;
+      if (!XbrlUtility.isBlank(branch)) {
+        rectangle = XbrlUtility.rectangularizeTree(branch, rectangle, level + 1);
+      }
+    });
+    return rectangle;
+  }
   public static constructXbrlStatement(role: string, xbrlReport: XbrlReportInterface = {}): XbrlStatementInterface {
     let xbrlStatement: XbrlStatementInterface = {
       role,
@@ -907,6 +949,7 @@ export class XbrlUtility {
     xbrlStatement.roleUse = (xsdRole || {}).usedOn;
 
     let items = {};
+    let contextRefs = [];
     ([['presentation', presentationLinks], ['definition', definitionLinks], ['calculation', calculationLinks]]).forEach((pair) => {
       let str = pair[0];
       let links = pair[1];
@@ -936,10 +979,14 @@ export class XbrlUtility {
       // }
       let trees = XbrlUtility.constructTrees(links, xbrlReport.ins.instances);
       xbrlStatement[str + 'LinkTrees'] = trees;
+      trees.forEach((tree) => contextRefs = contextRefs.concat(XbrlUtility.getContextRefs(tree)));
+      contextRefs.push();
       let arcs = [];
       links.map((link) => arcs = arcs.concat(link.arcs));
-      if (trees.length > 1) {
-        xbrlStatement[str + 'CompositeLinkTree'] = XbrlUtility.constructTree(arcs, xbrlReport.ins.instances);
+      // if (trees.length > 1) {
+      if (trees.length > 0) {
+        let tree = XbrlUtility.constructTree(arcs, xbrlReport.ins.instances);
+        xbrlStatement[str + 'CompositeLinkTree'] = tree;
       }
       links.forEach((link) => {
         ((link || {}).arcs || []).forEach((arc) => {
@@ -953,6 +1000,7 @@ export class XbrlUtility {
       });
     });
     xbrlStatement.items = items;
+    xbrlStatement.contextRefs = XbrlUtility.uniqueCompact(contextRefs);
 
     return xbrlStatement;
   }
