@@ -113,7 +113,7 @@ export class HomeComponent implements OnInit {
   }
 
   public contextRefToHeader(contextRef) {
-    return XbrlUtility.getContextRefHeading(contextRef, ((this.xbrlService.xbrls || {}).ins || {}).contexts)
+    return XbrlUtility.getContextRefHeading(contextRef, ((this.xbrlService.xbrls || {}).ins || {}).contexts);
   }
 
   public repeat(str: string, times: number = 1): string {

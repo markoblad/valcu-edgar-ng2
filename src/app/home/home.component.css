@@ -1,1 +1,3 @@
-/*styles for home content only*/
+button.active {
+  background-color: gray;
+}

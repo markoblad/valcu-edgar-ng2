@@ -901,8 +901,8 @@ export class XbrlUtility {
     let segmentTextContent = ((entity.segments || [])[0] || {}).textContent;
     let segmentExplicitMemberTextContent = (((((entity.segments || [])[0] || {}).explicitMember || [])[0]) || {}).textContent;
     let heading = XbrlUtility.uniqueCompact([date, identifierTextContent, segmentTextContent, segmentExplicitMemberTextContent]).join(', ');
-    // return heading
-    return context
+    // return heading;
+    return context;
   }
 
   public static rectangularizeTree(tree: any, rectangle: any = {}, level: number = 0): any {
@@ -1004,6 +1004,12 @@ export class XbrlUtility {
 
     return xbrlStatement;
   }
+
+  // http://xbrl.org/int/dim/arcrole/all - table
+  // http://xbrl.org/int/dim/arcrole/hypercube-dimension - axis
+  // http://xbrl.org/int/dim/arcrole/dimension-domain - heirarchy domain
+  // http://xbrl.org/int/dim/arcrole/domain-member - member
+  // http://xbrl.org/int/dim/arcrole/dimension-default - hierarchy domain - default
 
   // def self.construct_statement(role, data)
 

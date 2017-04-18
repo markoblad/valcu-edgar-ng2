@@ -55,7 +55,7 @@
     <div *ngIf="true">
       <pre>this.localState = {{ localState | json }}</pre>
       <hr>
-      <button *ngFor="let role of this.xbrlService.roles" (click)="selectXbrlStatement(role)">{{role}}</button>
+      <button *ngFor="let role of this.xbrlService.roles" [ngClass]="{'active': selectedXbrlStatement === role}" (click)="selectXbrlStatement(role)">{{role}}</button>
 
       <table *ngIf="selectedXbrlStatement">
         <tr>
