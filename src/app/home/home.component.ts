@@ -109,6 +109,7 @@ export class HomeComponent implements OnInit {
     this.rectangle = XbrlUtility.rectangularizeTree(tree) || {};
     // console.log('this.rectangle: ', JSON.stringify(this.rectangle));
     this.rectangleKeys = Object.keys(this.rectangle);
+    XbrlUtility.getXbrlStatementDimensions(this.xbrlStatement);
     console.log('rectangleKeys: ', JSON.stringify(this.rectangleKeys));
   }
 

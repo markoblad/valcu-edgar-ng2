@@ -1005,11 +1005,42 @@ export class XbrlUtility {
     return xbrlStatement;
   }
 
+  public static getXbrlStatementDimensions(xbrlStatement: XbrlStatementInterface): any {
+    let xbrlStatementDimensions = [];
+    let xbrlStatementLines = [];
+    let definitionCompositeLinkTree = xbrlStatement.definitionCompositeLinkTree;
+    if (!XbrlUtility.isBlank(definitionCompositeLinkTree)) {
+      let lines = [];
+      let line = [];
+      ({lines, line} = XbrlUtility.traverseDefinitionCompositeLinkTree(definitionCompositeLinkTree, lines, line));
+      console.log('lines: ', JSON.stringify(lines));
+      console.log('line: ', JSON.stringify(line));
+    }
+
+  }
+
+  public static traverseDefinitionCompositeLinkTree(definitionCompositeLinkTree: any, lines: any = [], line: any = []): any {
+    if (!XbrlUtility.isBlank(definitionCompositeLinkTree)) {
+      Object.keys(definitionCompositeLinkTree).forEach((key) => {
+        let branch = definitionCompositeLinkTree[key];
+        line.push(branch.toHref);
+        lines.push(line.slice());
+        let arcroleStub = branch.arcrole.split('/').last;
+        if (arcroleStub === 'domain-member' || arcroleStub === 'dimension-default' || XbrlUtility.isBlank(branch.branch)) {
+          line = [];
+        } else if (!XbrlUtility.isBlank(branch.branch)) {
+          ({lines, line} = XbrlUtility.traverseDefinitionCompositeLinkTree(branch.branch, lines, line));
+        }
+      });
+    }
+    return {lines, line};
+  }
+
   // http://xbrl.org/int/dim/arcrole/all - table
-  // http://xbrl.org/int/dim/arcrole/hypercube-dimension - axis
-  // http://xbrl.org/int/dim/arcrole/dimension-domain - heirarchy domain
-  // http://xbrl.org/int/dim/arcrole/domain-member - member
-  // http://xbrl.org/int/dim/arcrole/dimension-default - hierarchy domain - default
+  // http://xbrl.org/int/dim/arcrole/hypercube-dimension - axis RangeAxis
+  // http://xbrl.org/int/dim/arcrole/dimension-domain - heirarchy domain RangeMember
+  // http://xbrl.org/int/dim/arcrole/domain-member - member MinimumMember MaximumMember
+  // http://xbrl.org/int/dim/arcrole/dimension-default - hierarchy domain - default RangeMember
 
   // def self.construct_statement(role, data)
 
