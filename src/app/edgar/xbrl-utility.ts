@@ -1010,11 +1010,8 @@ export class XbrlUtility {
     let xbrlStatementLines = [];
     let definitionCompositeLinkTree = xbrlStatement.definitionCompositeLinkTree;
     if (!XbrlUtility.isBlank(definitionCompositeLinkTree)) {
-      let lines = [];
-      let line = [];
-      ({lines, line} = XbrlUtility.traverseDefinitionCompositeLinkTree(definitionCompositeLinkTree, lines, line));
+      let lines = XbrlUtility.traverseDefinitionCompositeLinkTree(definitionCompositeLinkTree);
       console.log('lines: ', JSON.stringify(lines));
-      console.log('line: ', JSON.stringify(line));
     }
 
   }
@@ -1023,17 +1020,16 @@ export class XbrlUtility {
     if (!XbrlUtility.isBlank(definitionCompositeLinkTree)) {
       Object.keys(definitionCompositeLinkTree).forEach((key) => {
         let branch = definitionCompositeLinkTree[key];
-        line.push(branch.toHref);
-        lines.push(line.slice());
         let arcroleStub = branch.arcrole.split('/').last;
+        let scopedLine = (line.concat([branch.toHref])).slice();
         if (arcroleStub === 'domain-member' || arcroleStub === 'dimension-default' || XbrlUtility.isBlank(branch.branch)) {
-          line = [];
+          lines.push(scopedLine);
         } else if (!XbrlUtility.isBlank(branch.branch)) {
-          ({lines, line} = XbrlUtility.traverseDefinitionCompositeLinkTree(branch.branch, lines, line));
+          lines = XbrlUtility.traverseDefinitionCompositeLinkTree(branch.branch, lines, scopedLine);
         }
       });
     }
-    return {lines, line};
+    return lines;
   }
 
   // http://xbrl.org/int/dim/arcrole/all - table
