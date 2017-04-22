@@ -396,7 +396,7 @@ export class XbrlUtility {
                         'dimension'
                       ],
                       textContent: true,
-
+                      transformFn: XbrlUtility.replaceDimensionTextContentColonTransform,
                     }
                   },
                 }
@@ -534,6 +534,18 @@ export class XbrlUtility {
   }
 
   public static justTextTransform(objs: any []) { return ((objs || [])[0] || {}).textContent; }
+
+  public static replaceDimensionTextContentColonTransform(objs: any []) {
+    return (objs || []).map((obj) => {
+      if (obj.dimension) {
+        obj.dimension = (obj.dimension || '').replace(':', '_');
+      }
+      if (obj.textContent) {
+        obj.textContent = (obj.textContent || '').replace(':', '_');
+      }
+      return obj;
+    });
+  }
 
   public static arrayedTextTransform(objs: any []) { return (objs || []).map((i) => (i || {}).textContent ); }
 
@@ -821,6 +833,8 @@ export class XbrlUtility {
 
   public static splitXbrlHref(href): string { return (href || '').replace(/(.*?_)/, ''); }
 
+  public static getHrefAnchor(href): string { let pieces = (href || '').split('#'); return pieces[pieces.length - 1] || ''; }
+
   public static growTree(from: string, arcs: any[] = [], instances: any): any {
     let tree: any = {};
     let arcsPool = arcs.slice(0);
@@ -879,17 +893,52 @@ export class XbrlUtility {
     return tree;
   }
 
-  public static getContextRefs(tree: any): [string] {
+  public static getContextRefs(tree: any, definitionTree?: any): [string] {
     let contextRefs = [];
     Object.keys(tree).forEach((rootKey) => {
       let root = tree[rootKey];
       contextRefs = contextRefs.concat(Object.keys(root.instances || {}));
       let branch = root.branch;
       if (branch) {
-        contextRefs = contextRefs.concat(XbrlUtility.getContextRefs(branch));
+        contextRefs = contextRefs.concat(XbrlUtility.getContextRefs(branch, definitionTree));
       }
     });
     return XbrlUtility.uniqueCompact(contextRefs);
+  }
+
+  public static pareContextRefs(contextRefs: any = [], contexts: any = [], dimensions?: [any]): [string] {
+    console.log('dimensions: ', JSON.stringify(dimensions));
+    let paredContextRefs: [string] = [];
+    let anyDimensions = !XbrlUtility.isBlank(dimensions);
+    contextRefs.forEach((contextRef) => {
+      let context = contexts[contextRef] || {};
+      let entities = (context.entity || []);
+      let segments = [];
+      entities.forEach((entity) => segments = segments.concat((entity || {}).segments || []));
+      console.log('segments: ', JSON.stringify(segments));
+      if (anyDimensions) {
+        let explicitMembers = [];
+        segments.forEach((segment) => explicitMembers = explicitMembers.concat((segment || {}).explicitMember || []));
+        console.log('explicitMembers: ', JSON.stringify(explicitMembers));
+        let foundDimension = explicitMembers.find((explicitMember: any = {}) => {
+          return dimensions.find((dimension: any = {}) => explicitMember.dimension === dimension.dimension && explicitMember.textContent === dimension.member );
+        });
+        if (!XbrlUtility.isBlank(foundDimension)) {
+          paredContextRefs.push(contextRef);
+        }
+      } else if (XbrlUtility.isBlank(segments)) {
+        paredContextRefs.push(contextRef);
+      }
+// Line  { "nodeName": "xbrli:context", "localName": "context", "id": "Context_FYE_01_Jan_2014T00_00_00_TO_31_Dec_2014T00_00_00_RangeAxis_MinimumMember",
+  // "entity": [ { "nodeName": "xbrli:entity", "localName": "entity",
+    // "identifier": [ { "nodeName": "xbrli:identifier", "localName": "identifier", "textContent": "0001371128", "scheme": "http://www.sec.gov/CIK" } ],
+    // "segments": [ { "nodeName": "xbrli:segment", "localName": "segment", "textContent": "us-gaap:MinimumMember",
+      // "explicitMember": [ { "nodeName": "xbrldi:explicitMember", "localName": "explicitMember", "textContent": "us-gaap:MinimumMember", "dimension": "us-gaap:RangeAxis" } ] } ] } ],
+  // "period": { "nodeName": "xbrli:period", "localName": "period", "startDate": "2014-01-01", "endDate": "2014-12-31" } }
+    });
+    // return XbrlUtility.uniqueCompact(paredContextRefs);
+    console.log('paredContextRefs: ', JSON.stringify(paredContextRefs));
+    return paredContextRefs;
   }
 
   public static getContextRefHeading(contextRef: string, contexts: any): string {
@@ -901,8 +950,8 @@ export class XbrlUtility {
     let segmentTextContent = ((entity.segments || [])[0] || {}).textContent;
     let segmentExplicitMemberTextContent = (((((entity.segments || [])[0] || {}).explicitMember || [])[0]) || {}).textContent;
     let heading = XbrlUtility.uniqueCompact([date, identifierTextContent, segmentTextContent, segmentExplicitMemberTextContent]).join(', ');
-    // return heading;
-    return context;
+    return heading;
+    // return context;
   }
 
   public static rectangularizeTree(tree: any, rectangle: any = {}, level: number = 0): any {
@@ -1011,20 +1060,26 @@ export class XbrlUtility {
     let definitionCompositeLinkTree = xbrlStatement.definitionCompositeLinkTree;
     if (!XbrlUtility.isBlank(definitionCompositeLinkTree)) {
       let lines = XbrlUtility.traverseDefinitionCompositeLinkTree(definitionCompositeLinkTree);
-      console.log('lines: ', JSON.stringify(lines));
+      // console.log('lines: ', JSON.stringify(lines));
+      return lines;
     }
 
   }
 
-  public static traverseDefinitionCompositeLinkTree(definitionCompositeLinkTree: any, lines: any = [], line: any = []): any {
+  public static traverseDefinitionCompositeLinkTree(definitionCompositeLinkTree: any, lines: any = [], line: any = {}): any {
     if (!XbrlUtility.isBlank(definitionCompositeLinkTree)) {
       Object.keys(definitionCompositeLinkTree).forEach((key) => {
         let branch = definitionCompositeLinkTree[key];
-        let arcroleStub = branch.arcrole.split('/').last;
-        let scopedLine = (line.concat([branch.toHref])).slice();
-        if (arcroleStub === 'domain-member' || arcroleStub === 'dimension-default' || XbrlUtility.isBlank(branch.branch)) {
+        let arcrolePieces = branch.arcrole.split('/') || '';
+        let arcroleStub = arcrolePieces[arcrolePieces.length - 1];
+        let scopedLine = JSON.parse(JSON.stringify(line));
+        if (arcroleStub === 'hypercube-dimension') {
+          scopedLine.dimension = XbrlUtility.getHrefAnchor(branch.toHref);
+        } else if (arcroleStub === 'domain-member' && !XbrlUtility.isBlank(scopedLine)) {
+          scopedLine.member = XbrlUtility.getHrefAnchor(branch.toHref);
           lines.push(scopedLine);
-        } else if (!XbrlUtility.isBlank(branch.branch)) {
+        }
+        if (!XbrlUtility.isBlank(branch.branch)) {
           lines = XbrlUtility.traverseDefinitionCompositeLinkTree(branch.branch, lines, scopedLine);
         }
       });

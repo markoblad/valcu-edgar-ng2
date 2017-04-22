@@ -58,19 +58,15 @@
       <button *ngFor="let role of this.xbrlService.roles" [ngClass]="{'active': selectedXbrlStatement === role}" (click)="selectXbrlStatement(role)">{{role}}</button>
 
       <table *ngIf="selectedXbrlStatement">
-        <tr *ngIf="xbrlStatement.definitionCompositeLinkTree">
-          <td>Line</td>
-          <td *ngFor="let contextRef of xbrlStatement.contextRefs">{{contextRefToHeader(contextRef) | json}}</td>
-        </tr>
         <tr>
           <td>Line</td>
-          <td *ngFor="let contextRef of xbrlStatement.contextRefs">{{contextRefToHeader(contextRef) | json}}</td>
+          <td *ngFor="let contextRef of paredContextRefs" [innerHTML]="contextRefToHeader(contextRef)"></td>
         </tr>
         <tr *ngFor="let rectangleKey of rectangleKeys">
     
           
           <td>{{repeat('│   ', rectangle[rectangleKey].level - 1)}}<span *ngIf="rectangle[rectangleKey].level !== 0">{{rectangle[rectangleKey].lastChild ? '└──' : '├──'}}&nbsp;</span>{{rectangleKey}}</td>
-          <td *ngFor="let contextRef of xbrlStatement.contextRefs" [innerHTML]="(((rectangle[rectangleKey] || {}).instances || {})[contextRef] || {}).textContent"></td>
+          <td *ngFor="let contextRef of paredContextRefs" [innerHTML]="(((rectangle[rectangleKey] || {}).instances || {})[contextRef] || {}).textContent"></td>
         </tr>
       </table>
       <pre *ngIf="true">xbrlStatement = {{ xbrlStatement | json }}</pre>

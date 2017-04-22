@@ -38,6 +38,8 @@ export class HomeComponent implements OnInit {
   public selectedXbrlStatement: string;
   public xbrlStatement: any = {};
   public xbrlStatementKeys: any = [];
+  public contexts;
+  public paredContextRefs;
   public rectangle: any = {};
   public rectangleKeys: any = [];
 
@@ -106,15 +108,17 @@ export class HomeComponent implements OnInit {
     this.selectedXbrlStatement = role;
     this.xbrlStatement = (this.xbrlService.xbrlStatements || {})[this.selectedXbrlStatement];
     let tree = (this.xbrlStatement || {}).presentationCompositeLinkTree || {};
+    this.contexts = ((this.xbrlService.xbrls || {}).ins || {}).contexts;
+    let dimensions = XbrlUtility.getXbrlStatementDimensions(this.xbrlStatement);
+    this.paredContextRefs = XbrlUtility.pareContextRefs(this.xbrlStatement.contextRefs, this.contexts, dimensions);
     this.rectangle = XbrlUtility.rectangularizeTree(tree) || {};
     // console.log('this.rectangle: ', JSON.stringify(this.rectangle));
     this.rectangleKeys = Object.keys(this.rectangle);
-    XbrlUtility.getXbrlStatementDimensions(this.xbrlStatement);
     console.log('rectangleKeys: ', JSON.stringify(this.rectangleKeys));
   }
 
   public contextRefToHeader(contextRef) {
-    return XbrlUtility.getContextRefHeading(contextRef, ((this.xbrlService.xbrls || {}).ins || {}).contexts);
+    return XbrlUtility.getContextRefHeading(contextRef, this.contexts);
   }
 
   public repeat(str: string, times: number = 1): string {
