@@ -39,6 +39,7 @@ export class HomeComponent implements OnInit {
   public xbrlStatement: any = {};
   public xbrlStatementKeys: any = [];
   public contexts;
+  public units;
   public paredContextRefs;
   public rectangle: any = {};
   public rectangleKeys: any = [];
@@ -68,6 +69,8 @@ export class HomeComponent implements OnInit {
         let roles = XbrlUtility.getXbrlsRoles(res);
         this.xbrlService.roles = roles;
         roles.forEach((role) => this.xbrlService.xbrlStatements[role] = XbrlUtility.constructXbrlStatement(role, this.xbrlService.xbrls));
+        this.contexts = ((this.xbrlService.xbrls || {}).ins || {}).contexts;
+        this.units = ((this.xbrlService.xbrls || {}).ins || {}).units;
 
         // this.xbrlService.xbrlStatements.filter((xbrlStatement) => !XbrlUtility.isBlank(xbrlStatement.calculationLinkTrees)).map((xbrlStatement) => {
         //   let newMultiData = [];
@@ -108,7 +111,6 @@ export class HomeComponent implements OnInit {
     this.selectedXbrlStatement = role;
     this.xbrlStatement = (this.xbrlService.xbrlStatements || {})[this.selectedXbrlStatement];
     let tree = (this.xbrlStatement || {}).presentationCompositeLinkTree || {};
-    this.contexts = ((this.xbrlService.xbrls || {}).ins || {}).contexts;
     let dimensions = XbrlUtility.getXbrlStatementDimensions(this.xbrlStatement);
     this.paredContextRefs = XbrlUtility.pareContextRefs(this.xbrlStatement.contextRefs, this.contexts, dimensions);
     this.rectangle = XbrlUtility.rectangularizeTree(tree) || {};

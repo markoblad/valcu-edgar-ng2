@@ -571,6 +571,8 @@ export class XbrlUtility {
 
   public static objsArrayToObjObjsByIdTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, 'id'); }
 
+  public static objsArrayToObjObjsByToHrefTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, 'toHref'); }
+
   public static objsArrayToObjObjsByNodeNameContextTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, (i) =>
     (i.nodeName || '').replace(':', '_') + '__' + (i.contextRef || '')
   ); }
@@ -599,6 +601,7 @@ export class XbrlUtility {
       arc.toHref = arc.to;
       arc.fromHref = (locs[arc.from] || {}).href;
     });
+    linkObj.arcs = XbrlUtility.objsArrayToObjObjsByToHrefTransform(arcs);
     // linkObj.arcs = arcs;
     return linkObj;
   }
@@ -612,7 +615,7 @@ export class XbrlUtility {
     let nsPrefix;
     let nss;
     ({nsHref, nsPrefix, nss} = XbrlUtility.getNamespace(doc));
-    // console.log('doc', doc);
+    console.log('doc', doc);
     let returnObj = fn(doc, nsHref, nsPrefix, nss);
     return returnObj;
   }

@@ -52,6 +52,7 @@
         we can use Angular's [(ngModel)] syntax
         <input type="text" name="textInput" [(ngModel)]="localState.value" autofocus>
       -->
+    <div>{{(((xbrlService || {}).xbrls || {}).lab || {}).labels | json}}</div>
     <div *ngIf="true">
       <pre>this.localState = {{ localState | json }}</pre>
       <hr>
@@ -65,7 +66,7 @@
         <tr *ngFor="let rectangleKey of rectangleKeys">
     
           
-          <td>{{repeat('│   ', rectangle[rectangleKey].level - 1)}}<span *ngIf="rectangle[rectangleKey].level !== 0">{{rectangle[rectangleKey].lastChild ? '└──' : '├──'}}&nbsp;</span>{{rectangleKey}}</td>
+          <td>{{repeat('│   ', rectangle[rectangleKey].level - 1)}}<span *ngIf="rectangle[rectangleKey].level !== 0">{{rectangle[rectangleKey].lastChild ? '└──' : '├──'}}&nbsp;</span>{{xbrlService.xbrls.lab.labels[rectangleKey]}}</td>
           <td *ngFor="let contextRef of paredContextRefs" [innerHTML]="(((rectangle[rectangleKey] || {}).instances || {})[contextRef] || {}).textContent"></td>
         </tr>
       </table>
