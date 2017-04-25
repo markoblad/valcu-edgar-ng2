@@ -127,4 +127,8 @@ export class HomeComponent implements OnInit {
     return str.repeat(Math.max(times || 0, 0));
   }
 
+  public getLabel(toHref: string, role?: string): string {
+    return XbrlUtility.getLabel((this.xbrlService.xbrls || {}).lab, toHref, role) || toHref;
+  }
+
 }

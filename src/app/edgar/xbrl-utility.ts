@@ -135,6 +135,27 @@ export class XbrlUtility {
     // xbrldt
   }
 
+  // http://www.xbrl.org/2003/role/label
+  // http://www.xbrl.org/2003/role/terseLabel
+  // http://www.xbrl.org/2003/role/verboseLabel
+  // http://www.xbrl.org/2003/role/totalLabel
+  // http://www.xbrl.org/2003/role/periodStartLabel
+  // http://www.xbrl.org/2003/role/periodEndLabel
+  // http://www.xbrl.org/2003/role/definitionGuidance
+  // http://www.xbrl.org/2003/role/documentation
+  public static get LABEL_ROLES(): [string] {
+    return [
+      'label',
+      'terseLabel',
+      'verboseLabel',
+      'totalLabel',
+      'periodStartLabel',
+      'periodEndLabel',
+      'definitionGuidance',
+      'documentation',
+    ];
+  }
+   // role:
   public static get LOC_STRUCTURE(): XbrlStructureInterface {
     return {
       rename: 'locs',
@@ -350,7 +371,8 @@ export class XbrlUtility {
             'lang', // 'xml:lang'
           ],
           textContent: true,
-          transformFn: XbrlUtility.objsArrayToObjObjsByLabelTransform,
+          // transformFn: XbrlUtility.objsArrayToObjObjsByLabelTransform,
+          transformFn: XbrlUtility.objsArrayToObjObjsObjsByLabelRoleTransform,
         },
         loc: XbrlUtility.LOC_STRUCTURE,
         labelArc: {
@@ -569,9 +591,15 @@ export class XbrlUtility {
 
   public static objsArrayToObjObjsByLabelTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, 'label'); }
 
+  public static objsArrayToObjObjsObjsByLabelRoleTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsObjsTransform(objs, 'label',
+    (nestedObj) => { let pieces = ((nestedObj || {}).role || '').split('/'); return pieces[pieces.length - 1]; }
+  ); }
+
   public static objsArrayToObjObjsByIdTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, 'id'); }
 
   public static objsArrayToObjObjsByToHrefTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, 'toHref'); }
+
+  public static objsArrayToObjObjsByFromTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, 'from'); }
 
   public static objsArrayToObjObjsByNodeNameContextTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, (i) =>
     (i.nodeName || '').replace(':', '_') + '__' + (i.contextRef || '')
@@ -601,7 +629,7 @@ export class XbrlUtility {
       arc.toHref = arc.to;
       arc.fromHref = (locs[arc.from] || {}).href;
     });
-    linkObj.arcs = XbrlUtility.objsArrayToObjObjsByToHrefTransform(arcs);
+    linkObj.arcs = XbrlUtility.objsArrayToObjObjsByFromTransform(arcs);
     // linkObj.arcs = arcs;
     return linkObj;
   }
@@ -955,6 +983,21 @@ export class XbrlUtility {
     let heading = XbrlUtility.uniqueCompact([date, identifierTextContent, segmentTextContent, segmentExplicitMemberTextContent]).join(', ');
     return heading;
     // return context;
+  }
+
+  public static getLabel(lab: any = {}, toHref: string, role?: string): string {
+    let labels = lab.labels[((lab.arcs || {})[toHref] || {}).to];
+    let label: string;
+    if (!XbrlUtility.isBlank(role)) {
+      label = labels[role];
+    }
+    if (XbrlUtility.isBlank(label)) {
+      let labelKeys = Object.keys(labels);
+      let roles = XbrlUtility.LABEL_ROLES;
+      role = labelKeys[0];
+      label = labels[role];
+    }
+    return (label || {textContent: ''}).textContent;
   }
 
   public static rectangularizeTree(tree: any, rectangle: any = {}, level: number = 0): any {
