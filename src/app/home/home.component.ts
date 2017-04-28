@@ -116,7 +116,7 @@ export class HomeComponent implements OnInit {
     this.rectangle = XbrlUtility.rectangularizeTree(tree) || {};
     // console.log('this.rectangle: ', JSON.stringify(this.rectangle));
     this.rectangleKeys = Object.keys(this.rectangle);
-    console.log('rectangleKeys: ', JSON.stringify(this.rectangleKeys));
+    // console.log('rectangleKeys: ', JSON.stringify(this.rectangleKeys));
   }
 
   public contextRefToHeader(contextRef) {
@@ -129,6 +129,10 @@ export class HomeComponent implements OnInit {
 
   public getLabel(toHref: string, role?: string): string {
     return XbrlUtility.getLabel((this.xbrlService.xbrls || {}).lab, toHref, role) || toHref;
+  }
+
+  public getHrefLastPiece(str): string {
+    return XbrlUtility.getHrefLastPiece(str);
   }
 
 }

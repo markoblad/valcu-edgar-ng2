@@ -145,8 +145,8 @@ export class XbrlUtility {
   // http://www.xbrl.org/2003/role/documentation
   public static get LABEL_ROLES(): [string] {
     return [
-      'label',
       'terseLabel',
+      'label',
       'verboseLabel',
       'totalLabel',
       'periodStartLabel',
@@ -186,6 +186,22 @@ export class XbrlUtility {
       'type', // 'xlink:type'
       'title', // 'xlink:title'
     ];
+  }
+
+  public static get LABEL_STRUCTURE(): XbrlStructureInterface {
+    return {
+      rename: 'labels',
+      atts: [
+        'id',
+        'label', // xlink:label
+        'role', // xlink:role
+        'type', // 'xlink:type'
+        'lang', // 'xml:lang'
+      ],
+      textContent: true,
+      // transformFn: XbrlUtility.objsArrayToObjObjsByLabelTransform,
+      transformFn: XbrlUtility.objsArrayToObjObjsObjsByLabelRoleTransform,
+    };
   }
 
   // xsdToID: string;
@@ -361,19 +377,7 @@ export class XbrlUtility {
     return {
       tags: {
         roleRef: XbrlUtility.ROLE_REF_STRUCTURE,
-        label: {
-          rename: 'labels',
-          atts: [
-            'id',
-            'label', // xlink:label
-            'role', // xlink:role
-            'type', // 'xlink:type'
-            'lang', // 'xml:lang'
-          ],
-          textContent: true,
-          // transformFn: XbrlUtility.objsArrayToObjObjsByLabelTransform,
-          transformFn: XbrlUtility.objsArrayToObjObjsObjsByLabelRoleTransform,
-        },
+        label: XbrlUtility.LABEL_STRUCTURE,
         loc: XbrlUtility.LOC_STRUCTURE,
         labelArc: {
           rename: 'arcs',
@@ -592,7 +596,7 @@ export class XbrlUtility {
   public static objsArrayToObjObjsByLabelTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, 'label'); }
 
   public static objsArrayToObjObjsObjsByLabelRoleTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsObjsTransform(objs, 'label',
-    (nestedObj) => { let pieces = ((nestedObj || {}).role || '').split('/'); return pieces[pieces.length - 1]; }
+    (nestedObj) => { XbrlUtility.getHrefLastPiece((nestedObj || {}).role || ''); }
   ); }
 
   public static objsArrayToObjObjsByIdTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, 'id'); }
@@ -600,6 +604,8 @@ export class XbrlUtility {
   public static objsArrayToObjObjsByToHrefTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, 'toHref'); }
 
   public static objsArrayToObjObjsByFromTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, 'from'); }
+
+  public static objsArrayToObjObjsByFromHrefTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, 'fromHref'); }
 
   public static objsArrayToObjObjsByNodeNameContextTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, (i) =>
     (i.nodeName || '').replace(':', '_') + '__' + (i.contextRef || '')
@@ -629,7 +635,8 @@ export class XbrlUtility {
       arc.toHref = arc.to;
       arc.fromHref = (locs[arc.from] || {}).href;
     });
-    linkObj.arcs = XbrlUtility.objsArrayToObjObjsByFromTransform(arcs);
+    // linkObj.arcs = XbrlUtility.objsArrayToObjObjsByFromTransform(arcs);
+    linkObj.arcs = XbrlUtility.objsArrayToObjObjsByFromHrefTransform(arcs);
     // linkObj.arcs = arcs;
     return linkObj;
   }
@@ -643,7 +650,7 @@ export class XbrlUtility {
     let nsPrefix;
     let nss;
     ({nsHref, nsPrefix, nss} = XbrlUtility.getNamespace(doc));
-    console.log('doc', doc);
+    // console.log('doc', doc);
     let returnObj = fn(doc, nsHref, nsPrefix, nss);
     return returnObj;
   }
@@ -864,7 +871,9 @@ export class XbrlUtility {
 
   public static splitXbrlHref(href): string { return (href || '').replace(/(.*?_)/, ''); }
 
-  public static getHrefAnchor(href): string { let pieces = (href || '').split('#'); return pieces[pieces.length - 1] || ''; }
+  public static getHrefAnchor(href): string { let pieces = (href || '').split('#'); return pieces[pieces.length - 1]; }
+
+  public static getHrefLastPiece(href): string { let pieces = (href || '').split('/'); return pieces[pieces.length - 1]; }
 
   public static growTree(from: string, arcs: any[] = [], instances: any): any {
     let tree: any = {};
@@ -946,7 +955,7 @@ export class XbrlUtility {
       let entities = (context.entity || []);
       let segments = [];
       entities.forEach((entity) => segments = segments.concat((entity || {}).segments || []));
-      console.log('segments: ', JSON.stringify(segments));
+      // console.log('segments: ', JSON.stringify(segments));
       if (anyDimensions) {
         let explicitMembers = [];
         segments.forEach((segment) => explicitMembers = explicitMembers.concat((segment || {}).explicitMember || []));
@@ -968,7 +977,7 @@ export class XbrlUtility {
   // "period": { "nodeName": "xbrli:period", "localName": "period", "startDate": "2014-01-01", "endDate": "2014-12-31" } }
     });
     // return XbrlUtility.uniqueCompact(paredContextRefs);
-    console.log('paredContextRefs: ', JSON.stringify(paredContextRefs));
+    // console.log('paredContextRefs: ', JSON.stringify(paredContextRefs));
     return paredContextRefs;
   }
 
@@ -986,17 +995,26 @@ export class XbrlUtility {
   }
 
   public static getLabel(lab: any = {}, toHref: string, role?: string): string {
-    let labels = lab.labels[((lab.arcs || {})[toHref] || {}).to];
-    let label: string;
+    // console.log('lab.arcs: ', JSON.stringify(lab.arcs));
+    let arc = (lab.arcs || {})[toHref] || {};
+    // console.log('arc: ', JSON.stringify(arc));
+    let to = arc.to;
+    // console.log('toHref: ', toHref);
+    // console.log('to: ', to);
+    // console.log('role: ', role);
+    let labels = lab.labels[to] || {};
+    let label: any;
     if (!XbrlUtility.isBlank(role)) {
-      label = labels[role];
+      let roleStub = XbrlUtility.getHrefLastPiece(role);
+      label = labels[roleStub];
     }
     if (XbrlUtility.isBlank(label)) {
-      let labelKeys = Object.keys(labels);
-      let roles = XbrlUtility.LABEL_ROLES;
-      role = labelKeys[0];
-      label = labels[role];
+      // let labelKeys = Object.keys(labels);
+      let roleStubs = XbrlUtility.LABEL_ROLES;
+      let roleStub = roleStubs.find((i) => !XbrlUtility.isBlank(labels[i]));
+      label = labels[roleStub];
     }
+    // console.log('label: ', JSON.stringify(label));
     return (label || {textContent: ''}).textContent;
   }
 
@@ -1005,9 +1023,11 @@ export class XbrlUtility {
     let lastIndex = keys.length - 1;
     keys.forEach((key, index) => {
       let treeItem = tree[key] || {};
+      let toHref = treeItem.toHref;
+      let preferredLabel = treeItem.preferredLabel;
       let instances = treeItem.instances;
       let lastChild = index === lastIndex;
-      rectangle[key] = {instances, level, lastChild};
+      rectangle[key] = {toHref, preferredLabel, instances, level, lastChild};
       let branch = (treeItem || {}).branch;
       if (!XbrlUtility.isBlank(branch)) {
         rectangle = XbrlUtility.rectangularizeTree(branch, rectangle, level + 1);
@@ -1116,8 +1136,7 @@ export class XbrlUtility {
     if (!XbrlUtility.isBlank(definitionCompositeLinkTree)) {
       Object.keys(definitionCompositeLinkTree).forEach((key) => {
         let branch = definitionCompositeLinkTree[key];
-        let arcrolePieces = branch.arcrole.split('/') || '';
-        let arcroleStub = arcrolePieces[arcrolePieces.length - 1];
+        let arcroleStub = XbrlUtility.getHrefLastPiece(branch.arcrole);
         let scopedLine = JSON.parse(JSON.stringify(line));
         if (arcroleStub === 'hypercube-dimension') {
           scopedLine.dimension = XbrlUtility.getHrefAnchor(branch.toHref);
