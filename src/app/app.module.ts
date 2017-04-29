@@ -15,6 +15,8 @@ import {
   PreloadAllModules
 } from '@angular/router';
 
+import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
+
 /*
  * Platform and Environment providers/directives/pipes
  */
@@ -66,6 +68,7 @@ type StoreType = {
   imports: [ // import Angular's modules
     BrowserModule,
     BrowserAnimationsModule,
+    NgbModule.forRoot(),
     NgxChartsModule,
     FormsModule,
     HttpModule,

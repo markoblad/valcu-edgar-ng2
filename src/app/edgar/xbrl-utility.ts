@@ -217,7 +217,7 @@ export class XbrlUtility {
     return {
       tags: {
         roleType: {
-          rename: 'roles',
+          rename: 'roleTypes',
           atts: [
             'roleURI',
           ],
@@ -233,6 +233,7 @@ export class XbrlUtility {
               transformFn: XbrlUtility.arrayedTextTransform,
             },
           },
+          transformFn: XbrlUtility.objsArrayToObjObjsByRoleURITransform,
         },
         element: {
           rename: 'elements',
@@ -596,8 +597,10 @@ export class XbrlUtility {
   public static objsArrayToObjObjsByLabelTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, 'label'); }
 
   public static objsArrayToObjObjsObjsByLabelRoleTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsObjsTransform(objs, 'label',
-    (nestedObj) => { XbrlUtility.getHrefLastPiece((nestedObj || {}).role || ''); }
+    (nestedObj) => { XbrlUtility.getLastSlash((nestedObj || {}).role || ''); }
   ); }
+
+  public static objsArrayToObjObjsByRoleURITransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, 'roleURI'); }
 
   public static objsArrayToObjObjsByIdTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsTransform(objs, 'id'); }
 
@@ -837,9 +840,10 @@ export class XbrlUtility {
     return structure.transformFn ? structure.transformFn(obj) : obj;
   }
 
-  public static getXbrlRoles(parsedXbrl): [string] {
+  public static getXbrlRoles(parsedXbrl): string[] {
     if (parsedXbrl.type === 'xsd') {
-      return parsedXbrl.roles.map((i) => i.roleURI);
+      // return parsedXbrl.roles.map((i) => i.roleURI);
+      return Object.keys(parsedXbrl.roleTypes || {});
     } else if (parsedXbrl.type === 'pre') {
       return parsedXbrl.presentationLinks.map((i) => i.role);
     } else if (parsedXbrl.type === 'def') {
@@ -862,7 +866,7 @@ export class XbrlUtility {
   }
 
   public static uniqueCompact(array?: any[]): any {
-    return (array || []).filter((v, i, a) => a.indexOf(v) === i && a !== null);
+    return (array || []).filter((v, i, a) => a.indexOf(v) === i && v !== null && v !== undefined);
   }
 
   public static isBlank(obj: any): boolean {
@@ -873,7 +877,7 @@ export class XbrlUtility {
 
   public static getHrefAnchor(href): string { let pieces = (href || '').split('#'); return pieces[pieces.length - 1]; }
 
-  public static getHrefLastPiece(href): string { let pieces = (href || '').split('/'); return pieces[pieces.length - 1]; }
+  public static getLastSlash(href): string { let pieces = (href || '').split('/'); return pieces[pieces.length - 1]; }
 
   public static growTree(from: string, arcs: any[] = [], instances: any): any {
     let tree: any = {};
@@ -1005,7 +1009,7 @@ export class XbrlUtility {
     let labels = lab.labels[to] || {};
     let label: any;
     if (!XbrlUtility.isBlank(role)) {
-      let roleStub = XbrlUtility.getHrefLastPiece(role);
+      let roleStub = XbrlUtility.getLastSlash(role);
       label = labels[roleStub];
     }
     if (XbrlUtility.isBlank(label)) {
@@ -1136,7 +1140,7 @@ export class XbrlUtility {
     if (!XbrlUtility.isBlank(definitionCompositeLinkTree)) {
       Object.keys(definitionCompositeLinkTree).forEach((key) => {
         let branch = definitionCompositeLinkTree[key];
-        let arcroleStub = XbrlUtility.getHrefLastPiece(branch.arcrole);
+        let arcroleStub = XbrlUtility.getLastSlash(branch.arcrole);
         let scopedLine = JSON.parse(JSON.stringify(line));
         if (arcroleStub === 'hypercube-dimension') {
           scopedLine.dimension = XbrlUtility.getHrefAnchor(branch.toHref);

@@ -10,6 +10,11 @@ import { bootloader } from '@angularclass/hmr';
  */
 import { AppModule } from './app';
 
+// Twitter Bootstrap 4
+import '@ng-bootstrap/ng-bootstrap';
+
+import 'ng2-fontawesome';
+
 /*
  * Bootstrap our Angular app with a top level NgModule
  */

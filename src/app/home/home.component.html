@@ -1,14 +1,4 @@
 <div>
-  <h1 x-large class="sample-content">Your Content Here</h1>
-
-  <hr>
-
-  <div>
-    For hot module reloading run
-    <pre>npm run start:hmr</pre>
-  </div>
-
-  <hr>
   <div *ngFor="let singleData of singleDatas">
     <v-chart
       [vChartType]="'barHorizontal'"
@@ -28,53 +18,81 @@
   </div>
 
   <div>
-    <h4>Local State</h4>
 
-    <form (ngSubmit)="submitState(localState.value)" autocomplete="off">
-
-      <input
-        [value]="localState.value"
-        (input)="localState.value = $event.target.value"
-        placeholder="Submit Local State to App State"
-        autofocus>
-
-      <button>Submit Value</button>
-    </form>
-
-    <form (ngSubmit)="clearXbrls()" autocomplete="off">
-      <button>Clear Xbrl</button>
-    </form>
-
+    <div class="row">
+      <div class="col">
+        <form class="form-inline my-2 my-lg-0" (ngSubmit)="submitState(localState.value)" autocomplete="off">
+          <input
+             class="form-control mr-sm-2"
+            [value]="localState.value"
+            (input)="localState.value = $event.target.value"
+            placeholder="Submit Local State to App State"
+            autofocus>
+          <button class="btn btn-primary">Submit Value</button>
+        </form>
+      </div>
+      <div class="col">
+        <form class="form-inline my-2 my-lg-0" (ngSubmit)="clearXbrls()" autocomplete="off">
+          <button class="btn btn-primary">Clear Xbrl</button>
+        </form>
+      </div>
+    </div>
+    <hr>
     
-    <!--
-        <input type="text" [value]="localState.value" (input)="localState.value = $event.target.value" autofocus>
-        Rather than wiring up two-way data-binding ourselves with [value] and (input)
-        we can use Angular's [(ngModel)] syntax
-        <input type="text" name="textInput" [(ngModel)]="localState.value" autofocus>
-      -->
     <div *ngIf="false">{{(((xbrlService || {}).xbrls || {}).lab || {}).labels | json}}</div>
     <div *ngIf="false">{{(((xbrlService || {}).xbrls || {}).lab || {}).arcs | json}}</div>
     <div *ngIf="true">
-      <pre>this.localState = {{ localState | json }}</pre>
-      <hr>
-      <button *ngFor="let role of this.xbrlService.roles" [ngClass]="{'active': selectedXbrlStatement === role}" (click)="selectXbrlStatement(role)">{{getHrefLastPiece(role)}}</button>
+      <pre *ngIf="false">this.localState = {{ localState | json }}</pre>
+      <div *ngIf="false">{{(xbrlService || {}).roles | json}}</div>
 
-      <table *ngIf="selectedXbrlStatement">
-        <tr>
-          <td>Line</td>
-          <td *ngFor="let contextRef of paredContextRefs" [innerHTML]="contextRefToHeader(contextRef)"></td>
-        </tr>
-        <tr *ngFor="let rectangleKey of rectangleKeys">
-    
-          
-          <td>{{repeat('│   ', rectangle[rectangleKey].level - 1)}}<span *ngIf="rectangle[rectangleKey].level !== 0">{{rectangle[rectangleKey].lastChild ? '└──' : '├──'}}&nbsp;</span>{{getLabel(rectangle[rectangleKey].toHref, rectangle[rectangleKey].preferredLabel)}}</td>
-          <td *ngFor="let contextRef of paredContextRefs" [innerHTML]="(((rectangle[rectangleKey] || {}).instances || {})[contextRef] || {}).textContent"></td>
-        </tr>
-      </table>
+      <div class="row">
+        <div class="col-3">
+          <ul class="nav flex-column flex-sm-row nav-pills">
+            <li class="nav-item flex-sm-fill">
+              <small>
+                <a *ngFor="let role of this.xbrlService.roles"
+                [ngClass]="{'flex-sm-fill': false, 'nav-link': true, 'active': selectedXbrlStatement === role}"
+                (click)="selectXbrlStatement(role)">{{displayRole(role)}}</a>
+              </small>
+            </li>
+          </ul>
+        </div>
+
+        <div class="col">
+          <small>
+            <table *ngIf="selectedXbrlStatement" class="table table-striped table-sm">
+              <thead class="thead-inverse">
+                <tr>
+                  <th>Line</th>
+                  <th *ngFor="let contextRef of paredContextRefs" [innerHTML]="contextRefToHeader(contextRef)"></th>
+                </tr>
+              </thead>
+
+              <tr *ngFor="let rectangleKey of rectangleKeys">
+                <td>{{repeat('│   ', rectangle[rectangleKey].level - 1)}}<span *ngIf="rectangle[rectangleKey].level !== 0">{{rectangle[rectangleKey].lastChild ? '└──' : '├──'}}&nbsp;</span>{{getLabel(rectangle[rectangleKey].toHref, rectangle[rectangleKey].preferredLabel)}}</td>
+                <td *ngFor="let contextRef of paredContextRefs" [innerHTML]="(((rectangle[rectangleKey] || {}).instances || {})[contextRef] || {}).textContent"></td>
+              </tr>
+            </table>
+          </small>
+
+          <div class="row" *ngIf="false && selectedXbrlStatement">
+            <div class="col-3">
+              <div>Line</div>
+              <div *ngFor="let rectangleKey of rectangleKeys">{{repeat('│   ', rectangle[rectangleKey].level - 1)}}<span *ngIf="rectangle[rectangleKey].level !== 0">{{rectangle[rectangleKey].lastChild ? '└──' : '├──'}}&nbsp;</span>{{getLabel(rectangle[rectangleKey].toHref, rectangle[rectangleKey].preferredLabel)}}</div>
+            </div>
+            <div class="col" *ngFor="let contextRef of paredContextRefs">
+              <div [innerHTML]="contextRefToHeader(contextRef)"></div>
+              <div *ngFor="let rectangleKey of rectangleKeys" [innerHTML]="(((rectangle[rectangleKey] || {}).instances || {})[contextRef] || {}).textContent"></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
       <pre *ngIf="false">xbrlStatement = {{ xbrlStatement | json }}</pre>
       <pre *ngIf="false">xbrlService.xbrlStatements = {{ xbrlService.xbrlStatements | json }}</pre>
-      <hr>
       <pre *ngIf="false">xbrlService.xbrls = {{ xbrlService.xbrls | json }}</pre>
+      <pre *ngIf="false">xbrlService.xbrls.xsd = {{ ((xbrlService.xbrls || {})).xsd | json }}</pre>
+
     </div>
 
   </div>

@@ -71,6 +71,9 @@ export class HomeComponent implements OnInit {
         roles.forEach((role) => this.xbrlService.xbrlStatements[role] = XbrlUtility.constructXbrlStatement(role, this.xbrlService.xbrls));
         this.contexts = ((this.xbrlService.xbrls || {}).ins || {}).contexts;
         this.units = ((this.xbrlService.xbrls || {}).ins || {}).units;
+        if (XbrlUtility.isBlank(this.selectedXbrlStatement)) {
+          this.selectXbrlStatement(roles[0]);
+        }
 
         // this.xbrlService.xbrlStatements.filter((xbrlStatement) => !XbrlUtility.isBlank(xbrlStatement.calculationLinkTrees)).map((xbrlStatement) => {
         //   let newMultiData = [];
@@ -131,8 +134,15 @@ export class HomeComponent implements OnInit {
     return XbrlUtility.getLabel((this.xbrlService.xbrls || {}).lab, toHref, role) || toHref;
   }
 
-  public getHrefLastPiece(str): string {
-    return XbrlUtility.getHrefLastPiece(str);
+  public getLastSlash(str): string {
+    return XbrlUtility.getLastSlash(str);
+  }
+
+  public displayRole(roleURI): string {
+    let pieces = (((((this.xbrlService.xbrls || {}).xsd || {}).roleTypes || {})[roleURI] || {}).definition || '').split(/\s+-\s+/);
+    return pieces[pieces.length - 1];
+     // ||
+      // (XbrlUtility.getLastSlash(roleURI) || '').replace(/[A-Z]/g,  (letter) => ' ' + letter).trim();
   }
 
 }

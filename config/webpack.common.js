@@ -133,7 +133,7 @@ module.exports = function (options) {
               loader: 'angular2-template-loader'
             }
           ],
-          exclude: [/\.(spec|e2e)\.ts$/]
+          exclude: [/\.(spec|e2e)\.ts$/, /node_modules\/(?!(ng2-bootstrap|angular2-token))/]
         },
 
         /*
@@ -266,7 +266,58 @@ module.exports = function (options) {
        */
       new CopyWebpackPlugin([
         { from: 'src/assets', to: 'assets' },
-        { from: 'src/meta'}
+        { from: 'src/meta'},
+        {
+          from: 'node_modules/lato-font/css/lato-font.min.css',
+          to: 'assets/lato-font/css/lato-font.min.css'
+        },
+        {
+          from: 'node_modules/lato-font/fonts/lato-black/lato-black.woff',
+          to: 'assets/lato-font/fonts/lato-black/lato-black.woff'
+        },
+        {
+          from: 'node_modules/lato-font/fonts/lato-black/lato-black.woff2',
+          to: 'assets/lato-font/fonts/lato-black/lato-black.woff2'
+        },
+
+        {
+          from: 'node_modules/lato-font/fonts/lato-black-italic/lato-black-italic.woff',
+          to: 'assets/lato-font/fonts/lato-black-italic/lato-black-italic.woff'
+        },
+        {
+          from: 'node_modules/lato-font/fonts/lato-black-italic/lato-black-italic.woff2',
+          to: 'assets/lato-font/fonts/lato-black-italic/lato-black-italic.woff2'
+        },
+
+        {
+          from: 'node_modules/lato-font/fonts/lato-medium/lato-medium.woff',
+          to: 'assets/lato-font/fonts/lato-medium/lato-medium.woff'
+        },
+        {
+          from: 'node_modules/lato-font/fonts/lato-medium/lato-medium.woff2',
+          to: 'assets/lato-font/fonts/lato-medium/lato-medium.woff2'
+        },
+
+        {
+          from: 'node_modules/lato-font/fonts/lato-medium-italic/lato-medium-italic.woff',
+          to: 'assets/lato-font/fonts/lato-medium-italic/lato-medium-italic.woff'
+        },
+        {
+          from: 'node_modules/lato-font/fonts/lato-medium-italic/lato-medium-italic.woff2',
+          to: 'assets/lato-font/fonts/lato-medium-italic/lato-medium-italic.woff2'
+        },
+        {
+          from: 'node_modules/bootstrap/dist/css/bootstrap.css',
+          to: 'assets/bootstrap/dist/css/bootstrap.css'
+        },
+        {
+          from: 'node_modules/font-awesome/css/font-awesome.min.css',
+          to: 'assets/font-awesome/css/font-awesome.min.css'
+        },
+        {
+          from: 'node_modules/font-awesome/fonts',
+          to: 'assets/font-awesome/fonts'
+        },
       ]),
 
 
