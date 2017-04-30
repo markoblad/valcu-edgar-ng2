@@ -36,14 +36,13 @@
 
     <div class="row">
       <div class="col-sm-11">
-        <nav class="nav nav-tabs">
-          <small>
-            <li *ngFor="let xbrlVReportKey of xbrlVReportKeys()" class="nav-item">
-              <a
-              [ngClass]="{'nav-link': true, active: xbrlVReportKey === selectedXbrlVReportKey}"
-              (click)="selectXbrlVReport(xbrlVReportKey)">{{xbrlVReportKey}}</a>
-            </li>
-          </small>
+        <nav class="nav nav-pills">
+          <li *ngFor="let xbrlVReportKey of xbrlVReportKeys()" class="nav-item">
+            <small>
+              <a [ngClass]="{'nav-link': true, active: xbrlVReportKey === selectedXbrlVReportKey}"
+                (click)="selectXbrlVReport(xbrlVReportKey)">{{xbrlVReportKey}}</a>
+            </small>
+          </li>
         </nav>
       </div>
       <div class="col-sm-1">

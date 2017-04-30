@@ -19,11 +19,12 @@ export interface XbrlReportInterface {
 }
 
 export interface XbrlVReportInterface {
-  xbrls: XbrlReportInterface;
+  edgarArchiveFiles?: any[];
+  xbrls?: XbrlReportInterface;
   roleURIs?: string[];
   contexts?: any;
   units?: any;
-  xbrlVStatements: {};
+  xbrlVStatements?: {};
 }
 
 export interface XbrlVStatementInterface {

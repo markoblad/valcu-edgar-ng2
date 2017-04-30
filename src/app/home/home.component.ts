@@ -46,8 +46,68 @@ export class HomeComponent implements OnInit {
     public title: Title,
     public edgarArchiveService: EdgarArchiveService,
     public xbrlService: XbrlService
-  ) {}
+  ) {
+    this.xbrlService.xbrlVReports = {
+      '000121390016011346': {
+        edgarArchiveFiles: [
+          {
+            type: 'xsd',
+            url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xsd',
+          },
+          {
+            type: 'pre',
+            url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_pre.xml',
+          },
+          {
+            type: 'def',
+            url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_def.xml',
+          },
+          {
+            type: 'cal',
+            url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_cal.xml',
+          },
+          {
+            type: 'lab',
+            url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_lab.xml',
+          },
+          {
+            type: 'ins',
+            url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xml',
+          },
+        ],
+      },
+      '000121390017002526': {
+        edgarArchiveFiles: [
+          {
+            type: 'xsd',
+            url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231.xsd',
+          },
+          {
+            type: 'pre',
+            url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231_pre.xml',
+          },
+          {
+            type: 'def',
+            url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231_def.xml',
+          },
+          {
+            type: 'cal',
+            url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231_cal.xml',
+          },
+          {
+            type: 'lab',
+            url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231_lab.xml',
+          },
+          {
+            type: 'ins',
+            url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231.xml',
+          },
+        ],
+      },
+    };
+  }
 
+// https://www.sec.gov/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231.xml
   public ngOnInit() {
     console.log('hello `Home` component');
     // this.title.getData().subscribe(data => this.data = data);
@@ -58,41 +118,46 @@ export class HomeComponent implements OnInit {
     this.appState.set('value', value);
     this.localState.value = '';
     // this.edgarContent = this.edgarArchiveService.get(value)
-    this.edgarArchiveService.getEdgarCompanyKeys(value).subscribe(
-      (parsedXbrls) => {
-        this.xbrlService.addParsedXbrls(parsedXbrls);
-        if (XbrlUtility.isBlank(this.selectedXbrlVReportKey)) {
-          this.selectXbrlVReport(Object.keys(this.xbrlService.xbrlVReports)[0]);
-          this.selectXbrlVStatement(Object.keys((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {})[0]);
-        }
+    Object.keys(this.xbrlService.xbrlVReports).forEach((xbrlVReportKey) => {
+      let xbrlReport = this.xbrlService.xbrlVReports[xbrlVReportKey];
+      this.edgarArchiveService.getParsedXbrls(xbrlReport.edgarArchiveFiles).subscribe(
+        (parsedXbrls) => {
+          // console.log('xbrlVReportKey: ', xbrlVReportKey);
+          this.xbrlService.addParsedXbrls(xbrlVReportKey, parsedXbrls, xbrlReport.edgarArchiveFiles);
+          if (XbrlUtility.isBlank(this.selectedXbrlVReportKey)) {
+            this.selectXbrlVReport(Object.keys(this.xbrlService.xbrlVReports)[0]);
+            this.selectXbrlVStatement(Object.keys((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {})[0]);
+          }
 
-        // this.xbrlService.xbrlStatements.filter((xbrlStatement) => !XbrlUtility.isBlank(xbrlStatement.calculationLinkTrees)).map((xbrlStatement) => {
-        //   let newMultiData = [];
-        //   let newSingleData = [];
-        //   xbrlStatement.calculationLinkTrees.map((calculationLinkTree) => {
-        //     // console.log('Object.keys(calculationLinkTree): ', JSON.stringify(Object.keys(calculationLinkTree)));
-        //     let rootKey = Object.keys(calculationLinkTree)[0];
-        //     let root = calculationLinkTree[rootKey] || {};
-        //     let branch = root.branch || {};
-        //     let branchesKeys = Object.keys(branch) || [];
-        //     let series = branchesKeys.map((branchesKey) => { return {
-        //       name: (((branch[branchesKey] || {}).instances || {}).Context_As_Of_31_Dec_2015T00_00_00_TO_31_Dec_2015T00_00_00 || {}).localName || '',
-        //       value: parseInt((((branch[branchesKey] || {}).instances || {}).Context_As_Of_31_Dec_2015T00_00_00_TO_31_Dec_2015T00_00_00 || {}).textContent || 0, 10)
-        //     }; });
-        //     newSingleData = newSingleData.concat(series);
-        //     newMultiData.push({name: rootKey, series});
-        //   });
-        //   // console.log('newMulti: ', JSON.stringify(newMultiData));
-        //   if (!XbrlUtility.isBlank(newSingleData)) {
-        //     this.singleDatas.push(newSingleData);
-        //   }
-        //   if (!XbrlUtility.isBlank(newMultiData)) {
-        //     this.multiDatas.push(newMultiData);
-        //   }
-        // });
-      },
-      (error) => console.log(error)
-    );
+          // this.xbrlService.xbrlStatements.filter((xbrlStatement) => !XbrlUtility.isBlank(xbrlStatement.calculationLinkTrees)).map((xbrlStatement) => {
+          //   let newMultiData = [];
+          //   let newSingleData = [];
+          //   xbrlStatement.calculationLinkTrees.map((calculationLinkTree) => {
+          //     // console.log('Object.keys(calculationLinkTree): ', JSON.stringify(Object.keys(calculationLinkTree)));
+          //     let rootKey = Object.keys(calculationLinkTree)[0];
+          //     let root = calculationLinkTree[rootKey] || {};
+          //     let branch = root.branch || {};
+          //     let branchesKeys = Object.keys(branch) || [];
+          //     let series = branchesKeys.map((branchesKey) => { return {
+          //       name: (((branch[branchesKey] || {}).instances || {}).Context_As_Of_31_Dec_2015T00_00_00_TO_31_Dec_2015T00_00_00 || {}).localName || '',
+          //       value: parseInt((((branch[branchesKey] || {}).instances || {}).Context_As_Of_31_Dec_2015T00_00_00_TO_31_Dec_2015T00_00_00 || {}).textContent || 0, 10)
+          //     }; });
+          //     newSingleData = newSingleData.concat(series);
+          //     newMultiData.push({name: rootKey, series});
+          //   });
+          //   // console.log('newMulti: ', JSON.stringify(newMultiData));
+          //   if (!XbrlUtility.isBlank(newSingleData)) {
+          //     this.singleDatas.push(newSingleData);
+          //   }
+          //   if (!XbrlUtility.isBlank(newMultiData)) {
+          //     this.multiDatas.push(newMultiData);
+          //   }
+          // });
+        },
+        (error) => console.log(error)
+      );
+
+    });
   }
 
   public clearXbrlReports() {

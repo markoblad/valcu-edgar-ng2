@@ -15,9 +15,10 @@ export class XbrlService {
     this.xbrlVReports = {};
   }
 
-  public addParsedXbrls(parsedXbrls: any[] = []): void {
+  public addParsedXbrls(xbrlVReportKey: string, parsedXbrls: any[] = [], edgarArchiveFiles: any[]): void {
 
     let xbrlVReport: XbrlVReportInterface = {
+      edgarArchiveFiles,
       xbrls: {},
       roleURIs: [],
       contexts: {},
@@ -42,8 +43,7 @@ export class XbrlService {
     });
     xbrlVReport.contexts = ((xbrlVReport.xbrls || {}).ins || {}).contexts;
     xbrlVReport.units = ((xbrlVReport.xbrls || {}).ins || {}).units;
-    let xbrlVReportKeys = Object.keys(this.xbrlVReports);
-    this.xbrlVReports[xbrlVReportKeys[xbrlVReportKeys.length - 1] || 0] = xbrlVReport;
+    this.xbrlVReports[xbrlVReportKey] = xbrlVReport;
   }
 
 }

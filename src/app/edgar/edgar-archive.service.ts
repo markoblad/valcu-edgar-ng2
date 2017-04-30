@@ -25,32 +25,6 @@ export class EdgarArchiveService {
   // 0001213900-16-011346
   // 000121390016011346
   // https://www.sec.gov/Archives/edgar/data/0001371128/000121390016011346/0001213900-16-011346-index.htm
-  public edgarArchiveFiles: any = [
-    {
-      type: 'xsd',
-      url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xsd',
-    },
-    {
-      type: 'pre',
-      url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_pre.xml',
-    },
-    {
-      type: 'def',
-      url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_def.xml',
-    },
-    {
-      type: 'cal',
-      url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_cal.xml',
-    },
-    {
-      type: 'lab',
-      url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_lab.xml',
-    },
-    {
-      type: 'ins',
-      url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xml',
-    },
-  ];
 
   // edgarArchiveFileUrl: string = 'https://www.sec.gov/Archives/edgar/data';
   // edgarArchiveFileUrl: string = 'https://www.sec.gov/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xml';
@@ -102,13 +76,13 @@ export class EdgarArchiveService {
     .map(this.getJson);
   }
 
-  public getEdgarCompanyKeys(cik: string): Observable<any> {
+  public getParsedXbrls(edgarArchiveFiles: any[] = []): Observable<any> {
     // console.log('this.headers: ', JSON.stringify(this.headers));
     // console.log("getting: ", `${this.edgarBrowseUrl}${cik}`);
     // console.log('getting: ', `${this.edgarArchiveFileUrl}`);
     // return this.http.get(`${this.edgarBrowseUrl}${cik}`, this.headers)
     let observableBatch = [];
-    this.edgarArchiveFiles.forEach((obj) => {
+    edgarArchiveFiles.forEach((obj) => {
       // console.log('obj.url: ', obj.url);
       observableBatch.push(this.http.get(`${obj.url}`, this.headers)
         .map(this.checkForError)
