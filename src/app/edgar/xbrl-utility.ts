@@ -18,6 +18,23 @@ export interface XbrlReportInterface {
   ins?: any;
 }
 
+export interface XbrlVReportInterface {
+  xbrls: XbrlReportInterface;
+  roleURIs?: string[];
+  contexts?: any;
+  units?: any;
+  xbrlVStatements: {};
+}
+
+export interface XbrlVStatementInterface {
+  roleURI: string;
+  xbrlStatement: any;
+  xbrlStatementKeys: any;
+  paredContextRefs: string[];
+  rectangle: any;
+  rectangleKeys: string[];
+}
+
 export interface XbrlToInstanceInterface {
   context: string;
   value: string;
@@ -107,7 +124,7 @@ export interface XbrlUnitInterface {
 }
 
 export interface XbrlStatementInterface {
-  role: string;
+  roleURI: string;
   roleDefinition?: string;
   roleUse?: string;
   preLinkTypes?: string[];
@@ -116,7 +133,7 @@ export interface XbrlStatementInterface {
   // items?: XbrlStatementItemInterface[];
   items?: any;
   contexts?: [XbrlContextInterface];
-  contextRefs?: [string];
+  contextRefs?: string[];
   units?: [XbrlUnitInterface];
 }
 
@@ -125,12 +142,12 @@ export class XbrlUtility {
 
   // constructor() {}
 
-  public static get NSPREFIXES(): [string] {
+  public static get NSPREFIXES(): string[] {
     // return ['ns', 'link', 'xsd', 'xs'];
     return ['ns', 'link', 'xlink', 'xsd', 'xs'];
   }
 
-  public static get INS_NSPREFIXES(): [string] {
+  public static get INS_NSPREFIXES(): string[] {
     return ['ns', 'xbrli', 'link', 'xlink', 'xbrldi', 'xsd', 'xs'];
     // xbrldt
   }
@@ -143,7 +160,7 @@ export class XbrlUtility {
   // http://www.xbrl.org/2003/role/periodEndLabel
   // http://www.xbrl.org/2003/role/definitionGuidance
   // http://www.xbrl.org/2003/role/documentation
-  public static get LABEL_ROLES(): [string] {
+  public static get LABEL_ROLES(): string[] {
     return [
       'terseLabel',
       'label',
@@ -171,7 +188,7 @@ export class XbrlUtility {
 
   public static get ROLE_REF_STRUCTURE(): XbrlStructureInterface {
     return {
-      rename: 'roles',
+      rename: 'roleRefs',
       atts: [
         'roleURI',
         'href', // 'xlink:href'
@@ -180,7 +197,7 @@ export class XbrlUtility {
     };
   }
 
-  public static get LINK_ATTS(): [string] {
+  public static get LINK_ATTS(): string[] {
     return [
       'role', // xlink:role
       'type', // 'xlink:type'
@@ -660,7 +677,7 @@ export class XbrlUtility {
 
   public static processTypeDoc(doc: XMLDocument, type): any {
     return XbrlUtility.processDoc(doc, (returnedDoc, nsHref, nsPrefix, nss) => {
-      let returnObj  =  {type, roles: []};
+      let returnObj  =  {type, roleURIs: []};
       returnObj = XbrlUtility.processStructure(returnedDoc, nsHref, nsPrefix, nss, XbrlUtility.XBRL_TYPE_TO_STRUCTURE[type], returnObj);
       // @pre_h = nil if @pre_h["roles"].blank? || @pre_h["dlinks"].blank?
       // @cal_h = nil if @cal_h["roles"].blank? || @cal_h["clinks"].blank?
@@ -776,7 +793,7 @@ export class XbrlUtility {
     return node.getAttributeNS(nsHref, att);
   }
 
-  public static getNodeTagsAtts(node, tag: string, attSelector: string, atts: [string], textContent: boolean, transformFn: (untransformedObj: any) => any, nsHref, nsPrefix, nss,
+  public static getNodeTagsAtts(node, tag: string, attSelector: string, atts: string[], textContent: boolean, transformFn: (untransformedObj: any) => any, nsHref, nsPrefix, nss,
                                 fn?: (node: any, nsHref: string, nsPrefix: string, nss: {}, obj: {}) => [any]): any {
     if (node && (tag || attSelector)) {
       let parse = attSelector ?  node.querySelectorAll('[' + attSelector + ']') : XbrlUtility.parseTag(tag, nsHref, nsPrefix, nss, node, false);
@@ -840,7 +857,7 @@ export class XbrlUtility {
     return structure.transformFn ? structure.transformFn(obj) : obj;
   }
 
-  public static getXbrlRoles(parsedXbrl): string[] {
+  public static getXbrlRoleURIs(parsedXbrl): string[] {
     if (parsedXbrl.type === 'xsd') {
       // return parsedXbrl.roles.map((i) => i.roleURI);
       return Object.keys(parsedXbrl.roleTypes || {});
@@ -853,12 +870,12 @@ export class XbrlUtility {
     }
   }
 
-  public static getXbrlsRoles(parsedXbrls): any {
-    let roles: string[] = [];
+  public static getXbrlsRoleURIs(parsedXbrls): any {
+    let roleURIs: string[] = [];
     parsedXbrls.forEach((parsedXbrl) => {
-      roles = roles.concat(XbrlUtility.getXbrlRoles(parsedXbrl));
+      roleURIs = roleURIs.concat(XbrlUtility.getXbrlRoleURIs(parsedXbrl));
     });
-    return XbrlUtility.uniqueCompact(roles);
+    return XbrlUtility.uniqueCompact(roleURIs);
   }
 
   public static unique(array?: any[]): any[] {
@@ -937,7 +954,7 @@ export class XbrlUtility {
     return tree;
   }
 
-  public static getContextRefs(tree: any, definitionTree?: any): [string] {
+  public static getContextRefs(tree: any, definitionTree?: any): string[] {
     let contextRefs = [];
     Object.keys(tree).forEach((rootKey) => {
       let root = tree[rootKey];
@@ -950,9 +967,9 @@ export class XbrlUtility {
     return XbrlUtility.uniqueCompact(contextRefs);
   }
 
-  public static pareContextRefs(contextRefs: any = [], contexts: any = [], dimensions?: [any]): [string] {
-    console.log('dimensions: ', JSON.stringify(dimensions));
-    let paredContextRefs: [string] = [];
+  public static pareContextRefs(contextRefs: any = [], contexts: any = [], dimensions?: [any]): string[] {
+    // console.log('dimensions: ', JSON.stringify(dimensions));
+    let paredContextRefs: string[] = [];
     let anyDimensions = !XbrlUtility.isBlank(dimensions);
     contextRefs.forEach((contextRef) => {
       let context = contexts[contextRef] || {};
@@ -963,7 +980,7 @@ export class XbrlUtility {
       if (anyDimensions) {
         let explicitMembers = [];
         segments.forEach((segment) => explicitMembers = explicitMembers.concat((segment || {}).explicitMember || []));
-        console.log('explicitMembers: ', JSON.stringify(explicitMembers));
+        // console.log('explicitMembers: ', JSON.stringify(explicitMembers));
         let foundDimension = explicitMembers.find((explicitMember: any = {}) => {
           return dimensions.find((dimension: any = {}) => explicitMember.dimension === dimension.dimension && explicitMember.textContent === dimension.member );
         });
@@ -1039,28 +1056,50 @@ export class XbrlUtility {
     });
     return rectangle;
   }
-  public static constructXbrlStatement(role: string, xbrlReport: XbrlReportInterface = {}): XbrlStatementInterface {
+
+  public static rectangularizeXbrlStatement(xbrlStatement, contexts) {
+    let tree = (xbrlStatement || {}).presentationCompositeLinkTree || {};
+    let dimensions = XbrlUtility.getXbrlStatementDimensions(xbrlStatement);
+    let paredContextRefs = XbrlUtility.pareContextRefs(xbrlStatement.contextRefs, contexts, dimensions);
+    let rectangle = XbrlUtility.rectangularizeTree(tree) || {};
+    let rectangleKeys = Object.keys(rectangle);
+    return {paredContextRefs, rectangle, rectangleKeys};
+  }
+
+  public static rectangularizeXbrlVStatement(xbrlVStatement, contexts) {
+    let paredContextRefs;
+    let rectangle;
+    let rectangleKeys;
+    ({paredContextRefs, rectangle, rectangleKeys} = XbrlUtility.rectangularizeXbrlStatement(xbrlVStatement.xbrlStatement, contexts));
+    xbrlVStatement.paredContextRefs = paredContextRefs;
+    xbrlVStatement.rectangle = rectangle;
+    xbrlVStatement.rectangleKeys = rectangleKeys;
+    return xbrlVStatement;
+  }
+
+  public static constructXbrlStatement(roleURI: string, xbrlReport: XbrlReportInterface = {}): XbrlStatementInterface {
     let xbrlStatement: XbrlStatementInterface = {
-      role,
+      roleURI,
       roleDefinition: null,
       items: null,
       contexts: null,
       units: null,
     };
-
-    let xsdRole = ((xbrlReport.xsd || {}).roles || []).find((i) => (i || {}).roleURI === role );
+    // console.log('((xbrlReport.xsd || {}).roleTypes || []): ', JSON.stringify(((xbrlReport.xsd || {}).roleTypes || [])));
+    // let xsdRole = ((xbrlReport.xsd || {}).roleTypes || []).find((i) => (i || {}).roleURI === roleURI );
+    let xsdRole = ((xbrlReport.xsd || {}).roleTypes || [])[roleURI];
     // let xsdElement = ((xbrlReport.xsd || {}).elements || []).find((i) => (i || {}).id === a.toHref.split('#').last );
 
-    let presentationLinks: any[] = (((xbrlReport || {}).pre || {}).presentationLinks || []).filter((i) => (i || {}).role  === role);
+    let presentationLinks: any[] = (((xbrlReport || {}).pre || {}).presentationLinks || []).filter((i) => (i || {}).role  === roleURI);
     xbrlStatement.preLinkTypes = presentationLinks.map((i) => i.type);
 
     // xbrlStatement.preLinkTypes = XbrlUtility.uniqueCompact(presentationLinks.map((i) => i.type));
 
-    let definitionLinks: any[] = (((xbrlReport || {}).def || {}).definitionLinks || []).filter((i) => (i || {}).role  === role);
+    let definitionLinks: any[] = (((xbrlReport || {}).def || {}).definitionLinks || []).filter((i) => (i || {}).role  === roleURI);
     xbrlStatement.defLinkTypes = definitionLinks.map((i) => i.type);
     // xbrlStatement.defLinkTypes = XbrlUtility.uniqueCompact(definitionLinks.map((i) => i.type));
 
-    let calculationLinks: any[] = (((xbrlReport || {}).cal || {}).calculationLinks || []).filter((i) => (i || {}).role  === role);
+    let calculationLinks: any[] = (((xbrlReport || {}).cal || {}).calculationLinks || []).filter((i) => (i || {}).role  === roleURI);
     xbrlStatement.calLinkTypes = calculationLinks.map((i) => i.type);
     // xbrlStatement.calLinkTypes = XbrlUtility.uniqueCompact(calculationArcs.map((i) => i.type));
 

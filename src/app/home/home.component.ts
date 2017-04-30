@@ -8,8 +8,9 @@ import { AppState } from '../app.service';
 import { Title } from './title';
 import { XLargeDirective } from './x-large';
 import { XbrlUtility } from '../edgar';
-import { XbrlService } from '../edgar';
 import { EdgarArchiveService } from '../edgar';
+import { XbrlVReportInterface, XbrlVStatementInterface, XbrlReportInterface, XbrlStatementInterface } from '../edgar';
+import { XbrlService } from '../edgar';
 import { VChartComponent } from '../v-chart';
 
 @Component({
@@ -35,14 +36,10 @@ export class HomeComponent implements OnInit {
   public singleDatas: any[] = [];
   public multiDatas: any[] = [];
 
-  public selectedXbrlStatement: string;
-  public xbrlStatement: any = {};
-  public xbrlStatementKeys: any = [];
-  public contexts;
-  public units;
-  public paredContextRefs;
-  public rectangle: any = {};
-  public rectangleKeys: any = [];
+  public selectedXbrlVReportKey: string;
+  public selectedXbrlVReport: XbrlVReportInterface;
+  public selectedXbrlVStatementRoleURI: string;
+  public selectedXbrlVStatement: XbrlVStatementInterface;
 
   constructor(
     public appState: AppState,
@@ -62,17 +59,11 @@ export class HomeComponent implements OnInit {
     this.localState.value = '';
     // this.edgarContent = this.edgarArchiveService.get(value)
     this.edgarArchiveService.getEdgarCompanyKeys(value).subscribe(
-      (res) => {
-        res.map((xbrl) => {
-          this.xbrlService.xbrls[xbrl.type] = xbrl;
-        });
-        let roles = XbrlUtility.getXbrlsRoles(res);
-        this.xbrlService.roles = roles;
-        roles.forEach((role) => this.xbrlService.xbrlStatements[role] = XbrlUtility.constructXbrlStatement(role, this.xbrlService.xbrls));
-        this.contexts = ((this.xbrlService.xbrls || {}).ins || {}).contexts;
-        this.units = ((this.xbrlService.xbrls || {}).ins || {}).units;
-        if (XbrlUtility.isBlank(this.selectedXbrlStatement)) {
-          this.selectXbrlStatement(roles[0]);
+      (parsedXbrls) => {
+        this.xbrlService.addParsedXbrls(parsedXbrls);
+        if (XbrlUtility.isBlank(this.selectedXbrlVReportKey)) {
+          this.selectXbrlVReport(Object.keys(this.xbrlService.xbrlVReports)[0]);
+          this.selectXbrlVStatement(Object.keys((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {})[0]);
         }
 
         // this.xbrlService.xbrlStatements.filter((xbrlStatement) => !XbrlUtility.isBlank(xbrlStatement.calculationLinkTrees)).map((xbrlStatement) => {
@@ -104,26 +95,31 @@ export class HomeComponent implements OnInit {
     );
   }
 
-  public clearXbrls() {
-    this.xbrlService.clearXbrls();
+  public clearXbrlReports() {
+    this.xbrlService.clearXbrlReports();
+    this.selectedXbrlVReportKey = null;
+    this.selectedXbrlVReport = null;
+    this.selectedXbrlVStatementRoleURI = null;
+    this.selectedXbrlVStatement = null;
   }
 
-  public selectXbrlStatement(role) {
-    // console.log('selected role: ', role);
-    // console.log('this.xbrlService.xbrlStatements keys: ', JSON.stringify(Object.keys(this.xbrlService.xbrlStatements)));
-    this.selectedXbrlStatement = role;
-    this.xbrlStatement = (this.xbrlService.xbrlStatements || {})[this.selectedXbrlStatement];
-    let tree = (this.xbrlStatement || {}).presentationCompositeLinkTree || {};
-    let dimensions = XbrlUtility.getXbrlStatementDimensions(this.xbrlStatement);
-    this.paredContextRefs = XbrlUtility.pareContextRefs(this.xbrlStatement.contextRefs, this.contexts, dimensions);
-    this.rectangle = XbrlUtility.rectangularizeTree(tree) || {};
-    // console.log('this.rectangle: ', JSON.stringify(this.rectangle));
-    this.rectangleKeys = Object.keys(this.rectangle);
-    // console.log('rectangleKeys: ', JSON.stringify(this.rectangleKeys));
+  public selectXbrlVReport(xbrlVReportKey): void {
+    this.selectedXbrlVReport = ((this.xbrlService || {xbrlVReports: {}}).xbrlVReports || {})[xbrlVReportKey] || {};
+    this.selectedXbrlVReportKey = xbrlVReportKey;
+  }
+
+  public selectXbrlVStatement(xbrlVStatementRoleURI): void {
+    XbrlUtility.rectangularizeXbrlVStatement(((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {})[xbrlVStatementRoleURI], (this.selectedXbrlVReport || {contexts: {}}).contexts);
+    this.selectedXbrlVStatement = ((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {})[xbrlVStatementRoleURI] || {};
+    this.selectedXbrlVStatementRoleURI = xbrlVStatementRoleURI;
+  }
+
+  public xbrlVReportKeys() {
+    return Object.keys(this.xbrlService.xbrlVReports || {});
   }
 
   public contextRefToHeader(contextRef) {
-    return XbrlUtility.getContextRefHeading(contextRef, this.contexts);
+    return XbrlUtility.getContextRefHeading(contextRef, (this.selectedXbrlVReport || {contexts: {}}).contexts);
   }
 
   public repeat(str: string, times: number = 1): string {
@@ -131,15 +127,15 @@ export class HomeComponent implements OnInit {
   }
 
   public getLabel(toHref: string, role?: string): string {
-    return XbrlUtility.getLabel((this.xbrlService.xbrls || {}).lab, toHref, role) || toHref;
+    return XbrlUtility.getLabel((this.selectedXbrlVReport.xbrls || {}).lab, toHref, role) || toHref;
   }
 
   public getLastSlash(str): string {
     return XbrlUtility.getLastSlash(str);
   }
 
-  public displayRole(roleURI): string {
-    let pieces = (((((this.xbrlService.xbrls || {}).xsd || {}).roleTypes || {})[roleURI] || {}).definition || '').split(/\s+-\s+/);
+  public displayRoleURI(roleURI): string {
+    let pieces = (((((this.selectedXbrlVReport.xbrls || {}).xsd || {}).roleTypes || {})[roleURI] || {}).definition || '').split(/\s+-\s+/);
     return pieces[pieces.length - 1];
      // ||
       // (XbrlUtility.getLastSlash(roleURI) || '').replace(/[A-Z]/g,  (letter) => ' ' + letter).trim();

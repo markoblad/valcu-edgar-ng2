@@ -113,7 +113,7 @@ export class EdgarArchiveService {
       observableBatch.push(this.http.get(`${obj.url}`, this.headers)
         .map(this.checkForError)
         .catch((err) => Observable.throw(err))
-        .map((resp) => this.toParsedXBRL(resp, obj.type))
+        .map((resp) => this.toParsedXbrl(resp, obj.type))
       );
     });
     return Observable.forkJoin(observableBatch);
@@ -165,7 +165,7 @@ export class EdgarArchiveService {
     return (content);
   }
 
-  private toParsedXBRL(resp: Response, type) {
+  private toParsedXbrl(resp: Response, type) {
     let doc = EdgarArchiveService.toXMLDocumentSelection(resp);
     return XbrlUtility.processTypeDoc(doc, type);
   }

@@ -31,28 +31,41 @@
           <button class="btn btn-primary">Submit Value</button>
         </form>
       </div>
-      <div class="col">
-        <form class="form-inline my-2 my-lg-0" (ngSubmit)="clearXbrls()" autocomplete="off">
-          <button class="btn btn-primary">Clear Xbrl</button>
-        </form>
+    </div>
+    <hr>
+
+    <div class="row">
+      <div class="col-sm-11">
+        <nav class="nav nav-tabs">
+          <small>
+            <li *ngFor="let xbrlVReportKey of xbrlVReportKeys()" class="nav-item">
+              <a
+              [ngClass]="{'nav-link': true, active: xbrlVReportKey === selectedXbrlVReportKey}"
+              (click)="selectXbrlVReport(xbrlVReportKey)">{{xbrlVReportKey}}</a>
+            </li>
+          </small>
+        </nav>
+      </div>
+      <div class="col-sm-1">
+        <button class="btn btn-danger btn-sm" (click)="clearXbrlReports()">&times;</button>
       </div>
     </div>
     <hr>
     
-    <div *ngIf="false">{{(((xbrlService || {}).xbrls || {}).lab || {}).labels | json}}</div>
-    <div *ngIf="false">{{(((xbrlService || {}).xbrls || {}).lab || {}).arcs | json}}</div>
+    <div *ngIf="false">{{(((selectedXbrlVReport || {}).xbrls || {}).lab || {}).labels | json}}</div>
+    <div *ngIf="false">{{(((selectedXbrlVReport || {}).xbrls || {}).lab || {}).arcs | json}}</div>
     <div *ngIf="true">
       <pre *ngIf="false">this.localState = {{ localState | json }}</pre>
-      <div *ngIf="false">{{(xbrlService || {}).roles | json}}</div>
+      <div *ngIf="false">{{(selectedXbrlVReport || {}).roleURIs | json}}</div>
 
       <div class="row">
         <div class="col-3">
-          <ul class="nav flex-column flex-sm-row nav-pills">
+          <ul class="nav flex-column flex-sm-row nav-pills xbrl-statement-nav">
             <li class="nav-item flex-sm-fill">
               <small>
-                <a *ngFor="let role of this.xbrlService.roles"
-                [ngClass]="{'flex-sm-fill': false, 'nav-link': true, 'active': selectedXbrlStatement === role}"
-                (click)="selectXbrlStatement(role)">{{displayRole(role)}}</a>
+                <a *ngFor="let roleURI of (selectedXbrlVReport || {}).roleURIs"
+                [ngClass]="{'flex-sm-fill': false, 'nav-link': true, 'active': selectedXbrlVStatementRoleURI === roleURI}"
+                (click)="selectXbrlVStatement(roleURI)">{{displayRoleURI(roleURI)}}</a>
               </small>
             </li>
           </ul>
@@ -60,38 +73,38 @@
 
         <div class="col">
           <small>
-            <table *ngIf="selectedXbrlStatement" class="table table-striped table-sm">
+            <table *ngIf="selectedXbrlVStatementRoleURI" class="table table-striped table-sm">
               <thead class="thead-inverse">
                 <tr>
-                  <th>Line</th>
-                  <th *ngFor="let contextRef of paredContextRefs" [innerHTML]="contextRefToHeader(contextRef)"></th>
+                  <th>{{displayRoleURI(selectedXbrlVStatementRoleURI)}}</th>
+                  <th *ngFor="let contextRef of selectedXbrlVStatement.paredContextRefs" [innerHTML]="contextRefToHeader(contextRef)"></th>
                 </tr>
               </thead>
 
-              <tr *ngFor="let rectangleKey of rectangleKeys">
-                <td>{{repeat('│   ', rectangle[rectangleKey].level - 1)}}<span *ngIf="rectangle[rectangleKey].level !== 0">{{rectangle[rectangleKey].lastChild ? '└──' : '├──'}}&nbsp;</span>{{getLabel(rectangle[rectangleKey].toHref, rectangle[rectangleKey].preferredLabel)}}</td>
-                <td *ngFor="let contextRef of paredContextRefs" [innerHTML]="(((rectangle[rectangleKey] || {}).instances || {})[contextRef] || {}).textContent"></td>
+              <tr *ngFor="let rectangleKey of selectedXbrlVStatement.rectangleKeys">
+                <td>{{repeat('│   ', selectedXbrlVStatement.rectangle[rectangleKey].level - 1)}}<span *ngIf="selectedXbrlVStatement.rectangle[rectangleKey].level !== 0">{{selectedXbrlVStatement.rectangle[rectangleKey].lastChild ? '└──' : '├──'}}&nbsp;</span>{{getLabel(selectedXbrlVStatement.rectangle[rectangleKey].toHref, selectedXbrlVStatement.rectangle[rectangleKey].preferredLabel)}}</td>
+                <td *ngFor="let contextRef of selectedXbrlVStatement.paredContextRefs" [innerHTML]="(((selectedXbrlVStatement.rectangle[rectangleKey] || {}).instances || {})[contextRef] || {}).textContent"></td>
               </tr>
             </table>
           </small>
 
-          <div class="row" *ngIf="false && selectedXbrlStatement">
+          <div class="row" *ngIf="false && selectedXbrlVStatementRoleURI">
             <div class="col-3">
               <div>Line</div>
-              <div *ngFor="let rectangleKey of rectangleKeys">{{repeat('│   ', rectangle[rectangleKey].level - 1)}}<span *ngIf="rectangle[rectangleKey].level !== 0">{{rectangle[rectangleKey].lastChild ? '└──' : '├──'}}&nbsp;</span>{{getLabel(rectangle[rectangleKey].toHref, rectangle[rectangleKey].preferredLabel)}}</div>
+              <div *ngFor="let rectangleKey of selectedXbrlVStatement.rectangleKeys">{{repeat('│   ', selectedXbrlVStatement.rectangle[rectangleKey].level - 1)}}<span *ngIf="selectedXbrlVStatement.rectangle[rectangleKey].level !== 0">{{selectedXbrlVStatement.rectangle[rectangleKey].lastChild ? '└──' : '├──'}}&nbsp;</span>{{getLabel(selectedXbrlVStatement.rectangle[rectangleKey].toHref, selectedXbrlVStatement.rectangle[rectangleKey].preferredLabel)}}</div>
             </div>
-            <div class="col" *ngFor="let contextRef of paredContextRefs">
+            <div class="col" *ngFor="let contextRef of selectedXbrlVStatement.paredContextRefs">
               <div [innerHTML]="contextRefToHeader(contextRef)"></div>
-              <div *ngFor="let rectangleKey of rectangleKeys" [innerHTML]="(((rectangle[rectangleKey] || {}).instances || {})[contextRef] || {}).textContent"></div>
+              <div *ngFor="let rectangleKey of selectedXbrlVStatement.rectangleKeys" [innerHTML]="(((selectedXbrlVStatement.rectangle[rectangleKey] || {}).instances || {})[contextRef] || {}).textContent"></div>
             </div>
           </div>
 
         </div>
       </div>
-      <pre *ngIf="false">xbrlStatement = {{ xbrlStatement | json }}</pre>
-      <pre *ngIf="false">xbrlService.xbrlStatements = {{ xbrlService.xbrlStatements | json }}</pre>
-      <pre *ngIf="false">xbrlService.xbrls = {{ xbrlService.xbrls | json }}</pre>
-      <pre *ngIf="false">xbrlService.xbrls.xsd = {{ ((xbrlService.xbrls || {})).xsd | json }}</pre>
+      <pre *ngIf="false">selectedXbrlVStatement = {{ selectedXbrlVStatement | json }}</pre>
+      <pre *ngIf="false">selectedXbrlVStatement.xbrlStatements = {{ selectedXbrlVStatement.xbrlStatements | json }}</pre>
+      <pre *ngIf="false">selectedXbrlVReport.xbrls = {{ selectedXbrlVReport.xbrls | json }}</pre>
+      <pre *ngIf="false">selectedXbrlVReport.xbrls.xsd = {{ ((selectedXbrlVReport.xbrls || {})).xsd | json }}</pre>
 
     </div>
 
