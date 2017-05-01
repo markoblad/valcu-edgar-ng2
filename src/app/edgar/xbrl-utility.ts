@@ -592,9 +592,9 @@ export class XbrlUtility {
     });
   }
 
-  public static arrayedTextTransform(objs: any []) { return (objs || []).map((i) => (i || {}).textContent ); }
+  public static arrayedTextTransform(objs: any[]) { return (objs || []).map((i) => (i || {}).textContent ); }
 
-  public static firstArrayItemTransform(objs: any []) { return (objs || [])[0]; }
+  public static firstArrayItemTransform(objs: any[]) { return (objs || [])[0]; }
 
   public static objsArrayToObjObjsTransform(objs: any[], keyOrFn: any) { let obj = {}; (objs || []).map((i) => obj[typeof keyOrFn === 'function' ? keyOrFn(i) : i[keyOrFn]] = i); return obj; }
 
