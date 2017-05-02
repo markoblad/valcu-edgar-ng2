@@ -8,11 +8,13 @@ import { XbrlVReportInterface, XbrlVStatementInterface, XbrlReportInterface, Xbr
 export class XbrlService {
 
   public xbrlVReports: any = {};
+  public xbrlVReportKeys: string[] = [];
 
   // constructor() {}
 
   public clearXbrlReports() {
     this.xbrlVReports = {};
+    this.xbrlVReportKeys = [];
   }
 
   public addParsedXbrls(xbrlVReportKey: string, parsedXbrls: any[] = [], edgarArchiveFiles: any[]): void {
@@ -43,6 +45,8 @@ export class XbrlService {
     });
     xbrlVReport.contexts = ((xbrlVReport.xbrls || {}).ins || {}).contexts;
     xbrlVReport.units = ((xbrlVReport.xbrls || {}).ins || {}).units;
+    this.xbrlVReportKeys.push(xbrlVReportKey);
+    console.log('this.xbrlVReportKeys: ', JSON.stringify(this.xbrlVReportKeys));
     this.xbrlVReports[xbrlVReportKey] = xbrlVReport;
   }
 

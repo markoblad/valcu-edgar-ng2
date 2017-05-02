@@ -29,7 +29,7 @@ import { VChartComponent } from '../v-chart';
 })
 export class HomeComponent implements OnInit {
   // Set our default values
-  public localState = { value: '' };
+  public localState = { value: '1371128' };
   public edgarContents: any = [];
   // TypeScript public modifiers
 
@@ -48,62 +48,62 @@ export class HomeComponent implements OnInit {
     public xbrlService: XbrlService
   ) {
     this.xbrlService.xbrlVReports = {
-      '000121390016011346': {
-        edgarArchiveFiles: [
-          {
-            type: 'xsd',
-            url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xsd',
-          },
-          {
-            type: 'pre',
-            url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_pre.xml',
-          },
-          {
-            type: 'def',
-            url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_def.xml',
-          },
-          {
-            type: 'cal',
-            url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_cal.xml',
-          },
-          {
-            type: 'lab',
-            url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_lab.xml',
-          },
-          {
-            type: 'ins',
-            url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xml',
-          },
-        ],
-      },
-      '000121390017002526': {
-        edgarArchiveFiles: [
-          {
-            type: 'xsd',
-            url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231.xsd',
-          },
-          {
-            type: 'pre',
-            url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231_pre.xml',
-          },
-          {
-            type: 'def',
-            url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231_def.xml',
-          },
-          {
-            type: 'cal',
-            url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231_cal.xml',
-          },
-          {
-            type: 'lab',
-            url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231_lab.xml',
-          },
-          {
-            type: 'ins',
-            url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231.xml',
-          },
-        ],
-      },
+    //   '000121390016011346': {
+    //     edgarArchiveFiles: [
+    //       {
+    //         type: 'xsd',
+    //         url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xsd',
+    //       },
+    //       {
+    //         type: 'pre',
+    //         url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_pre.xml',
+    //       },
+    //       {
+    //         type: 'def',
+    //         url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_def.xml',
+    //       },
+    //       {
+    //         type: 'cal',
+    //         url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_cal.xml',
+    //       },
+    //       {
+    //         type: 'lab',
+    //         url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_lab.xml',
+    //       },
+    //       {
+    //         type: 'ins',
+    //         url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xml',
+    //       },
+    //     ],
+    //   },
+    //   '000121390017002526': {
+    //     edgarArchiveFiles: [
+    //       {
+    //         type: 'xsd',
+    //         url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231.xsd',
+    //       },
+    //       {
+    //         type: 'pre',
+    //         url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231_pre.xml',
+    //       },
+    //       {
+    //         type: 'def',
+    //         url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231_def.xml',
+    //       },
+    //       {
+    //         type: 'cal',
+    //         url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231_cal.xml',
+    //       },
+    //       {
+    //         type: 'lab',
+    //         url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231_lab.xml',
+    //       },
+    //       {
+    //         type: 'ins',
+    //         url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231.xml',
+    //       },
+    //     ],
+    //   },
     };
   }
 
@@ -114,6 +114,7 @@ export class HomeComponent implements OnInit {
   }
 
   public submitState(value: string) {
+    this.clearXbrlReports();
     console.log('submitState', value);
     this.appState.set('value', value);
     this.localState.value = '';
@@ -121,51 +122,72 @@ export class HomeComponent implements OnInit {
     if (value) {
       this.edgarArchiveService.getCikArchive(value).subscribe(
         (cikObjs) => {
-          console.log('cikObjs: ', JSON.stringify(cikObjs));
+          // console.log('cikObjs: ', JSON.stringify(cikObjs || ''));
+          cikObjs.forEach((cikObj) => {
+            this.edgarArchiveService.getArchive(cikObj.href).subscribe(
+              (archiveObjs) => {
+                // console.log('archiveObjs: ', JSON.stringify(archiveObjs || ''));
+                let edgarArchiveFiles = this.edgarArchiveService.archiveUrlObjsToEdgarArchiveFiles(archiveObjs);
+                if (edgarArchiveFiles) {
+                  let xbrlVReport = {edgarArchiveFiles};
+                  // console.log('xbrlVReport: ', JSON.stringify(xbrlVReport));
+                  let urlPieces = (edgarArchiveFiles[0].url || '').split('/');
+                  let xbrlVReportKey = urlPieces[urlPieces.length - 2];
+                  // console.log('xbrlVReportKey: ', xbrlVReportKey);
+                  this.getXbrlReport(xbrlVReportKey, xbrlVReport);
+                }
+              },
+              (error) => console.log(error)
+            );
+          });
         },
         (error) => console.log(error)
       );
     } else {
       Object.keys(this.xbrlService.xbrlVReports).forEach((xbrlVReportKey) => {
-        let xbrlReport = this.xbrlService.xbrlVReports[xbrlVReportKey];
-        this.edgarArchiveService.getParsedXbrls(xbrlReport.edgarArchiveFiles).subscribe(
-          (parsedXbrls) => {
-            // console.log('xbrlVReportKey: ', xbrlVReportKey);
-            this.xbrlService.addParsedXbrls(xbrlVReportKey, parsedXbrls, xbrlReport.edgarArchiveFiles);
-            if (XbrlUtility.isBlank(this.selectedXbrlVReportKey)) {
-              this.selectXbrlVReport(Object.keys(this.xbrlService.xbrlVReports)[0]);
-              this.selectXbrlVStatement(Object.keys((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {})[0]);
-            }
-
-            // this.xbrlService.xbrlStatements.filter((xbrlStatement) => !XbrlUtility.isBlank(xbrlStatement.calculationLinkTrees)).map((xbrlStatement) => {
-            //   let newMultiData = [];
-            //   let newSingleData = [];
-            //   xbrlStatement.calculationLinkTrees.map((calculationLinkTree) => {
-            //     // console.log('Object.keys(calculationLinkTree): ', JSON.stringify(Object.keys(calculationLinkTree)));
-            //     let rootKey = Object.keys(calculationLinkTree)[0];
-            //     let root = calculationLinkTree[rootKey] || {};
-            //     let branch = root.branch || {};
-            //     let branchesKeys = Object.keys(branch) || [];
-            //     let series = branchesKeys.map((branchesKey) => { return {
-            //       name: (((branch[branchesKey] || {}).instances || {}).Context_As_Of_31_Dec_2015T00_00_00_TO_31_Dec_2015T00_00_00 || {}).localName || '',
-            //       value: parseInt((((branch[branchesKey] || {}).instances || {}).Context_As_Of_31_Dec_2015T00_00_00_TO_31_Dec_2015T00_00_00 || {}).textContent || 0, 10)
-            //     }; });
-            //     newSingleData = newSingleData.concat(series);
-            //     newMultiData.push({name: rootKey, series});
-            //   });
-            //   // console.log('newMulti: ', JSON.stringify(newMultiData));
-            //   if (!XbrlUtility.isBlank(newSingleData)) {
-            //     this.singleDatas.push(newSingleData);
-            //   }
-            //   if (!XbrlUtility.isBlank(newMultiData)) {
-            //     this.multiDatas.push(newMultiData);
-            //   }
-            // });
-          },
-          (error) => console.log(error)
-        );
+        let xbrlVReport = this.xbrlService.xbrlVReports[xbrlVReportKey];
+        this.getXbrlReport(xbrlVReportKey, xbrlVReport);
       });
     }
+  }
+
+  public getXbrlReport(xbrlVReportKey, xbrlVReport) {
+    this.edgarArchiveService.getParsedXbrls(xbrlVReport.edgarArchiveFiles).subscribe(
+      (parsedXbrls) => {
+        // console.log('parsedXbrls: ', JSON.stringify(parsedXbrls));
+        this.xbrlService.addParsedXbrls(xbrlVReportKey, parsedXbrls, xbrlVReport.edgarArchiveFiles);
+        if (XbrlUtility.isBlank(this.selectedXbrlVReportKey)) {
+          this.selectXbrlVReport(Object.keys(this.xbrlService.xbrlVReports)[0]);
+          this.selectXbrlVStatement(Object.keys((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {})[0]);
+        }
+
+        // this.xbrlService.xbrlStatements.filter((xbrlStatement) => !XbrlUtility.isBlank(xbrlStatement.calculationLinkTrees)).map((xbrlStatement) => {
+        //   let newMultiData = [];
+        //   let newSingleData = [];
+        //   xbrlStatement.calculationLinkTrees.map((calculationLinkTree) => {
+        //     // console.log('Object.keys(calculationLinkTree): ', JSON.stringify(Object.keys(calculationLinkTree)));
+        //     let rootKey = Object.keys(calculationLinkTree)[0];
+        //     let root = calculationLinkTree[rootKey] || {};
+        //     let branch = root.branch || {};
+        //     let branchesKeys = Object.keys(branch) || [];
+        //     let series = branchesKeys.map((branchesKey) => { return {
+        //       name: (((branch[branchesKey] || {}).instances || {}).Context_As_Of_31_Dec_2015T00_00_00_TO_31_Dec_2015T00_00_00 || {}).localName || '',
+        //       value: parseInt((((branch[branchesKey] || {}).instances || {}).Context_As_Of_31_Dec_2015T00_00_00_TO_31_Dec_2015T00_00_00 || {}).textContent || 0, 10)
+        //     }; });
+        //     newSingleData = newSingleData.concat(series);
+        //     newMultiData.push({name: rootKey, series});
+        //   });
+        //   // console.log('newMulti: ', JSON.stringify(newMultiData));
+        //   if (!XbrlUtility.isBlank(newSingleData)) {
+        //     this.singleDatas.push(newSingleData);
+        //   }
+        //   if (!XbrlUtility.isBlank(newMultiData)) {
+        //     this.multiDatas.push(newMultiData);
+        //   }
+        // });
+      },
+      (error) => console.log(error)
+    );
   }
 
   public clearXbrlReports() {
@@ -179,10 +201,17 @@ export class HomeComponent implements OnInit {
   public selectXbrlVReport(xbrlVReportKey): void {
     this.selectedXbrlVReport = ((this.xbrlService || {xbrlVReports: {}}).xbrlVReports || {})[xbrlVReportKey] || {};
     this.selectedXbrlVReportKey = xbrlVReportKey;
+    if (XbrlUtility.isBlank(this.selectedXbrlVStatementRoleURI) ||
+      !(Object.keys((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {}).indexOf(this.selectedXbrlVStatementRoleURI) >= 0)) {
+      this.selectXbrlVStatement(Object.keys((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {})[0]);
+    }
   }
 
   public selectXbrlVStatement(xbrlVStatementRoleURI): void {
-    XbrlUtility.rectangularizeXbrlVStatement(((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {})[xbrlVStatementRoleURI], (this.selectedXbrlVReport || {contexts: {}}).contexts);
+    XbrlUtility.rectangularizeXbrlVStatement(
+      ((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {})[xbrlVStatementRoleURI],
+      (this.selectedXbrlVReport || {contexts: {}}).contexts
+    );
     this.selectedXbrlVStatement = ((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {})[xbrlVStatementRoleURI] || {};
     this.selectedXbrlVStatementRoleURI = xbrlVStatementRoleURI;
   }

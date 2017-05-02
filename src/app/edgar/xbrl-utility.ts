@@ -732,7 +732,7 @@ export class XbrlUtility {
     // var xpathResult = document.evaluate( xpathExpression, contextNode, namespaceResolver, resultType, result );
 
     // return doc.getElementsByTagName(tag);
-    return doc.getElementsByTagNameNS(nsHref, tag);
+    return nsHref ? doc.getElementsByTagNameNS(nsHref, tag) : doc.getElementsByTagName(tag);
   }
 //         @r = doc.xpath("//ns:#{tag}", "ns" => nsHref)
 //         raise ArgumentError, "Xpath of //ns:#{tag} is blank." if @r.blank?
@@ -766,17 +766,19 @@ export class XbrlUtility {
 //                   @r = no_namespace_doc.css("/#{tag}")
 
   public static getNodeAtts(node, atts: any, nsHref, nsPrefix, nss, obj?: any): any {
+    // console.log('atts: ', JSON.stringify(atts));
     if (node && atts) {
       // console.log('atts: ', JSON.stringify(atts));
       let returnObj = obj || {};
       // console.log('nsUris: ', nss);
-      let nsUris = Object.keys(nss);
+      let nsUris = Object.keys(nss || {});
       (atts || []).forEach((att) => {
+        // console.log('att: ', att);
         let attVal = node.getAttribute(att);
         if (attVal === null) {
-          for (let i in Object.keys(nsUris)) {
+          for (let i in nsUris) {
             if (i.length > 0) {
-              attVal = XbrlUtility.getNodeAttNS(node, att, nss[nsUris[i]]);
+              attVal = XbrlUtility.getNodeAttNS(node, att, (nss || {})[nsUris[i]]);
               if (attVal !== null) { break; }
             }
           }
@@ -790,19 +792,32 @@ export class XbrlUtility {
   }
 
   public static getNodeAttNS(node, att: string, nsHref): any {
-    // return node.getAttribute(att);
-    return node.getAttributeNS(nsHref, att);
+    return nsHref ? node.getAttributeNS(nsHref, att) : node.getAttribute(att);
   }
 
-  public static getNodeTagsAtts(node, tag: string, attSelector: string, atts: string[], textContent: boolean, transformFn: (untransformedObj: any) => any, nsHref, nsPrefix, nss,
-                                fn?: (node: any, nsHref: string, nsPrefix: string, nss: {}, obj: {}) => [any]): any {
+  public static getNodeTagsAtts(
+    node,
+    tag: string,
+    attSelector: string,
+    atts: string[],
+    textContent: boolean,
+    transformFn: (untransformedObj: any) => any,
+    nsHref,
+    nsPrefix,
+    nss,
+    fn?: (node: any, nsHref: string, nsPrefix: string, nss: {}, obj: {}) => [any]
+  ): any {
     if (node && (tag || attSelector)) {
+      // console.log('tag: ', tag);
+      // console.log('node: ', node);
       let parse = attSelector ?  node.querySelectorAll('[' + attSelector + ']') : XbrlUtility.parseTag(tag, nsHref, nsPrefix, nss, node, false);
+      // console.log('parse: ', JSON.stringify(Object.keys(parse)));
       let objs = [];
       for (let i in Object.keys(parse)) {
         if (i.length > 0) {
           let parseI = parse[i];
           if (parseI) {
+            // console.log('parseI: ', JSON.stringify(parseI));
             let nestedObj = <any> {};
             // nestedObj.tagName = ((parseI || {}).tagName || '').trim();
             nestedObj.nodeName = ((parseI || {}).nodeName || '').trim();
@@ -810,6 +825,7 @@ export class XbrlUtility {
             if (textContent) {
               nestedObj.textContent = ((parseI || {}).textContent || '').trim();
             }
+            // console.log('nestedObj: ', JSON.stringify(nestedObj));
             nestedObj = XbrlUtility.getNodeAtts(parseI, atts, nsHref, nsPrefix, nss, nestedObj);
             if (fn) {
               nestedObj = fn(parseI, nsHref, nsPrefix, nss, nestedObj);
@@ -901,7 +917,7 @@ export class XbrlUtility {
     let tree: any = {};
     let arcsPool = arcs.slice(0);
     arcs.forEach((arc) => {
-      if (from === arc.from) {
+      if (from === (arc || {}).from) {
         let newArc = JSON.parse(JSON.stringify(arc));
         let index = arcsPool.indexOf(arc);
         if (index > -1) { arcsPool.splice(index, 1); }
@@ -932,8 +948,8 @@ export class XbrlUtility {
 
   public static constructTree(arcs: any[] = [], instances: any): any {
     let trees = [];
-    let froms = XbrlUtility.uniqueCompact(arcs.map((i) => i.from));
-    let tos = XbrlUtility.uniqueCompact(arcs.map((i) => i.to));
+    let froms = XbrlUtility.uniqueCompact(arcs.map((i) => (i || {}).from));
+    let tos = XbrlUtility.uniqueCompact(arcs.map((i) => (i || {}).to));
     let rootFroms = froms.filter((i) => tos.indexOf(i) < 0);
     // let rootFrom = rootFroms[0];
     // if (rootFroms.length > 0) {
@@ -1058,7 +1074,7 @@ export class XbrlUtility {
     return rectangle;
   }
 
-  public static rectangularizeXbrlStatement(xbrlStatement, contexts) {
+  public static rectangularizeXbrlStatement(xbrlStatement = {}, contexts) {
     let tree = (xbrlStatement || {}).presentationCompositeLinkTree || {};
     let dimensions = XbrlUtility.getXbrlStatementDimensions(xbrlStatement);
     let paredContextRefs = XbrlUtility.pareContextRefs(xbrlStatement.contextRefs, contexts, dimensions);
@@ -1067,7 +1083,7 @@ export class XbrlUtility {
     return {paredContextRefs, rectangle, rectangleKeys};
   }
 
-  public static rectangularizeXbrlVStatement(xbrlVStatement, contexts) {
+  public static rectangularizeXbrlVStatement(xbrlVStatement: {} = {}, contexts) {
     let paredContextRefs;
     let rectangle;
     let rectangleKeys;
@@ -1164,7 +1180,7 @@ export class XbrlUtility {
     return xbrlStatement;
   }
 
-  public static getXbrlStatementDimensions(xbrlStatement: XbrlStatementInterface): any {
+  public static getXbrlStatementDimensions(xbrlStatement: XbrlStatementInterface = {}): any {
     let xbrlStatementDimensions = [];
     let xbrlStatementLines = [];
     let definitionCompositeLinkTree = xbrlStatement.definitionCompositeLinkTree;

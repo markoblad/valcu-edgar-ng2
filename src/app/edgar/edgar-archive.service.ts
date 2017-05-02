@@ -22,7 +22,7 @@ export class EdgarArchiveService {
   // proxyUrl: string = 'https://valcu.co';
   // edgarArchiveUrl: string = 'https://www.sec.gov/Archives/edgar/data/'; // ${cik}/${accountNumberNoDash}/${accountNumber}-index.htm
   public proxyUrl: string = '//localhost:3003/edgar/'; // ${cik}/${accountNumberNoDash}/${accountNumber}-index.htm
-  public edgarArchivePath: string = 'Archives/edgar/data/'; // ${cik}/${accountNumberNoDash}/${accountNumber}-index.htm
+  public edgarArchivePathStub: string = 'Archives/edgar/data/'; // ${cik}/${accountNumberNoDash}/${accountNumber}-index.htm
   // 0001213900-16-011346
   // 000121390016011346
   // https://www.sec.gov/Archives/edgar/data/0001371128/000121390016011346/0001213900-16-011346-index.htm
@@ -73,21 +73,30 @@ export class EdgarArchiveService {
   }
 
   public get(path: string): Observable<any> {
-    return this.http.get(`${this.proxyUrl}${this.edgarArchivePath}${path}`, this.headers)
+    return this.http.get(`${this.proxyUrl}${this.edgarArchivePathStub}${path}`, this.headers)
     .map(this.checkForError)
     .catch((err) => Observable.throw(err))
     .map(this.getJson);
   }
 
   public getCikArchive(cik: string): Observable<any> {
-    let path = this.edgarArchivePath + (cik || '').toString().trim().replace(/^0+/, '');
-    console.log('path: ', path);
+    let path = this.edgarArchivePathStub + (cik || '').toString().trim().replace(/^0+/, '');
+    // console.log('path: ', path);
     let url = this.proxyUrl + path;
-    console.log('url: ', url);
+    // console.log('url: ', url);
     return this.http.get(url)
     .map(this.checkForError)
     .catch((err) => Observable.throw(err))
-    .map((resp) => this.toArchiveUrls(resp, path));
+    .map((resp) => this.toArchiveUrlObjs(resp, path));
+  }
+
+  public getArchive(archivePath: string): Observable<any> {
+    let url = this.proxyUrl + (archivePath || '').replace(/^\//, '');
+    // console.log('url: ', url);
+    return this.http.get(url)
+    .map(this.checkForError)
+    .catch((err) => Observable.throw(err))
+    .map((resp) => this.toArchiveUrlObjs(resp, archivePath));
   }
 
   public getParsedXbrls(edgarArchiveFiles: any[] = []): Observable<any> {
@@ -98,7 +107,8 @@ export class EdgarArchiveService {
     let observableBatch = [];
     edgarArchiveFiles.forEach((obj) => {
       // console.log('obj.url: ', obj.url);
-      observableBatch.push(this.http.get(`${obj.url}`, this.headers)
+      let url = this.proxyUrl + (obj.url || '').replace(/^\//, '');
+      observableBatch.push(this.http.get(url, this.headers)
         .map(this.checkForError)
         .catch((err) => Observable.throw(err))
         .map((resp) => this.toParsedXbrl(resp, obj.type))
@@ -109,8 +119,8 @@ export class EdgarArchiveService {
 
   public post(path, body): Observable<any> {
     return this.http.post(
-      `${this.proxyUrl}${this.edgarArchivePath}${path}`,
-      JSON.stringify(body),
+      `${this.proxyUrl}${this.edgarArchivePathStub}${path}`,
+      // JSON.stringify(body),
       {headers: this.headers}
     )
     .map(this.checkForError)
@@ -119,10 +129,36 @@ export class EdgarArchiveService {
   }
 
   public delete(path: string): Observable<any> {
-    return this.http.delete(`${this.proxyUrl}${this.edgarArchivePath}${path}`, this.headers)
+    return this.http.delete(`${this.proxyUrl}${this.edgarArchivePathStub}${path}`, this.headers)
     .map(this.checkForError)
     .catch((err) => Observable.throw(err))
     .map(this.getJson);
+  }
+
+  public archiveUrlObjsToEdgarArchiveFiles(archiveUrlObjs): any {
+    let edgarArchiveFiles = [];
+    (archiveUrlObjs || []).filter((archiveUrlObj) => archiveUrlObj.href.match(/\.(?:xsd)|(?:xml)$/))
+    .forEach((archiveUrlObj) => {
+      let edgarArchiveFile = {url: archiveUrlObj.href, type: null};
+      if (archiveUrlObj.href.match(/\.xsd$/)) {
+        edgarArchiveFile.type = 'xsd';
+      } else if (archiveUrlObj.href.match(/\_pre\.xml$/)) {
+        edgarArchiveFile.type = 'pre';
+      } else if (archiveUrlObj.href.match(/\_def\.xml$/)) {
+        edgarArchiveFile.type = 'def';
+      } else if (archiveUrlObj.href.match(/\_cal\.xml$/)) {
+        edgarArchiveFile.type = 'cal';
+      } else if (archiveUrlObj.href.match(/\_lab\.xml$/)) {
+        edgarArchiveFile.type = 'lab';
+      } else if (archiveUrlObj.href.match(/\-\d{8}\.xml$/) && !archiveUrlObj.href.match(/FilingSummary\.xml$/)) {
+        console.log('archiveUrlObj.href: ', archiveUrlObj.href);
+        edgarArchiveFile.type = 'ins';
+      }
+      if (!XbrlUtility.isBlank(edgarArchiveFile.type)) {
+        edgarArchiveFiles.push(edgarArchiveFile);
+      }
+    });
+    return XbrlUtility.isBlank(edgarArchiveFiles) ? null : edgarArchiveFiles;
   }
 
   private setHeaders(headers) {
@@ -158,18 +194,18 @@ export class EdgarArchiveService {
     return XbrlUtility.processTypeDoc(doc, type);
   }
 
-  private toArchiveUrls(resp: Response, path: string): any[] {
-    let txt = resp.innerHTML();
+  private toArchiveUrlObjs(resp: Response, path: string): any[] {
+    let txt = resp.text();
     // console.log(txt);
     // let doc = new DOMParser().parseFromString(body.data, 'application/xml');
     // let doc = new DOMParser().parseFromString(resp.data, 'text/html');
     let doc = new DOMParser().parseFromString(txt, 'text/html');
-    console.log('doc: ', JSON.stringify(doc));
+    // console.log('doc: ', JSON.stringify(doc));
     // let selection = (<Element>doc.firstChild);
     let selection = (<Element> doc.lastChild);
     // let selection = doc;
-    console.log('selection: ', JSON.stringify(selection));
-    let urlObjs = XbrlUtility.getNodeTagsAtts(selection, 'a', null, ['href'], true, null, (objs) => objs.filter((obj) => (obj.href || '').indexOf(path) >= 0));
+    // console.log('selection: ', JSON.stringify(selection));
+    let urlObjs = XbrlUtility.getNodeTagsAtts(selection, 'a', null, ['href'], true, (objs) => objs.filter((obj) => (obj.href || '').indexOf(path) >= 0), null, null, null, null);
     return urlObjs;
   }
 
