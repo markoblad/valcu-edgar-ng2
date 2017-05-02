@@ -21,6 +21,12 @@
 
     <div class="row">
       <div class="col">
+        <p [innerHTML]="appState.get('companyName')"></p>
+        <p [innerHTML]="appState.get('cik')"></p>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
         <form class="form-inline my-2 my-lg-0" (ngSubmit)="submitState(localState.value)" autocomplete="off">
           <input
              class="form-control mr-sm-2"

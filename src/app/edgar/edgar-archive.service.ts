@@ -18,6 +18,8 @@ export class EdgarArchiveService {
 
   // edgarBrowseUrl: string = 'https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&type=10-k&count=10&CIK=';
   public edgarBrowseUrl: string = '//localhost:3003/edgar/cgi-bin/browse-edgar?action=getcompany&type=10-k&count=10&CIK=';
+  public edgarCikBrowsePathStub: string = 'cgi-bin/browse-edgar?action=getcompany&type=10-k&count=10&CIK=';
+  // https://www.sec.gov/cgi-bin/browse-edgar?CIK=0001375796&owner=exclude&action=getcompany&Find=Search
   // edgarBrowseUrl: string = 'https://valcu.co/?CIK=';
   // proxyUrl: string = 'https://valcu.co';
   // edgarArchiveUrl: string = 'https://www.sec.gov/Archives/edgar/data/'; // ${cik}/${accountNumberNoDash}/${accountNumber}-index.htm
@@ -27,31 +29,10 @@ export class EdgarArchiveService {
   // 000121390016011346
   // https://www.sec.gov/Archives/edgar/data/0001371128/000121390016011346/0001213900-16-011346-index.htm
 
-// https://www.sec.gov/Archives/edgar/data/1371128
+  // https://www.sec.gov/Archives/edgar/data/1371128
 
-  // edgarArchiveFileUrl: string = 'https://www.sec.gov/Archives/edgar/data';
-  // edgarArchiveFileUrl: string = 'https://www.sec.gov/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xml';
-  // public edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/30554/000089322007002631/dd-ssu_xbrl.xsd';
-  // edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xml';
-  // edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xsd';
-  // edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_pre.xml';
-  // edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_def.xml';
-  // edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_cal.xml';
-  // edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_lab.xml';
-
-  // edgarArchiveFileUrl: string = '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_ins.xml';
-  // https://www.sec.gov/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xml
-
-    // [0] "http://www.sec.gov/Archives/edgar/data/30554/000089322007002631/w37855e8vk.htm",
-    // [1] "http://www.sec.gov/Archives/edgar/data/30554/000089322007002631/dd-20070630.xml",
-    // [2] "http://www.sec.gov/Archives/edgar/data/30554/000089322007002631/dd-20070630.xsd",
-    // [3] "http://www.sec.gov/Archives/edgar/data/30554/000089322007002631/dd-ssu_xbrl.xsd",
-    // [4] "http://www.sec.gov/Archives/edgar/data/30554/000089322007002631/dd-20070630_cal.xml",
-    // [5] "http://www.sec.gov/Archives/edgar/data/30554/000089322007002631/dd-20070630_lab.xml",
-    // [6] "http://www.sec.gov/Archives/edgar/data/30554/000089322007002631/dd-20070630_pre.xml"
-
-    // https://www.sec.gov/Archives/edgar/monthly/
-    // https://www.sec.gov/Archives/edgar/monthly/xbrlrss-2007-08.xml
+  // https://www.sec.gov/Archives/edgar/monthly/
+  // https://www.sec.gov/Archives/edgar/monthly/xbrlrss-2007-08.xml
 
   public edgarCompanyKeysObj: any = {};
 
@@ -80,7 +61,7 @@ export class EdgarArchiveService {
   }
 
   public getCikArchive(cik: string): Observable<any> {
-    let path = this.edgarArchivePathStub + (cik || '').toString().trim().replace(/^0+/, '');
+    let path = this.edgarArchivePathStub + (cik || '').toString().trim().replace(/^0+/, '').trim();
     // console.log('path: ', path);
     let url = this.proxyUrl + path;
     // console.log('url: ', url);
@@ -91,12 +72,21 @@ export class EdgarArchiveService {
   }
 
   public getArchive(archivePath: string): Observable<any> {
-    let url = this.proxyUrl + (archivePath || '').replace(/^\//, '');
+    let url = this.proxyUrl + (archivePath || '').replace(/^\//, '').trim();
     // console.log('url: ', url);
     return this.http.get(url)
     .map(this.checkForError)
     .catch((err) => Observable.throw(err))
     .map((resp) => this.toArchiveUrlObjs(resp, archivePath));
+  }
+
+  public getCikInfo(cik: string): Observable<any> {
+    let url = this.proxyUrl + this.edgarCikBrowsePathStub + (cik || '').toString().trim().replace(/^\//, '').trim();
+    // console.log('url: ', url);
+    return this.http.get(url)
+    .map(this.checkForError)
+    .catch((err) => Observable.throw(err))
+    .map((resp) => this.toCikInfoObj(resp));
   }
 
   public getParsedXbrls(edgarArchiveFiles: any[] = []): Observable<any> {
@@ -197,16 +187,22 @@ export class EdgarArchiveService {
   private toArchiveUrlObjs(resp: Response, path: string): any[] {
     let txt = resp.text();
     // console.log(txt);
-    // let doc = new DOMParser().parseFromString(body.data, 'application/xml');
-    // let doc = new DOMParser().parseFromString(resp.data, 'text/html');
     let doc = new DOMParser().parseFromString(txt, 'text/html');
-    // console.log('doc: ', JSON.stringify(doc));
-    // let selection = (<Element>doc.firstChild);
     let selection = (<Element> doc.lastChild);
-    // let selection = doc;
-    // console.log('selection: ', JSON.stringify(selection));
     let urlObjs = XbrlUtility.getNodeTagsAtts(selection, 'a', null, ['href'], true, (objs) => objs.filter((obj) => (obj.href || '').indexOf(path) >= 0), null, null, null, null);
     return urlObjs;
+  }
+
+  private toCikInfoObj(resp: Response): {} {
+    let txt = resp.text();
+    // console.log(txt);
+    let doc = new DOMParser().parseFromString(txt, 'text/html');
+    let selection = (<Element> doc.lastChild);
+    // console.log('selection: ', JSON.stringify(selection));
+    // let content = selection.querySelectorAll('.companyInfo')[0].textContent;
+    let content = (selection.querySelectorAll('.companyName')[0].firstChild.textContent || '').trim();
+    console.log('content: ', content);
+    return {companyName: content};
   }
 
   private checkForError(resp: Response): Response {

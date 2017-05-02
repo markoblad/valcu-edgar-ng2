@@ -116,10 +116,14 @@ export class HomeComponent implements OnInit {
   public submitState(value: string) {
     this.clearXbrlReports();
     console.log('submitState', value);
-    this.appState.set('value', value);
+    this.appState.set('cik', value);
     this.localState.value = '';
     // this.edgarContent = this.edgarArchiveService.get(value)
     if (value) {
+      this.edgarArchiveService.getCikInfo(value).subscribe(
+        (cikInfoObj) => this.appState.set('companyName', (cikInfoObj || {}).companyName),
+        (error) => console.log(error)
+      );
       this.edgarArchiveService.getCikArchive(value).subscribe(
         (cikObjs) => {
           // console.log('cikObjs: ', JSON.stringify(cikObjs || ''));
