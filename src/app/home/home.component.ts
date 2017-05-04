@@ -41,6 +41,8 @@ export class HomeComponent implements OnInit {
   public selectedXbrlVStatementRoleURI: string;
   public selectedXbrlVStatement: XbrlVStatementInterface;
 
+  private verbose: boolean = true;
+
   constructor(
     public appState: AppState,
     public title: Title,
@@ -116,47 +118,52 @@ export class HomeComponent implements OnInit {
   public submitState(value: string) {
     this.clearXbrlReports();
     console.log('submitState', value);
-    this.appState.set('cik', value);
+    this.appState.set('searchTerm', value);
     this.localState.value = '';
     // this.edgarContent = this.edgarArchiveService.get(value)
     if (value) {
+      let index = 0;
       this.edgarArchiveService.getCikInfo(value).subscribe(
-        (cikInfoObj) => this.appState.set('companyName', (cikInfoObj || {}).companyName),
-        (error) => console.log(error)
-      );
-      this.edgarArchiveService.getCikArchive(value).subscribe(
-        (cikObjs) => {
-          // console.log('cikObjs: ', JSON.stringify(cikObjs || ''));
-          cikObjs.forEach((cikObj) => {
-            this.edgarArchiveService.getArchive(cikObj.href).subscribe(
-              (archiveObjs) => {
-                // console.log('archiveObjs: ', JSON.stringify(archiveObjs || ''));
-                let edgarArchiveFiles = this.edgarArchiveService.archiveUrlObjsToEdgarArchiveFiles(archiveObjs);
-                if (edgarArchiveFiles) {
-                  let xbrlVReport = {edgarArchiveFiles};
-                  // console.log('xbrlVReport: ', JSON.stringify(xbrlVReport));
-                  let urlPieces = (edgarArchiveFiles[0].url || '').split('/');
-                  let xbrlVReportKey = urlPieces[urlPieces.length - 2];
-                  // console.log('xbrlVReportKey: ', xbrlVReportKey);
-                  this.getXbrlReport(xbrlVReportKey, xbrlVReport);
-                }
-              },
-              (error) => console.log(error)
-            );
-          });
+        (cikInfoObj) => {
+          this.appState.set('companyName', (cikInfoObj || {}).companyName);
+          this.appState.set('cik', (cikInfoObj || {}).cik);
+          this.edgarArchiveService.getCikArchive(this.appState.get('cik')).subscribe(
+            (cikObjs) => {
+              // console.log('cikObjs: ', JSON.stringify(cikObjs || ''));
+              cikObjs.forEach((cikObj) => {
+                this.edgarArchiveService.getArchive(cikObj.href).subscribe(
+                  (archiveObjs) => {
+                    index += 1;
+                    // console.log('archiveObjs: ', JSON.stringify(archiveObjs || ''));
+                    let edgarArchiveFiles = this.edgarArchiveService.archiveUrlObjsToEdgarArchiveFiles(archiveObjs);
+                    if (edgarArchiveFiles) {
+                      let xbrlVReport = {edgarArchiveFiles};
+                      // console.log('xbrlVReport: ', JSON.stringify(xbrlVReport));
+                      let urlPieces = (edgarArchiveFiles[0].url || '').split('/');
+                      let xbrlVReportKey = urlPieces[urlPieces.length - 2];
+                      // console.log('xbrlVReportKey: ', xbrlVReportKey);
+                      this.getXbrlReport(xbrlVReportKey, xbrlVReport, this.verbose && index === 0);
+                    }
+                  },
+                  (error) => console.log(error)
+                );
+              });
+            },
+            (error) => console.log(error)
+          );
         },
         (error) => console.log(error)
       );
     } else {
       Object.keys(this.xbrlService.xbrlVReports).forEach((xbrlVReportKey) => {
         let xbrlVReport = this.xbrlService.xbrlVReports[xbrlVReportKey];
-        this.getXbrlReport(xbrlVReportKey, xbrlVReport);
+        this.getXbrlReport(xbrlVReportKey, xbrlVReport, this.verbose);
       });
     }
   }
 
-  public getXbrlReport(xbrlVReportKey, xbrlVReport) {
-    this.edgarArchiveService.getParsedXbrls(xbrlVReport.edgarArchiveFiles).subscribe(
+  public getXbrlReport(xbrlVReportKey, xbrlVReport, verbose?: boolean) {
+    this.edgarArchiveService.getParsedXbrls(xbrlVReport.edgarArchiveFiles, verbose).subscribe(
       (parsedXbrls) => {
         // console.log('parsedXbrls: ', JSON.stringify(parsedXbrls));
         this.xbrlService.addParsedXbrls(xbrlVReportKey, parsedXbrls, xbrlVReport.edgarArchiveFiles);

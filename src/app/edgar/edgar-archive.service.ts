@@ -89,7 +89,7 @@ export class EdgarArchiveService {
     .map((resp) => this.toCikInfoObj(resp));
   }
 
-  public getParsedXbrls(edgarArchiveFiles: any[] = []): Observable<any> {
+  public getParsedXbrls(edgarArchiveFiles: any[] = [], verbose?: boolean): Observable<any> {
     // console.log('this.headers: ', JSON.stringify(this.headers));
     // console.log("getting: ", `${this.edgarBrowseUrl}${cik}`);
     // console.log('getting: ', `${this.edgarArchiveFileUrl}`);
@@ -101,7 +101,7 @@ export class EdgarArchiveService {
       observableBatch.push(this.http.get(url, this.headers)
         .map(this.checkForError)
         .catch((err) => Observable.throw(err))
-        .map((resp) => this.toParsedXbrl(resp, obj.type))
+        .map((resp) => this.toParsedXbrl(resp, obj.type, verbose))
       );
     });
     return Observable.forkJoin(observableBatch);
@@ -179,9 +179,9 @@ export class EdgarArchiveService {
     return (content);
   }
 
-  private toParsedXbrl(resp: Response, type) {
+  private toParsedXbrl(resp: Response, type, verbose?: boolean) {
     let doc = EdgarArchiveService.toXMLDocumentSelection(resp);
-    return XbrlUtility.processTypeDoc(doc, type);
+    return XbrlUtility.processTypeDoc(doc, type, verbose);
   }
 
   private toArchiveUrlObjs(resp: Response, path: string): any[] {
@@ -200,9 +200,11 @@ export class EdgarArchiveService {
     let selection = (<Element> doc.lastChild);
     // console.log('selection: ', JSON.stringify(selection));
     // let content = selection.querySelectorAll('.companyInfo')[0].textContent;
-    let content = (selection.querySelectorAll('.companyName')[0].firstChild.textContent || '').trim();
-    console.log('content: ', content);
-    return {companyName: content};
+    let companyName = (selection.querySelectorAll('.companyName')[0].firstChild.textContent || '').trim();
+    let cik = (selection.querySelectorAll('.companyName a')[0].firstChild.textContent || '').trim().substring(0, 10);
+
+    console.log('content: ', companyName);
+    return {companyName, cik};
   }
 
   private checkForError(resp: Response): Response {

@@ -666,18 +666,20 @@ export class XbrlUtility {
     return (linkObjs || []).map((linkObj) => XbrlUtility.linkLocsArcsInterleaveTransform(linkObj));
   }
 
-  public static processDoc(doc: XMLDocument, fn: (doc: XMLDocument, nsHref: string, nsPrefix: string, nss: {}) => {}): any {
+  public static processDoc(doc: XMLDocument, verbose: boolean, fn: (doc: XMLDocument, nsHref: string, nsPrefix: string, nss: {}) => {}): any {
     let nsHref;
     let nsPrefix;
     let nss;
     ({nsHref, nsPrefix, nss} = XbrlUtility.getNamespace(doc));
-    // console.log('doc', doc);
+    if (verbose) {
+      console.log('doc', doc);
+    }
     let returnObj = fn(doc, nsHref, nsPrefix, nss);
     return returnObj;
   }
 
-  public static processTypeDoc(doc: XMLDocument, type): any {
-    return XbrlUtility.processDoc(doc, (returnedDoc, nsHref, nsPrefix, nss) => {
+  public static processTypeDoc(doc: XMLDocument, type, verbose?: boolean): any {
+    return XbrlUtility.processDoc(doc, verbose, (returnedDoc, nsHref, nsPrefix, nss) => {
       let returnObj  =  {type, roleURIs: []};
       returnObj = XbrlUtility.processStructure(returnedDoc, nsHref, nsPrefix, nss, XbrlUtility.XBRL_TYPE_TO_STRUCTURE[type], returnObj);
       // @pre_h = nil if @pre_h["roles"].blank? || @pre_h["dlinks"].blank?
