@@ -41,7 +41,7 @@ export class HomeComponent implements OnInit {
   public selectedXbrlVStatementRoleURI: string;
   public selectedXbrlVStatement: XbrlVStatementInterface;
 
-  private verbose: boolean = true;
+  private verbose: boolean = false;
 
   constructor(
     public appState: AppState,
@@ -122,7 +122,6 @@ export class HomeComponent implements OnInit {
     this.localState.value = '';
     // this.edgarContent = this.edgarArchiveService.get(value)
     if (value) {
-      let index = 0;
       this.edgarArchiveService.getCikInfo(value).subscribe(
         (cikInfoObj) => {
           this.appState.set('companyName', (cikInfoObj || {}).companyName);
@@ -133,7 +132,6 @@ export class HomeComponent implements OnInit {
               cikObjs.forEach((cikObj) => {
                 this.edgarArchiveService.getArchive(cikObj.href).subscribe(
                   (archiveObjs) => {
-                    index += 1;
                     // console.log('archiveObjs: ', JSON.stringify(archiveObjs || ''));
                     let edgarArchiveFiles = this.edgarArchiveService.archiveUrlObjsToEdgarArchiveFiles(archiveObjs);
                     if (edgarArchiveFiles) {
@@ -142,7 +140,7 @@ export class HomeComponent implements OnInit {
                       let urlPieces = (edgarArchiveFiles[0].url || '').split('/');
                       let xbrlVReportKey = urlPieces[urlPieces.length - 2];
                       // console.log('xbrlVReportKey: ', xbrlVReportKey);
-                      this.getXbrlReport(xbrlVReportKey, xbrlVReport, this.verbose && index === 0);
+                      this.getXbrlReport(xbrlVReportKey, xbrlVReport, this.verbose);
                     }
                   },
                   (error) => console.log(error)

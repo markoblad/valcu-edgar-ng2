@@ -31,9 +31,11 @@ export interface XbrlVStatementInterface {
   roleURI: string;
   xbrlStatement: any;
   xbrlStatementKeys: any;
-  paredContextRefs: string[];
-  rectangle: any;
-  rectangleKeys: string[];
+  paredContextRefs?: string[];
+  paredContexts?: any;
+  paredPeriods?: any;
+  rectangle?: any;
+  rectangleKeys?: string[];
 }
 
 export interface XbrlToInstanceInterface {
@@ -131,6 +133,9 @@ export interface XbrlStatementInterface {
   preLinkTypes?: string[];
   defLinkTypes?: string[];
   calLinkTypes?: string[];
+  presentationCompositeLinkTree?: any;
+  definitionCompositeLinkTree?: any;
+  calculationCompositeLinkTree?: any;
   // items?: XbrlStatementItemInterface[];
   items?: any;
   contexts?: [XbrlContextInterface];
@@ -840,7 +845,7 @@ export class XbrlUtility {
     }
   }
 
-  public static processStructure(doc: XMLDocument, nsHref: string, nsPrefix: string, nss: {}, structure: XbrlStructureInterface, obj: {any}): any {
+  public static processStructure(doc: XMLDocument, nsHref: string, nsPrefix: string, nss: {}, structure: XbrlStructureInterface, obj: {}): any {
     let tags = Object.keys(structure.tags || {}) || [];
     let attSelectors = Object.keys(structure.attSelectors || {}) || [];
 
@@ -986,9 +991,10 @@ export class XbrlUtility {
     return XbrlUtility.uniqueCompact(contextRefs);
   }
 
-  public static pareContextRefs(contextRefs: any = [], contexts: any = [], dimensions?: [any]): string[] {
+  public static pareContextRefs(contextRefs: any = [], contexts: any = [], dimensions?: [any]): {paredContextRefs: string[], paredPeriods: any} {
     // console.log('dimensions: ', JSON.stringify(dimensions));
     let paredContextRefs: string[] = [];
+    let paredPeriods: any = {};
     let anyDimensions = !XbrlUtility.isBlank(dimensions);
     contextRefs.forEach((contextRef) => {
       let context = contexts[contextRef] || {};
@@ -1005,9 +1011,19 @@ export class XbrlUtility {
         });
         if (!XbrlUtility.isBlank(foundDimension)) {
           paredContextRefs.push(contextRef);
+          let periodKey = XbrlUtility.periodToKey(context.period, ' to ');
+          let periodContextRefs = paredPeriods[periodKey] || [];
+          periodContextRefs.push(contextRef);
+          paredPeriods[periodKey] = periodContextRefs;
         }
-      } else if (XbrlUtility.isBlank(segments)) {
+      // } else if (XbrlUtility.isBlank(segments)) {
+      }
+      if (XbrlUtility.isBlank(segments)) {
         paredContextRefs.push(contextRef);
+        let periodKey = XbrlUtility.periodToKey(context.period, ' to ');
+        let periodContextRefs = paredPeriods[periodKey] || [];
+        periodContextRefs.push(contextRef);
+        paredPeriods[periodKey] = periodContextRefs;
       }
 // Line  { "nodeName": "xbrli:context", "localName": "context", "id": "Context_FYE_01_Jan_2014T00_00_00_TO_31_Dec_2014T00_00_00_RangeAxis_MinimumMember",
   // "entity": [ { "nodeName": "xbrli:entity", "localName": "entity",
@@ -1018,13 +1034,13 @@ export class XbrlUtility {
     });
     // return XbrlUtility.uniqueCompact(paredContextRefs);
     // console.log('paredContextRefs: ', JSON.stringify(paredContextRefs));
-    return paredContextRefs;
+    return {paredContextRefs, paredPeriods};
   }
 
   public static getContextRefHeading(contextRef: string, contexts: any): string {
     let context = ((contexts || {})[contextRef] || {});
     let period = context.period || {};
-    let date = period.instant ? period.instant : ((period.startDate || 'NA') + ' to ' + (period.endDate || 'NA'));
+    let date = XbrlUtility.periodToKey(period, ' to ');
     let entity = (context.entity || [])[0] || {};
     let identifierTextContent = ((entity.identifier || [])[0] || {}).textContent;
     let segmentTextContent = ((entity.segments || [])[0] || {}).textContent;
@@ -1032,6 +1048,10 @@ export class XbrlUtility {
     let heading = XbrlUtility.uniqueCompact([date, identifierTextContent, segmentTextContent, segmentExplicitMemberTextContent]).join(', ');
     return heading;
     // return context;
+  }
+
+  public static periodToKey(period: {instant?: string, startDate?: string, endDate?: string}, separator: string = '-'): string {
+    return !XbrlUtility.isBlank(period.instant) ? period.instant : (period.startDate || 'NA' + separator + (period.endDate || 'NA'));
   }
 
   public static getLabel(lab: any = {}, toHref: string, role?: string): string {
@@ -1076,21 +1096,29 @@ export class XbrlUtility {
     return rectangle;
   }
 
-  public static rectangularizeXbrlStatement(xbrlStatement = {}, contexts) {
-    let tree = (xbrlStatement || {}).presentationCompositeLinkTree || {};
+  public static rectangularizeXbrlStatement(xbrlStatement: XbrlStatementInterface, contexts) {
+    let tree = (xbrlStatement || {presentationCompositeLinkTree: {}}).presentationCompositeLinkTree || {};
     let dimensions = XbrlUtility.getXbrlStatementDimensions(xbrlStatement);
-    let paredContextRefs = XbrlUtility.pareContextRefs(xbrlStatement.contextRefs, contexts, dimensions);
+    let paredContextRefs: string[] = [];
+    let paredPeriods: any = {};
+    ({paredContextRefs, paredPeriods} = XbrlUtility.pareContextRefs(xbrlStatement.contextRefs, contexts, dimensions));
+    let paredContexts = {};
+    paredContextRefs.forEach((paredContextRef) => paredContexts[paredContextRef] = contexts[paredContextRef]);
     let rectangle = XbrlUtility.rectangularizeTree(tree) || {};
     let rectangleKeys = Object.keys(rectangle);
-    return {paredContextRefs, rectangle, rectangleKeys};
+    return {paredContextRefs, paredContexts, paredPeriods, rectangle, rectangleKeys};
   }
 
-  public static rectangularizeXbrlVStatement(xbrlVStatement: {} = {}, contexts) {
+  public static rectangularizeXbrlVStatement(xbrlVStatement: XbrlVStatementInterface, contexts) {
     let paredContextRefs;
+    let paredContexts = {};
+    let paredPeriods: any = {};
     let rectangle;
     let rectangleKeys;
-    ({paredContextRefs, rectangle, rectangleKeys} = XbrlUtility.rectangularizeXbrlStatement(xbrlVStatement.xbrlStatement, contexts));
+    ({paredContextRefs, paredContexts, paredPeriods, rectangle, rectangleKeys} = XbrlUtility.rectangularizeXbrlStatement(xbrlVStatement.xbrlStatement, contexts));
     xbrlVStatement.paredContextRefs = paredContextRefs;
+    xbrlVStatement.paredContexts = paredContexts;
+    xbrlVStatement.paredPeriods = paredPeriods;
     xbrlVStatement.rectangle = rectangle;
     xbrlVStatement.rectangleKeys = rectangleKeys;
     return xbrlVStatement;
