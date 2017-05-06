@@ -205,6 +205,9 @@ export class HomeComponent implements OnInit {
     this.selectedXbrlVReport = null;
     this.selectedXbrlVStatementRoleURI = null;
     this.selectedXbrlVStatement = null;
+    this.appState.set('companyName', null);
+    this.appState.set('cik', null);
+    this.appState.set('searchTerm', null);
   }
 
   public selectXbrlVReport(xbrlVReportKey): void {
@@ -238,7 +241,7 @@ export class HomeComponent implements OnInit {
   }
 
   public getLabel(toHref: string, role?: string): string {
-    return XbrlUtility.getLabel((this.selectedXbrlVReport.xbrls || {}).lab, toHref, role) || toHref;
+    return XbrlUtility.manageLabelBreaks(XbrlUtility.getLabel((this.selectedXbrlVReport.xbrls || {}).lab, toHref, role) || toHref);
   }
 
   public getLastSlash(str): string {
@@ -247,9 +250,13 @@ export class HomeComponent implements OnInit {
 
   public displayRoleURI(roleURI): string {
     let pieces = (((((this.selectedXbrlVReport.xbrls || {}).xsd || {}).roleTypes || {})[roleURI] || {}).definition || '').split(/\s+-\s+/);
-    return pieces[pieces.length - 1];
+    return XbrlUtility.manageLabelBreaks(pieces[pieces.length - 1]);
      // ||
       // (XbrlUtility.getLastSlash(roleURI) || '').replace(/[A-Z]/g,  (letter) => ' ' + letter).trim();
+  }
+
+  public displayPeriodKey(periodKey): string {
+    return XbrlUtility.manageLabelBreaks(periodKey);
   }
 
 }

@@ -62,7 +62,7 @@
     
     <div *ngIf="true" class="row">
       <div class="col-sm-3">
-        <ul class="nav flex-column flex-sm-row nav-pills xbrl-statement-nav">
+        <ul class="nav flex-column flex-sm-row nav-pills xbrl-statement-nav scroll-column">
           <li class="nav-item flex-sm-fill">
             <small>
               <a *ngFor="let roleURI of (selectedXbrlVReport || {}).roleURIs"
@@ -79,13 +79,13 @@
             <thead class="thead-inverse">
               <tr>
                 <th>{{displayRoleURI(selectedXbrlVStatementRoleURI)}}</th>
-                <th *ngFor="let contextRef of selectedXbrlVStatement.paredContextRefs" [innerHTML]="contextRefToHeader(contextRef)"></th>
+                <th *ngFor="let paredPeriodKey of selectedXbrlVStatement.paredPeriodKeys" [innerHTML]="displayPeriodKey(paredPeriodKey)"></th>
               </tr>
             </thead>
 
             <tr *ngFor="let rectangleKey of selectedXbrlVStatement.rectangleKeys">
-              <td>{{repeat('│   ', selectedXbrlVStatement.rectangle[rectangleKey].level - 1)}}<span *ngIf="selectedXbrlVStatement.rectangle[rectangleKey].level !== 0">{{selectedXbrlVStatement.rectangle[rectangleKey].lastChild ? '└──' : '├──'}}&nbsp;</span>{{getLabel(selectedXbrlVStatement.rectangle[rectangleKey].toHref, selectedXbrlVStatement.rectangle[rectangleKey].preferredLabel)}}</td>
-              <td *ngFor="let contextRef of selectedXbrlVStatement.paredContextRefs" [innerHTML]="(((selectedXbrlVStatement.rectangle[rectangleKey] || {}).instances || {})[contextRef] || {}).textContent"></td>
+              <td>{{repeat('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', selectedXbrlVStatement.rectangle[rectangleKey].level - 1)}}<span *ngIf="selectedXbrlVStatement.rectangle[rectangleKey].level !== 0">{{selectedXbrlVStatement.rectangle[rectangleKey].lastChild ? '└──' : '├──'}}</span>{{getLabel(selectedXbrlVStatement.rectangle[rectangleKey].toHref, selectedXbrlVStatement.rectangle[rectangleKey].preferredLabel)}}</td>
+              <td *ngFor="let paredPeriodKey of selectedXbrlVStatement.paredPeriodKeys"><div *ngFor="let contextRef of selectedXbrlVStatement.paredPeriods[paredPeriodKey]"><span [innerHTML]="((((selectedXbrlVStatement.rectangle[rectangleKey] || {}).instances || {})[contextRef] || {}).textContent || '')"></span><br /></div></td>
             </tr>
           </table>
         </small>
@@ -93,7 +93,7 @@
       <div class="row" *ngIf="false && selectedXbrlVStatementRoleURI">
         <div class="col-3">
           <div>Line</div>
-          <div *ngFor="let rectangleKey of selectedXbrlVStatement.rectangleKeys">{{repeat('│   ', selectedXbrlVStatement.rectangle[rectangleKey].level - 1)}}<span *ngIf="selectedXbrlVStatement.rectangle[rectangleKey].level !== 0">{{selectedXbrlVStatement.rectangle[rectangleKey].lastChild ? '└──' : '├──'}}&nbsp;</span>{{getLabel(selectedXbrlVStatement.rectangle[rectangleKey].toHref, selectedXbrlVStatement.rectangle[rectangleKey].preferredLabel)}}</div>
+          <div *ngFor="let rectangleKey of selectedXbrlVStatement.rectangleKeys">{{repeat('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', selectedXbrlVStatement.rectangle[rectangleKey].level - 1)}}<span *ngIf="selectedXbrlVStatement.rectangle[rectangleKey].level !== 0">{{selectedXbrlVStatement.rectangle[rectangleKey].lastChild ? '└──' : '├──'}}</span>{{getLabel(selectedXbrlVStatement.rectangle[rectangleKey].toHref, selectedXbrlVStatement.rectangle[rectangleKey].preferredLabel)}}</div>
         </div>
         <div class="col" *ngFor="let contextRef of selectedXbrlVStatement.paredContextRefs">
           <div [innerHTML]="contextRefToHeader(contextRef)"></div>

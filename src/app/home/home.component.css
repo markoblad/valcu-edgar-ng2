@@ -5,3 +5,9 @@ button.active {
 .xbrl-statement-nav {
   
 }
+
+.scroll-column {
+  // height:700px;
+  height: 90vh;
+  overflow-y: scroll;
+}
