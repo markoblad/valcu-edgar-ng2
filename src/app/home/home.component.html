@@ -82,6 +82,7 @@
                 <th *ngFor="let paredPeriodKey of selectedXbrlVStatement.paredPeriodKeys" [innerHTML]="displayPeriodKey(paredPeriodKey)"></th>
               </tr>
             </thead>
+            <tr><td>{{selectedXbrlVStatement.dimensions | json}}</td></tr>
 
             <tr *ngFor="let rectangleKey of selectedXbrlVStatement.rectangleKeys">
               <td>{{repeat('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', selectedXbrlVStatement.rectangle[rectangleKey].level - 1)}}<span *ngIf="selectedXbrlVStatement.rectangle[rectangleKey].level !== 0">{{selectedXbrlVStatement.rectangle[rectangleKey].lastChild ? '└──' : '├──'}}</span>{{getLabel(selectedXbrlVStatement.rectangle[rectangleKey].toHref, selectedXbrlVStatement.rectangle[rectangleKey].preferredLabel)}}</td>

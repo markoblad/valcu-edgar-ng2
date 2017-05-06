@@ -37,6 +37,7 @@ export interface XbrlVStatementInterface {
   paredPeriods?: any;
   rectangle?: any;
   rectangleKeys?: string[];
+  dimensions?: any[];
 }
 
 export interface XbrlToInstanceInterface {
@@ -922,9 +923,7 @@ export class XbrlUtility {
   public static getLastSlash(href): string { let pieces = (href || '').split('/'); return pieces[pieces.length - 1]; }
 
   public static manageLabelBreaks(str): string {
-    return (XbrlUtility.isBlank(str) ? '' : str).toString().replace(/[ -]/g, (m, i) => {
-      return (i % 80 > 60) ? m : (m.match(/ /) ? '\u00a0' : '\u2011');
-    });
+    return (XbrlUtility.isBlank(str) ? '' : str).toString().replace(/[ -]/g, (m, i) => (i % 80 > 60) ? m : (m.match(/ /) ? '\u00a0' : '\u2011'));
   }
 
   public static growTree(from: string, arcs: any[] = [], instances: any): any {
@@ -1097,24 +1096,27 @@ export class XbrlUtility {
       let arcroleStub = XbrlUtility.getLastSlash(treeItem.arcrole);
       // if (arcroleStub !== 'all') {
       // if (arcroleStub !== 'hypercube-dimension') {
-      if (arcroleStub !== 'dimension-domain') {
-        let toHref = treeItem.toHref;
-        let preferredLabel = treeItem.preferredLabel;
-        let instances = treeItem.instances;
-        let lastChild = index === lastIndex;
+      // if (arcroleStub !== 'dimension-domain') {
+      let toHref = treeItem.toHref;
+      let preferredLabel = treeItem.preferredLabel;
+      let instances = treeItem.instances;
+      let lastChild = index === lastIndex;
+      if (!XbrlUtility.isBlank(instances)) {
         rectangle[key] = {toHref, preferredLabel, instances, level, lastChild};
-        let branch = (treeItem || {}).branch;
-        if (!XbrlUtility.isBlank(branch)) {
-          rectangle = XbrlUtility.rectangularizeTree(branch, rectangle, level + 1);
-        }
+      }
+      let branch = (treeItem || {}).branch;
+      if (!XbrlUtility.isBlank(branch)) {
+        rectangle = XbrlUtility.rectangularizeTree(branch, rectangle, level + 1);
       }
     });
     return rectangle;
   }
 
   public static rectangularizeXbrlStatement(xbrlStatement: XbrlStatementInterface, contexts) {
-    let tree = (xbrlStatement || {definitionCompositeLinkTree: {}}).definitionCompositeLinkTree ||
-      (xbrlStatement || {presentationCompositeLinkTree: {}}).presentationCompositeLinkTree || {};
+    let tree = (xbrlStatement || {definitionCompositeLinkTree: {}}).definitionCompositeLinkTree;
+    if (XbrlUtility.isBlank(tree)) {
+      tree = (xbrlStatement || {presentationCompositeLinkTree: {}}).presentationCompositeLinkTree || {};
+    }
     // let tree = (xbrlStatement || {presentationCompositeLinkTree: {}}).presentationCompositeLinkTree || {};
     let dimensions = XbrlUtility.getXbrlStatementDimensions(xbrlStatement);
     let paredContextRefs: string[] = [];
@@ -1125,7 +1127,7 @@ export class XbrlUtility {
     paredContextRefs.forEach((paredContextRef) => paredContexts[paredContextRef] = contexts[paredContextRef]);
     let rectangle = XbrlUtility.rectangularizeTree(tree) || {};
     let rectangleKeys = Object.keys(rectangle);
-    return {paredContextRefs, paredContexts, paredPeriodKeys, paredPeriods, rectangle, rectangleKeys};
+    return {paredContextRefs, paredContexts, paredPeriodKeys, paredPeriods, rectangle, rectangleKeys, dimensions};
   }
 
   public static rectangularizeXbrlVStatement(xbrlVStatement: XbrlVStatementInterface, contexts) {
@@ -1135,13 +1137,15 @@ export class XbrlUtility {
     let paredPeriods: any = {};
     let rectangle;
     let rectangleKeys;
-    ({paredContextRefs, paredContexts, paredPeriodKeys, paredPeriods, rectangle, rectangleKeys} = XbrlUtility.rectangularizeXbrlStatement(xbrlVStatement.xbrlStatement, contexts));
+    let dimensions;
+    ({paredContextRefs, paredContexts, paredPeriodKeys, paredPeriods, rectangle, rectangleKeys, dimensions} = XbrlUtility.rectangularizeXbrlStatement(xbrlVStatement.xbrlStatement, contexts));
     xbrlVStatement.paredContextRefs = paredContextRefs;
     xbrlVStatement.paredContexts = paredContexts;
     xbrlVStatement.paredPeriodKeys = paredPeriodKeys;
     xbrlVStatement.paredPeriods = paredPeriods;
     xbrlVStatement.rectangle = rectangle;
     xbrlVStatement.rectangleKeys = rectangleKeys;
+    xbrlVStatement.dimensions = dimensions;
     return xbrlVStatement;
   }
 

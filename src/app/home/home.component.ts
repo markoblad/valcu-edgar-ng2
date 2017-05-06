@@ -213,10 +213,11 @@ export class HomeComponent implements OnInit {
   public selectXbrlVReport(xbrlVReportKey): void {
     this.selectedXbrlVReport = ((this.xbrlService || {xbrlVReports: {}}).xbrlVReports || {})[xbrlVReportKey] || {};
     this.selectedXbrlVReportKey = xbrlVReportKey;
-    if (XbrlUtility.isBlank(this.selectedXbrlVStatementRoleURI) ||
-      !(Object.keys((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {}).indexOf(this.selectedXbrlVStatementRoleURI) >= 0)) {
-      this.selectXbrlVStatement(Object.keys((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {})[0]);
-    }
+    // if (XbrlUtility.isBlank(this.selectedXbrlVStatementRoleURI) ||
+      // !(Object.keys((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {}).indexOf(this.selectedXbrlVStatementRoleURI) >= 0)) {
+    let xbrlVStatementKeys = Object.keys((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {});
+    this.selectXbrlVStatement((xbrlVStatementKeys.indexOf(this.selectedXbrlVStatementRoleURI) >= 0) ? this.selectedXbrlVStatementRoleURI : xbrlVStatementKeys[0]);
+    // }
   }
 
   public selectXbrlVStatement(xbrlVStatementRoleURI): void {
