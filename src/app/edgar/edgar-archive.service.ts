@@ -90,6 +90,7 @@ export class EdgarArchiveService {
   }
 
   public getParsedXbrls(edgarArchiveFiles: any[] = [], verbose?: boolean): Observable<any> {
+    console.log('edgarArchiveFiles: ', JSON.stringify(edgarArchiveFiles));
     // console.log('this.headers: ', JSON.stringify(this.headers));
     // console.log("getting: ", `${this.edgarBrowseUrl}${cik}`);
     // console.log('getting: ', `${this.edgarArchiveFileUrl}`);

@@ -50,62 +50,62 @@ export class HomeComponent implements OnInit {
     public xbrlService: XbrlService
   ) {
     this.xbrlService.xbrlVReports = {
-    //   '000121390016011346': {
-    //     edgarArchiveFiles: [
-    //       {
-    //         type: 'xsd',
-    //         url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xsd',
-    //       },
-    //       {
-    //         type: 'pre',
-    //         url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_pre.xml',
-    //       },
-    //       {
-    //         type: 'def',
-    //         url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_def.xml',
-    //       },
-    //       {
-    //         type: 'cal',
-    //         url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_cal.xml',
-    //       },
-    //       {
-    //         type: 'lab',
-    //         url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_lab.xml',
-    //       },
-    //       {
-    //         type: 'ins',
-    //         url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xml',
-    //       },
-    //     ],
-    //   },
-    //   '000121390017002526': {
-    //     edgarArchiveFiles: [
-    //       {
-    //         type: 'xsd',
-    //         url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231.xsd',
-    //       },
-    //       {
-    //         type: 'pre',
-    //         url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231_pre.xml',
-    //       },
-    //       {
-    //         type: 'def',
-    //         url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231_def.xml',
-    //       },
-    //       {
-    //         type: 'cal',
-    //         url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231_cal.xml',
-    //       },
-    //       {
-    //         type: 'lab',
-    //         url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231_lab.xml',
-    //       },
-    //       {
-    //         type: 'ins',
-    //         url: '//localhost:3003/edgar/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231.xml',
-    //       },
-    //     ],
-    //   },
+      '000121390016011346': {
+        edgarArchiveFiles: [
+          {
+            type: 'xsd',
+            url: 'Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xsd',
+          },
+          {
+            type: 'pre',
+            url: 'Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_pre.xml',
+          },
+          {
+            type: 'def',
+            url: 'Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_def.xml',
+          },
+          {
+            type: 'cal',
+            url: 'Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_cal.xml',
+          },
+          {
+            type: 'lab',
+            url: 'Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_lab.xml',
+          },
+          {
+            type: 'ins',
+            url: 'Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xml',
+          },
+        ],
+      },
+      '000121390017002526': {
+        edgarArchiveFiles: [
+          {
+            type: 'xsd',
+            url: 'Archives/edgar/data/1371128/000121390017002526/bsrc-20161231.xsd',
+          },
+          {
+            type: 'pre',
+            url: 'Archives/edgar/data/1371128/000121390017002526/bsrc-20161231_pre.xml',
+          },
+          {
+            type: 'def',
+            url: 'Archives/edgar/data/1371128/000121390017002526/bsrc-20161231_def.xml',
+          },
+          {
+            type: 'cal',
+            url: 'Archives/edgar/data/1371128/000121390017002526/bsrc-20161231_cal.xml',
+          },
+          {
+            type: 'lab',
+            url: 'Archives/edgar/data/1371128/000121390017002526/bsrc-20161231_lab.xml',
+          },
+          {
+            type: 'ins',
+            url: 'Archives/edgar/data/1371128/000121390017002526/bsrc-20161231.xml',
+          },
+        ],
+      },
     };
   }
 
@@ -116,12 +116,11 @@ export class HomeComponent implements OnInit {
   }
 
   public submitState(value: string) {
-    this.clearXbrlReports();
     console.log('submitState', value);
-    this.appState.set('searchTerm', value);
-    this.localState.value = '';
-    // this.edgarContent = this.edgarArchiveService.get(value)
-    if (value) {
+    if (!XbrlUtility.isBlank(value)) {
+      this.clearXbrlReports();
+      this.appState.set('searchTerm', value);
+      this.localState.value = '';
       this.edgarArchiveService.getCikInfo(value).subscribe(
         (cikInfoObj) => {
           this.appState.set('companyName', (cikInfoObj || {}).companyName);
@@ -153,7 +152,9 @@ export class HomeComponent implements OnInit {
         (error) => console.log(error)
       );
     } else {
+      // console.log('this.xbrlService.xbrlVReports: ', JSON.stringify(this.xbrlService.xbrlVReports));
       Object.keys(this.xbrlService.xbrlVReports).forEach((xbrlVReportKey) => {
+        // console.log('xbrlVReportKey: ', xbrlVReportKey);
         let xbrlVReport = this.xbrlService.xbrlVReports[xbrlVReportKey];
         this.getXbrlReport(xbrlVReportKey, xbrlVReport, this.verbose);
       });
@@ -227,6 +228,56 @@ export class HomeComponent implements OnInit {
     );
     this.selectedXbrlVStatement = ((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {})[xbrlVStatementRoleURI] || {};
     this.selectedXbrlVStatementRoleURI = xbrlVStatementRoleURI;
+  }
+
+  public lineItemIterators(dimensions) {
+    return [{dimension: null}].concat(dimensions || []);
+  }
+
+  public getDimensionedRectangleItems(rectangleKeys: string[] = [], dimension: any = {}): string[] {
+    let paredRectangleKeys = rectangleKeys.filter((rectangleKey) => { // !dimension.dimension ||
+      let rectangleItem = this.selectedXbrlVStatement.rectangle[rectangleKey] || {};
+      return this.selectedXbrlVStatement.paredPeriodKeys.find((periodKey) => {
+        return ((this.selectedXbrlVStatement.rectangle[rectangleKey] || {}).instances || {})[this.getContextRefByDimensionPeriodKey(dimension, periodKey)];
+      });
+    });
+    return paredRectangleKeys.map((rectangleKey) => this.selectedXbrlVStatement.rectangle[rectangleKey]);
+  }
+
+  public getHeadDimensionedRectangleItem(rectangleKeys: string[] = [], dimension: any = {}): any {
+    let foundFectangleKey = rectangleKeys.find((rectangleKey) => { // !dimension.dimension ||
+      let rectangleItem = this.selectedXbrlVStatement.rectangle[rectangleKey] || {};
+      return (rectangleItem && rectangleItem.domainMember === dimension.member &&
+        rectangleItem.hypercubeDimension === dimension.dimension);
+    });
+    return this.selectedXbrlVStatement.rectangle[foundFectangleKey];
+  }
+
+  public getHeadDimensionedRectangleItemLabel(rectangleKeys: string[] = [], dimension: any = {}): any {
+    let rectangleItem = this.getHeadDimensionedRectangleItem(rectangleKeys, dimension) || {};
+    return this.getLabel(rectangleItem.toHref, rectangleItem.preferredLabel);
+  }
+
+  public getContextRefByDimensionPeriodKey(dimension: any, periodKey: string): string {
+    let contextRefs = this.selectedXbrlVStatement.paredPeriods[periodKey] || [];
+    return contextRefs.find((contextRef) => {
+      let context = this.selectedXbrlVStatement.paredContexts[contextRef];
+      let segments = [];
+      context.entity.forEach((entity) => segments = segments.concat((entity || {}).segments || []));
+      let explicitMembers = [];
+      segments.forEach((segment) => explicitMembers = explicitMembers.concat((segment || {}).explicitMember || []));
+      let foundDimension = explicitMembers.find((explicitMember: any = {}) => {
+        return explicitMember.dimension === dimension.dimension && explicitMember.textContent === dimension.member;
+      });
+      return (!dimension.dimension && !foundDimension) || (dimension.dimension && foundDimension);
+    });
+  }
+
+  public instanceObjIterators(dimension, rectangleItem, periodKeys): any {
+    return periodKeys.map((periodKey) => {
+      let contextRef = this.getContextRefByDimensionPeriodKey(dimension, periodKey);
+      return {periodKey, contextRef};
+    });
   }
 
   public xbrlVReportKeys() {

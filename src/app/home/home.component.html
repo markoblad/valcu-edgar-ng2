@@ -79,27 +79,23 @@
             <thead class="thead-inverse">
               <tr>
                 <th>{{displayRoleURI(selectedXbrlVStatementRoleURI)}}</th>
-                <th *ngFor="let paredPeriodKey of selectedXbrlVStatement.paredPeriodKeys" [innerHTML]="displayPeriodKey(paredPeriodKey)"></th>
+                <th *ngFor="let periodKey of selectedXbrlVStatement.paredPeriodKeys" [innerHTML]="displayPeriodKey(periodKey)"></th>
               </tr>
             </thead>
-            <tr><td>{{selectedXbrlVStatement.dimensions | json}}</td></tr>
-
-            <tr *ngFor="let rectangleKey of selectedXbrlVStatement.rectangleKeys">
-              <td>{{repeat('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', selectedXbrlVStatement.rectangle[rectangleKey].level - 1)}}<span *ngIf="selectedXbrlVStatement.rectangle[rectangleKey].level !== 0">{{selectedXbrlVStatement.rectangle[rectangleKey].lastChild ? '└──' : '├──'}}</span>{{getLabel(selectedXbrlVStatement.rectangle[rectangleKey].toHref, selectedXbrlVStatement.rectangle[rectangleKey].preferredLabel)}}</td>
-              <td *ngFor="let paredPeriodKey of selectedXbrlVStatement.paredPeriodKeys"><div *ngFor="let contextRef of selectedXbrlVStatement.paredPeriods[paredPeriodKey]"><span [innerHTML]="((((selectedXbrlVStatement.rectangle[rectangleKey] || {}).instances || {})[contextRef] || {}).textContent || '')"></span><br /></div></td>
-            </tr>
+            <tbody *ngFor="let dimension of lineItemIterators(selectedXbrlVStatement.dimensions)">
+              <tr *ngIf="dimension.member" class="table-inverse bg-primary">
+                <td>{{getHeadDimensionedRectangleItemLabel(selectedXbrlVStatement.rectangleKeys, dimension)}}</td>
+                <td *ngFor="let periodKey of selectedXbrlVStatement.paredPeriodKeys" [innerHTML]="displayPeriodKey(periodKey)"></td>
+              </tr>
+              <tr *ngFor="let rectangleItem of getDimensionedRectangleItems(selectedXbrlVStatement.rectangleKeys, dimension)" [ngClass]="{'thead-inverse': rectangleItem.domainMember}">
+                <td><span>{{repeat('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', rectangleItem.level - 1)}}</span><span *ngIf="rectangleItem.level !== 0">{{rectangleItem.lastChild ? '└──' : '├──'}}</span>{{getLabel(rectangleItem.toHref, rectangleItem.preferredLabel)}}</td>
+                <td *ngFor="let instanceObj of instanceObjIterators(dimension, rectangleItem, selectedXbrlVStatement.paredPeriodKeys)">
+                  <span  *ngIf="!rectangleItem.domainMember" [innerHTML]="((((rectangleItem || {}).instances || {})[instanceObj.contextRef] || {}).textContent || '')"></span>
+                </td>
+              </tr>
+            </tbody>
           </table>
         </small>
-      </div>
-      <div class="row" *ngIf="false && selectedXbrlVStatementRoleURI">
-        <div class="col-3">
-          <div>Line</div>
-          <div *ngFor="let rectangleKey of selectedXbrlVStatement.rectangleKeys">{{repeat('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', selectedXbrlVStatement.rectangle[rectangleKey].level - 1)}}<span *ngIf="selectedXbrlVStatement.rectangle[rectangleKey].level !== 0">{{selectedXbrlVStatement.rectangle[rectangleKey].lastChild ? '└──' : '├──'}}</span>{{getLabel(selectedXbrlVStatement.rectangle[rectangleKey].toHref, selectedXbrlVStatement.rectangle[rectangleKey].preferredLabel)}}</div>
-        </div>
-        <div class="col" *ngFor="let contextRef of selectedXbrlVStatement.paredContextRefs">
-          <div [innerHTML]="contextRefToHeader(contextRef)"></div>
-          <div *ngFor="let rectangleKey of selectedXbrlVStatement.rectangleKeys" [innerHTML]="(((selectedXbrlVStatement.rectangle[rectangleKey] || {}).instances || {})[contextRef] || {}).textContent"></div>
-        </div>
       </div>
       
     </div>

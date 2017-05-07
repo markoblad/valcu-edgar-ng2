@@ -1088,7 +1088,7 @@ export class XbrlUtility {
     return (label || {textContent: ''}).textContent;
   }
 
-  public static rectangularizeTree(tree: any, rectangle: any = {}, level: number = 0): any {
+  public static rectangularizeTree(tree: any, rectangle: any = {}, level: number = 0, hypercubeDimension?: string): any {
     let keys = Object.keys(tree || {}).sort((a, b) => parseFloat((tree[a] || {order: 0}).order || 0) - parseFloat((tree[b] || {order: 0}).order || 0));
     let lastIndex = keys.length - 1;
     keys.forEach((key, index) => {
@@ -1101,12 +1101,18 @@ export class XbrlUtility {
       let preferredLabel = treeItem.preferredLabel;
       let instances = treeItem.instances;
       let lastChild = index === lastIndex;
-      if (!XbrlUtility.isBlank(instances)) {
-        rectangle[key] = {toHref, preferredLabel, instances, level, lastChild};
+      let domainMember;
+      if (arcroleStub === 'hypercube-dimension') {
+        hypercubeDimension = XbrlUtility.getHrefAnchor(treeItem.toHref);
+      } else if (arcroleStub === 'domain-member' && !XbrlUtility.isBlank(hypercubeDimension)) {
+        domainMember = XbrlUtility.getHrefAnchor(treeItem.toHref);
+      }
+      if (!XbrlUtility.isBlank(instances) || !XbrlUtility.isBlank(domainMember)) {
+        rectangle[key] = {toHref, preferredLabel, instances, level, lastChild, hypercubeDimension, domainMember};
       }
       let branch = (treeItem || {}).branch;
       if (!XbrlUtility.isBlank(branch)) {
-        rectangle = XbrlUtility.rectangularizeTree(branch, rectangle, level + 1);
+        rectangle = XbrlUtility.rectangularizeTree(branch, rectangle, level + 1, hypercubeDimension);
       }
     });
     return rectangle;
@@ -1244,7 +1250,6 @@ export class XbrlUtility {
       // console.log('lines: ', JSON.stringify(lines));
       return lines;
     }
-
   }
 
   public static traverseDefinitionCompositeLinkTree(definitionCompositeLinkTree: any, lines: any = [], line: any = {}): any {

@@ -46,7 +46,7 @@ export class XbrlService {
     xbrlVReport.contexts = ((xbrlVReport.xbrls || {}).ins || {}).contexts;
     xbrlVReport.units = ((xbrlVReport.xbrls || {}).ins || {}).units;
     this.xbrlVReportKeys.push(xbrlVReportKey);
-    console.log('this.xbrlVReportKeys: ', JSON.stringify(this.xbrlVReportKeys));
+    // console.log('this.xbrlVReportKeys: ', JSON.stringify(this.xbrlVReportKeys));
     this.xbrlVReports[xbrlVReportKey] = xbrlVReport;
   }
 
