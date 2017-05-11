@@ -10,8 +10,10 @@ import { XLargeDirective } from './x-large';
 import { XbrlUtility } from '../edgar';
 import { EdgarArchiveService } from '../edgar';
 import { XbrlVReportInterface, XbrlVStatementInterface, XbrlReportInterface, XbrlStatementInterface } from '../edgar';
+// import * as NlpCompromise from 'compromise';
 import { XbrlService } from '../edgar';
 import { VChartComponent } from '../v-chart';
+import * as nlp from 'compromise/builds/compromise.es6.js';
 
 @Component({
   // The selector is what angular internally uses
@@ -40,6 +42,9 @@ export class HomeComponent implements OnInit {
   public selectedXbrlVReport: XbrlVReportInterface;
   public selectedXbrlVStatementRoleURI: string;
   public selectedXbrlVStatement: XbrlVStatementInterface;
+
+  public parsed: any;
+  public parsedOut: any;
 
   private verbose: boolean = false;
 
@@ -112,6 +117,9 @@ export class HomeComponent implements OnInit {
 // https://www.sec.gov/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231.xml
   public ngOnInit() {
     console.log('hello `Home` component');
+    this.parsed = nlp('Now this is a story all about how..');
+    this.parsedOut = this.parsed.normalize().out('html');
+
     // this.title.getData().subscribe(data => this.data = data);
   }
 
