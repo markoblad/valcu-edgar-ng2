@@ -14,6 +14,7 @@ import { XbrlVReportInterface, XbrlVStatementInterface, XbrlReportInterface, Xbr
 import { XbrlService } from '../edgar';
 import { VChartComponent } from '../v-chart';
 import * as nlp from 'compromise/builds/compromise.es6.js';
+import * as JsDiff from 'diff/dist/diff.min.js';
 
 @Component({
   // The selector is what angular internally uses
@@ -47,6 +48,8 @@ export class HomeComponent implements OnInit {
   public parsedOut: any;
 
   private verbose: boolean = false;
+
+  private nlpDisplay: boolean = true;
 
   constructor(
     public appState: AppState,
@@ -117,9 +120,9 @@ export class HomeComponent implements OnInit {
 // https://www.sec.gov/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231.xml
   public ngOnInit() {
     console.log('hello `Home` component');
-    this.parsed = nlp('Now this is a story all about how..');
-    this.parsedOut = this.parsed.normalize().out('html');
-
+    // this.parsed = nlp('Now this is a story all about how..');
+    // this.parsedOut = this.parsed.normalize().out('terms');
+    this.parsedOut = JsDiff.diffWords('Mark Edward Oblad', 'Henry Mark Oblad');
     // this.title.getData().subscribe(data => this.data = data);
   }
 
@@ -317,6 +320,16 @@ export class HomeComponent implements OnInit {
 
   public displayPeriodKey(periodKey): string {
     return XbrlUtility.manageLabelBreaks(periodKey);
+  }
+
+  public displayContent(content): any {
+    console.log('displaying');
+    if (this.nlpDisplay && !XbrlUtility.isBlank(content) && !XbrlUtility.isNumber(content)) {
+      // return nlp(XbrlUtility.htmlToMDA(content).join('\n')).normalize().out('normal');
+      return XbrlUtility.htmlToMDA(content).join('\n').replace(/\s*\n+\s*/g, '\<br \/\>');
+    } else {
+      return content;
+    }
   }
 
 }

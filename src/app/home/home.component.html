@@ -21,7 +21,7 @@
 
     <div class="row">
       <div class="col">
-        <p [innerHTML]="parsedOut"></p>
+        <p [innerHTML]="parsedOut | json"></p>
         <p>
           Entity: <span [innerHTML]="appState.get('companyName')"></span>&nbsp;
           CIK: <span [innerHTML]="appState.get('cik')"></span>&nbsp;
@@ -80,7 +80,7 @@
             <thead class="thead-inverse">
               <tr>
                 <th>{{displayRoleURI(selectedXbrlVStatementRoleURI)}}</th>
-                <th *ngFor="let periodKey of selectedXbrlVStatement.paredPeriodKeys" placement="top" ngbTooltip="Tooltip on top"><span [innerHTML]="displayPeriodKey(periodKey)"></span></th>
+                <th *ngFor="let periodKey of selectedXbrlVStatement.paredPeriodKeys"><span placement="top" ngbTooltip="Tooltip on top" [innerHTML]="displayPeriodKey(periodKey)"></span></th>
               </tr>
             </thead>
             <tbody *ngFor="let dimension of lineItemIterators(selectedXbrlVStatement.dimensions)">
@@ -91,7 +91,7 @@
               <tr *ngFor="let rectangleItem of getDimensionedRectangleItems(selectedXbrlVStatement.rectangleKeys, dimension)" [ngClass]="{'thead-inverse': rectangleItem.domainMember}">
                 <td><span>{{repeat('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', rectangleItem.level - 1)}}</span><span *ngIf="rectangleItem.level !== 0">{{rectangleItem.lastChild ? '└──' : '├──'}}</span>{{getLabel(rectangleItem.toHref, rectangleItem.preferredLabel)}}</td>
                 <td *ngFor="let instanceObj of instanceObjIterators(dimension, rectangleItem, selectedXbrlVStatement.paredPeriodKeys)">
-                  <span  *ngIf="!rectangleItem.domainMember" [innerHTML]="((((rectangleItem || {}).instances || {})[instanceObj.contextRef] || {}).textContent || '')"></span>
+                  <div  *ngIf="!rectangleItem.domainMember" [innerHTML]="displayContent((((rectangleItem || {}).instances || {})[instanceObj.contextRef] || {}).textContent || '')"></div>
                 </td>
               </tr>
             </tbody>

@@ -847,6 +847,28 @@ export class XbrlUtility {
     }
   }
 
+  public static htmlToMDA(html: string): any[] {
+    let doc = new DOMParser().parseFromString(html, 'text/html');
+    let node = (<Element> doc.lastChild);
+    return XbrlUtility.selectionToMDA(node);
+  }
+
+  public static selectionToMDA(node, mda: any[] = []): any[] {
+    node.childNodes.forEach((childNode) => {
+      if (childNode.nodeType === Node.TEXT_NODE) {
+        if (!XbrlUtility.isBlank(childNode.textContent)) {
+          mda.push(childNode.textContent);
+        }
+      } else {
+        let childMDA = XbrlUtility.selectionToMDA(childNode, mda);
+        // if (!XbrlUtility.isBlank(childMDA)) {
+        //   mda.push(childMDA);
+        // }
+      }
+    });
+    return mda;
+  }
+
   public static processStructure(doc: XMLDocument, nsHref: string, nsPrefix: string, nss: {}, structure: XbrlStructureInterface, obj: {}): any {
     let tags = Object.keys(structure.tags || {}) || [];
     let attSelectors = Object.keys(structure.attSelectors || {}) || [];
@@ -914,6 +936,20 @@ export class XbrlUtility {
 
   public static isBlank(obj: any): boolean {
     return obj === null || obj === undefined || (typeof obj === 'object' && Object.keys(obj).length === 0) || (typeof obj !== 'object' && obj.length === 0);
+  }
+
+  public static isNumber(obj: any): boolean {
+    if (XbrlUtility.isBlank(obj)) {
+      return false;
+    }
+    if (typeof obj === 'number' && !isNaN(obj) && isFinite(obj)) {
+      return true;
+    }
+    obj = obj.toString().trim();
+    if (XbrlUtility.isBlank(obj)) {
+      return false;
+    }
+    return !!obj.match(/^[+-]?(\d+)?(\.\d+(e(\+|\-)\d+)?)?$/);
   }
 
   public static splitXbrlHref(href): string { return (href || '').replace(/(.*?_)/, ''); }
