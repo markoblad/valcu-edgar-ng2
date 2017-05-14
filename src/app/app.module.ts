@@ -31,6 +31,7 @@ import { AboutComponent } from './about';
 import { VChartComponent } from './v-chart';
 import { NoContentComponent } from './no-content';
 import { XLargeDirective } from './home/x-large';
+import { DiffComponent } from './diff';
 import { XbrlUtility } from './edgar';
 import { XbrlService } from './edgar';
 import { EdgarArchiveService } from './edgar';
@@ -63,7 +64,8 @@ type StoreType = {
     HomeComponent,
     VChartComponent,
     NoContentComponent,
-    XLargeDirective
+    XLargeDirective,
+    DiffComponent
   ],
   imports: [ // import Angular's modules
     BrowserModule,

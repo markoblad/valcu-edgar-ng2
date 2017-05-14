@@ -1,3 +1,55 @@
+<nav class="navbar fixed-top navbar-toggleable-md  navbar-inverse bg-primary bg-faded">
+  <button
+    class="navbar-toggler navbar-toggler-right"
+    type="button"
+    data-toggle="collapse"
+    data-target="#navbarSupportedContent"
+    aria-controls="navbarSupportedContent"
+    (click)="isCollapsed = !isCollapsed"
+    [attr.aria-expanded]="!isCollapsed"
+    aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <a class="navbar-brand"
+    [routerLink]=" ['./'] "
+    routerLinkActive="active"
+    [routerLinkActiveOptions]= "{exact: true}">
+    <img [src]="valcuLogo" height="30" class="d-inline-block align-top" alt="Valcu Viewer Logo">
+    <span>Valcu Viewer</span>
+  </a>
+  <div class="collapse navbar-collapse" id="navbarSupportedContent" [ngbCollapse]="isCollapsed">
+    <ul class="navbar-nav mr-auto">
+      <li [ngClass]="{'nav-item': true}">
+        <a class="nav-link" [routerLink]=" ['./home'] "
+          routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}">
+          Home
+        </a>
+      </li>
+      <li [ngClass]="{'nav-item': true}">
+        <a class="nav-link" [routerLink]=" ['./about'] "
+          routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}">
+          About
+        </a>
+      </li>
+    </ul>
+    <form class="form-inline my-2 my-lg-0" (ngSubmit)="submitState(localState.value)" autocomplete="off">
+      <div class="input-group">
+        <input
+           class="form-control"
+          [value]="localState.value"
+          (input)="localState.value = $event.target.value"
+          type="text" placeholder="Search"
+          autofocus>
+        <span class="input-group-btn">
+          <button class="btn btn-outline-secondary my-2 my-sm-0"><span class="fa fa-search fa-inverse"></span></button>
+        </span>
+      </div>
+    </form>
+  </div>
+
+</nav>
+<br />
+
 <div>
   <div *ngFor="let singleData of singleDatas">
     <v-chart
@@ -21,7 +73,7 @@
 
     <div class="row">
       <div class="col">
-        <p [innerHTML]="parsedOut | json"></p>
+        <!-- <p [innerHTML]="parsedOut | json"></p> -->
         <p>
           Entity: <span [innerHTML]="appState.get('companyName')"></span>&nbsp;
           CIK: <span [innerHTML]="appState.get('cik')"></span>&nbsp;
@@ -29,23 +81,39 @@
         </p>
       </div>
     </div>
-    <div class="row">
-      <div class="col">
-        <form class="form-inline my-2 my-lg-0" (ngSubmit)="submitState(localState.value)" autocomplete="off">
-          <input
-             class="form-control mr-sm-2"
-            [value]="localState.value"
-            (input)="localState.value = $event.target.value"
-            placeholder="Submit Local State to App State"
-            autofocus>
-          <button class="btn btn-primary">Submit Value</button>
-        </form>
-      </div>
-    </div>
     <hr>
 
     <div class="row">
-      <div class="col-sm-11">
+      <div class="col align-self-end">
+        <div *ngIf="nlpMode === 'redline'" ngbDropdown [up]="false" class="pull-right d-inline-block">
+          <button class="btn btn-outline-primary btn-sm" id="dropdownComparisonStatement" ngbDropdownToggle (click)="false">Comparison Statement</button>
+          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownComparisonStatement">
+            <button *ngFor="let roleURI of (priorXbrlVReport || {}).roleURIs"
+              [ngClass]="{'dropdown-item btn-sm': true, 'active': roleURI === priorXbrlVStatementRoleURI}"
+              (click)="selectPriorXbrlVStatement(roleURI)">{{displayRoleURI(roleURI)}}</button>
+          </div>
+        </div>
+        <div *ngIf="nlpMode === 'redline'" ngbDropdown [up]="false" [open]="true" class="pull-right d-inline-block">
+          <button class="btn btn-outline-primary btn-sm" id="dropdownComparisonReport" ngbDropdownToggle (click)="false">Comparison Report</button>
+          <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownComparisonReport">
+            <button *ngFor="let xbrlVReportKey of xbrlService.xbrlVReportKeys"
+              [ngClass]="{'dropdown-item btn-sm': true, 'active': xbrlVReportKey === priorXbrlVReportKey}"
+            (click)="selectPriorXbrlVReport(xbrlVReportKey)">{{xbrlVReportKey}}</button>
+          </div>
+        </div>
+        <div class="btn-group btn-group-sm pull-right" role="group" aria-label="...">
+          <button [ngClass]="{btn: true, 'btn-success': nlpMode === 'places', 'btn-primary': nlpMode != 'places'}"
+          (click)="setNlpMode(nlpMode === 'places' ? null : 'places')"><span class="fa fa-map-marker"></span></button>
+          <button [ngClass]="{btn: true, 'btn-success': nlpMode === 'people', 'btn-primary': nlpMode != 'people'}"
+          (click)="setNlpMode(nlpMode === 'people' ? null : 'people')"><span class="fa fa-user-circle"></span></button>
+          <button [ngClass]="{btn: true, 'btn-success': nlpMode === 'redline', 'btn-primary': nlpMode != 'redline'}"
+          (click)="setNlpMode(nlpMode === 'redline' ? null : 'redline')"><span class="fa fa-strikethrough"></span></button>
+          <button class="btn btn-danger pull-right" (click)="clearXbrlReports()">&times;</button>
+        </div>
+      </div>
+    </div>
+    <div class="row">
+      <div class="col">
         <nav class="nav nav-tabs d-flex flex-wrap">
           <li *ngFor="let xbrlVReportKey of xbrlService.xbrlVReportKeys" class="nav-item">
             <small>
@@ -55,19 +123,15 @@
           </li>
         </nav>
       </div>
-      <div class="col-sm-1">
-        <button class="btn btn-danger btn-sm" (click)="clearXbrlReports()">&times;</button>
-      </div>
     </div>
-    <br />
     
-    <div *ngIf="true" class="row">
+    <div *ngIf="selectedXbrlVReport" class="row pt-2">
       <div class="col-sm-3">
-        <ul class="nav flex-column flex-sm-row nav-pills xbrl-statement-nav scroll-column">
+        <ul class="nav flex-column flex-sm-row nav-pills xbrl-statement-nav scroll-column bg-faded rounded-left">
           <li class="nav-item flex-sm-fill">
             <small>
               <a *ngFor="let roleURI of (selectedXbrlVReport || {}).roleURIs"
-              [ngClass]="{'flex-sm-fill': false, 'nav-link': true, 'active': selectedXbrlVStatementRoleURI === roleURI}"
+              [ngClass]="{'flex-sm-fill': false, 'nav-link': true, 'active': roleURI === selectedXbrlVStatementRoleURI}"
               (click)="selectXbrlVStatement(roleURI)">{{displayRoleURI(roleURI)}}</a>
             </small>
           </li>
@@ -75,7 +139,7 @@
       </div>
 
       <div class="col-sm-9">
-        <small>
+        <small class="bg-faded rounded-right">
           <table *ngIf="selectedXbrlVStatementRoleURI" class="table table-striped table-sm">
             <thead class="thead-inverse">
               <tr>
@@ -91,7 +155,7 @@
               <tr *ngFor="let rectangleItem of getDimensionedRectangleItems(selectedXbrlVStatement.rectangleKeys, dimension)" [ngClass]="{'thead-inverse': rectangleItem.domainMember}">
                 <td><span>{{repeat('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', rectangleItem.level - 1)}}</span><span *ngIf="rectangleItem.level !== 0">{{rectangleItem.lastChild ? '└──' : '├──'}}</span>{{getLabel(rectangleItem.toHref, rectangleItem.preferredLabel)}}</td>
                 <td *ngFor="let instanceObj of instanceObjIterators(dimension, rectangleItem, selectedXbrlVStatement.paredPeriodKeys)">
-                  <div  *ngIf="!rectangleItem.domainMember" [innerHTML]="displayContent((((rectangleItem || {}).instances || {})[instanceObj.contextRef] || {}).textContent || '')"></div>
+                  <div *ngIf="!rectangleItem.domainMember"><span *ngIf="nlpMode != 'redline'" [innerHTML]="getContent(rectangleItem, instanceObj.contextRef)"></span><span *ngIf="nlpMode === 'redline'"><diff [diffType]="'diffWords'" [priorContent]="getPriorContent(rectangleItem, instanceObj.contextRef)"  [postContent]="getContent(rectangleItem, instanceObj.contextRef)"></diff></span></div>
                 </td>
               </tr>
             </tbody>

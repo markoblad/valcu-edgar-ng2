@@ -1133,6 +1133,7 @@ export class XbrlUtility {
       // if (arcroleStub !== 'all') {
       // if (arcroleStub !== 'hypercube-dimension') {
       // if (arcroleStub !== 'dimension-domain') {
+      let to = treeItem.to;
       let toHref = treeItem.toHref;
       let preferredLabel = treeItem.preferredLabel;
       let instances = treeItem.instances;
@@ -1144,7 +1145,7 @@ export class XbrlUtility {
         domainMember = XbrlUtility.getHrefAnchor(treeItem.toHref);
       }
       if (!XbrlUtility.isBlank(instances) || !XbrlUtility.isBlank(domainMember)) {
-        rectangle[key] = {toHref, preferredLabel, instances, level, lastChild, hypercubeDimension, domainMember};
+        rectangle[key] = {to, toHref, preferredLabel, instances, level, lastChild, hypercubeDimension, domainMember};
       }
       let branch = (treeItem || {}).branch;
       if (!XbrlUtility.isBlank(branch)) {

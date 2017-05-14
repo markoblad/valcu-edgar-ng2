@@ -31,7 +31,13 @@ import * as JsDiff from 'diff/dist/diff.min.js';
   templateUrl: './home.component.html'
 })
 export class HomeComponent implements OnInit {
-  // Set our default values
+
+  public valcuLogo = 'assets/img/valcu_v.png';
+  public name = 'valcu-edgar-ng2';
+  // public url = 'https://twitter.com/valcuco';
+  public url = '/';
+  public isCollapsed = true;
+
   public localState = { value: '1371128' };
   public edgarContents: any = [];
   // TypeScript public modifiers
@@ -44,12 +50,17 @@ export class HomeComponent implements OnInit {
   public selectedXbrlVStatementRoleURI: string;
   public selectedXbrlVStatement: XbrlVStatementInterface;
 
+  public priorXbrlVReportKey: string;
+  public priorXbrlVReport: XbrlVReportInterface;
+  public priorXbrlVStatementRoleURI: string;
+  public priorXbrlVStatement: XbrlVStatementInterface;
+
   public parsed: any;
   public parsedOut: any;
+  public nlpDisplay: boolean = false;
+  public nlpMode: string = null;
 
   private verbose: boolean = false;
-
-  private nlpDisplay: boolean = true;
 
   constructor(
     public appState: AppState,
@@ -122,7 +133,7 @@ export class HomeComponent implements OnInit {
     console.log('hello `Home` component');
     // this.parsed = nlp('Now this is a story all about how..');
     // this.parsedOut = this.parsed.normalize().out('terms');
-    this.parsedOut = JsDiff.diffWords('Mark Edward Oblad', 'Henry Mark Oblad');
+    // this.parsedOut = JsDiff.diffWords('Mark Edward Oblad', 'Henry Mark Oblad');
     // this.title.getData().subscribe(data => this.data = data);
   }
 
@@ -212,6 +223,7 @@ export class HomeComponent implements OnInit {
   }
 
   public clearXbrlReports() {
+    this.setNlpMode(null);
     this.xbrlService.clearXbrlReports();
     this.selectedXbrlVReportKey = null;
     this.selectedXbrlVReport = null;
@@ -232,6 +244,16 @@ export class HomeComponent implements OnInit {
     // }
   }
 
+  public selectPriorXbrlVReport(xbrlVReportKey): void {
+    this.priorXbrlVReport = ((this.xbrlService || {xbrlVReports: {}}).xbrlVReports || {})[xbrlVReportKey] || {};
+    this.priorXbrlVReportKey = xbrlVReportKey;
+    // if (XbrlUtility.isBlank(this.selectedXbrlVStatementRoleURI) ||
+      // !(Object.keys((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {}).indexOf(this.selectedXbrlVStatementRoleURI) >= 0)) {
+    let xbrlVStatementKeys = Object.keys((this.priorXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {});
+    this.selectPriorXbrlVStatement((xbrlVStatementKeys.indexOf(this.priorXbrlVStatementRoleURI) >= 0) ? this.priorXbrlVStatementRoleURI : xbrlVStatementKeys[0]);
+    // }
+  }
+
   public selectXbrlVStatement(xbrlVStatementRoleURI): void {
     XbrlUtility.rectangularizeXbrlVStatement(
       ((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {})[xbrlVStatementRoleURI],
@@ -239,6 +261,15 @@ export class HomeComponent implements OnInit {
     );
     this.selectedXbrlVStatement = ((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {})[xbrlVStatementRoleURI] || {};
     this.selectedXbrlVStatementRoleURI = xbrlVStatementRoleURI;
+  }
+
+  public selectPriorXbrlVStatement(xbrlVStatementRoleURI): void {
+    XbrlUtility.rectangularizeXbrlVStatement(
+      ((this.priorXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {})[xbrlVStatementRoleURI],
+      (this.priorXbrlVReport || {contexts: {}}).contexts
+    );
+    this.priorXbrlVStatement = ((this.priorXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {})[xbrlVStatementRoleURI] || {};
+    this.priorXbrlVStatementRoleURI = xbrlVStatementRoleURI;
   }
 
   public lineItemIterators(dimensions) {
@@ -322,14 +353,42 @@ export class HomeComponent implements OnInit {
     return XbrlUtility.manageLabelBreaks(periodKey);
   }
 
+  public getContent(item, contextRef): any {
+    return this.displayContent((((item || {}).instances || {})[contextRef] || {}).textContent || '');
+  }
+
+  public getPriorContent(item, contextRef): any {
+    if (XbrlUtility.isBlank(this.priorXbrlVReportKey)) {
+      let xbrlVReportKeys = Object.keys((this.xbrlService || {xbrlVReports: {}}).xbrlVReports || {});
+      let priorXbrlVReportKey = xbrlVReportKeys[(xbrlVReportKeys.indexOf(this.selectedXbrlVReportKey) || 0) - 1] ||
+        xbrlVReportKeys[(xbrlVReportKeys.indexOf(this.selectedXbrlVReportKey) || 0) + 1];
+      this.selectPriorXbrlVReport(priorXbrlVReportKey);
+    }
+    if (XbrlUtility.isBlank(this.priorXbrlVStatementRoleURI)) {
+      this.selectPriorXbrlVStatement(this.selectedXbrlVStatementRoleURI);
+    }
+    let priorItem = this.priorXbrlVStatement.rectangle[item.to];
+    console.log('priorItem: ', JSON.stringify(priorItem));
+    let contextRefs = Object.keys((priorItem || {}).instances || {});
+    console.log('contextRefs: ', JSON.stringify(contextRefs));
+    return this.displayContent((((priorItem || {}).instances || {})[contextRefs[0]] || {}).textContent || '');
+  }
+
   public displayContent(content): any {
     console.log('displaying');
     if (this.nlpDisplay && !XbrlUtility.isBlank(content) && !XbrlUtility.isNumber(content)) {
       // return nlp(XbrlUtility.htmlToMDA(content).join('\n')).normalize().out('normal');
-      return XbrlUtility.htmlToMDA(content).join('\n').replace(/\s*\n+\s*/g, '\<br \/\>');
+      // return XbrlUtility.htmlToMDA(content).join('\n').replace(/\s*\n+\s*/g, '\<br \/\>');
+      let parsedNlp = nlp(XbrlUtility.htmlToMDA(content).join('\n') || '');
+      return this.nlpMode === 'people' ? parsedNlp.people().out('html') : (this.nlpMode === 'places' ? parsedNlp.places().out('html') : (parsedNlp.out('text')));
     } else {
       return content;
     }
+  }
+
+  public setNlpMode(nlpMode: string): void {
+    this.nlpMode = nlpMode;
+    this.nlpDisplay = !XbrlUtility.isBlank(nlpMode);
   }
 
 }

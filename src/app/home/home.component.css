@@ -8,6 +8,6 @@ button.active {
 
 .scroll-column {
   // height:700px;
-  height: 90vh;
+  height: 80vh;
   overflow-y: scroll;
 }

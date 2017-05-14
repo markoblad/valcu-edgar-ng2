@@ -1,0 +1,1 @@
+<span *ngFor="let diffResult of diffResults"><span [ngClass]="{diff: true, added: diffResult.added, removed: diffResult.removed}">{{diffResult.value}}</span></span>
