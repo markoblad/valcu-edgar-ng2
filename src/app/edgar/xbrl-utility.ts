@@ -511,27 +511,38 @@ export class XbrlUtility {
           },
           transformFn: XbrlUtility.objsArrayToObjObjsByIdTransform,
         },
-        loc: XbrlUtility.LOC_STRUCTURE,
-        footnoteArc: { // link:footnoteArc
-          rename: 'footnoteArcs',
-          atts: [
-            'order',
-            'arcrole', // 'xlink:arcrole'
-            'from', // 'xlink:from'
-            'to', // 'xlink:to'
-            'type', // 'xlink:type'
-          ],
+        footnoteLink: {
+          rename: 'footnoteLinks',
+          atts: XbrlUtility.LINK_ATTS,
+          tags: {
+            loc: XbrlUtility.LOC_STRUCTURE,
+            footnoteArc: {
+              rename: 'arcs',
+              atts: [
+                'order',
+                'arcrole', // 'xlink:arcrole'
+                'from', // 'xlink:from'
+                'to', // 'xlink:to',
+                'type', // 'xlink:type'
+              ],
+            },
+            footnote: { // link:loc
+              rename: 'footnotes',
+              textContent: true,
+              atts: [
+                'label', // 'xlink:label'
+                'role', // 'xlink:role'
+                'type', // 'xlink:type'
+                'lang', // 'xml:lang'
+              ],
+            },
+          },
+          transformFn: XbrlUtility.linksLocsArcsInterleaveTransform,
         },
-        footnote: { // link:loc
-          rename: 'footnotes',
-          textContent: true,
-          atts: [
-            'label', // 'xlink:label'
-            'role', // 'xlink:role'
-            'type', // 'xlink:type'
-            'lang', // 'xml:lang'
-          ],
-        },
+  //     @ins["foot_arcs"].each do |i|
+  //       foot = begin @ins["foots"].select {|foot| foot["label"] == i["to"] }.first rescue {} end
+  //       footnote_h = {
+  //         "href" => begin @ins["foot_locs"].select {|l| l["label"] == i["from"] }.first["href"] || "" rescue "" end,
       },
       attSelectors: {
         contextRef: {
@@ -549,20 +560,6 @@ export class XbrlUtility {
           transformFn: XbrlUtility.objsArrayToObjObjsObjsByNodeNameContextTransform,
         },
       },
-      // @ins_h["footnotes"] = begin EdgarBuilder::construct_footnotes(@ins_h) || [] rescue [] end
-      // '...': {
-      //   textContent: true,
-      //   atts: [
-      //     'contextRef',
-      //     'decimals',
-      //     'id',
-      //     'unitRef',
-      //     'nil',
-      //     'lang', //'xml:lang'
-      //   ],
-      // },
-      // @ins_h["doc"] = begin doc rescue "" end
-      // @ins_h = nil if @ins_h["doc"].blank?
     };
     // #item names map to xsd elements, with first underscore changed to colon;
     // #item unitRefs map internally to unit id
@@ -570,8 +567,6 @@ export class XbrlUtility {
     // #xbrldi:explicitMember dimension under contexts maps to ?;
     // # explicitMember text (colon needs to be changed to underscore) maps to xsd element id where it is in the company's namespace
     // #entity is cik
-
-    //  #item parsing doesnt occur here, but in EdgarBuilder
   }
 
   public static get XBRL_TYPE_TO_STRUCTURE(): {xsd, pre, def, cal, lab, ins} {
@@ -1549,92 +1544,6 @@ export class XbrlUtility {
   //     "labels" => begin @labels rescue [] end
   //   }
   //   return @statement
-  // end
-
-  // def self.construct_footnotes(ins)
-  //   @ins = {}
-  //   @ins["foot_locs"] = []
-  //   @ins["foot_locs"] = begin ins["foot_locs"] rescue [] end
-  //   @ins["foot_arcs"] = []
-  //   @ins["foot_arcs"] = begin ins["foot_arcs"] rescue [] end
-  //   @ins["foots"] = []
-  //   @ins["foots"] = begin ins["foots"] rescue [] end
-  //   @footnotes = []
-
-  //   unless @ins.blank? || @ins["foot_arcs"].blank?
-  //     @ins["foot_arcs"].each do |i|
-  //       foot = begin @ins["foots"].select {|foot| foot["label"] == i["to"] }.first rescue {} end
-  //       footnote_h = {}
-  //       footnote_h = {
-  //         "href" => begin @ins["foot_locs"].select {|l| l["label"] == i["from"] }.first["href"] || "" rescue "" end,
-  //         "arc_from_label" => begin i["from"] || "" rescue "" end,
-  //         "arc_to_label" => begin i["to"] || "" rescue "" end,
-  //         "arc_arcrole" => begin i["arcrole"] || "" rescue "" end,
-  //         "arc_order" => begin i["order"] || "" rescue "" end,
-  //         "arc_type" => begin i["type"] || "" rescue "" end,
-  //         "role" => begin foot["role"] || "" rescue "" end,
-  //         "footnote_type" => begin foot["footnote_type"] || "" rescue "" end,
-  //         "language" => begin foot["lang"] || "" rescue "" end,
-  //         "value" => begin clean_edgar_text(foot["text"]) || "" rescue "" end
-  //       }
-  //       @footnotes << footnote_h
-  //     end
-  //   end
-  //   return @footnotes
-  // end
-
-  // def self.construct_label(lab_locs, lab_labarcs, lab_labels, href)
-  //   label_template = {
-  //     "label_arc_from" => "",
-  //     "label_arc_to" => "",
-  //     "label_arc_order" => "",
-  //     "label_arc_arcrole" => "",
-  //     "label_arc_type" => "",
-  //     "label_role" => "",
-  //     "label_value" => "",
-  //     "label_language" => "",
-  //     "label_id" => ""
-  //   }
-  //   # collect the labels that apply to the item/a
-  //   label_h = {}
-  //   to_label = begin lab_locs.select {|l| l["href"] == href }.first["label"] || "" rescue "" end
-  //   @arc = []
-  //   @arc = begin lab_labarcs.select {|l| l["from"] == to_label }.first || "" rescue "" end
-
-  //   unless @arc.blank?
-  //     label_h =
-  //     {
-  //       "label_arc_from" => begin @arc["from"] || "" rescue "" end,
-  //       "label_arc_to" => begin @arc["to"] || "" rescue "" end,
-  //       "label_arc_order" => begin @arc["order"] || "" rescue "" end,
-  //       "label_arc_arcrole" => begin @arc["arcrole"] || "" rescue "" end,
-  //       "label_arc_type" => begin @arc["type"] || "" rescue "" end
-  //     }
-  //     intermediate_label_clone = {}
-  //     intermediate_label_clone = label_template.clone
-  //     intermediate_label_clone.merge!(label_h)
-
-  //     to_to = begin @arc["to"] || "" rescue "" end
-  //     to_items = begin lab_labels.select {|l| l["label"] == to_to} rescue [] end
-  //     @label_a = []
-  //     to_items.each do |to_item|
-  //       label_h = {}
-  //       label_h =
-  //       {
-  //         "label_role" => begin to_item["role"] || "" rescue "" end,
-  //         "label_value" => begin clean_edgar_text(to_item["text"]) || "" rescue "" end,
-  //         "label_language" => begin to_item["lang"] || "" rescue "" end,
-  //         "label_id" => begin to_item["id"] || "" rescue "" end
-  //       }
-  //       label_clone = {}
-  //       label_clone = intermediate_label_clone.clone
-  //       label = label_clone.merge(label_h)
-  //       @label_a << label
-  //     end
-  //     return @label_a
-  //   else
-  //     return {}
-  //   end
   // end
 
 }
