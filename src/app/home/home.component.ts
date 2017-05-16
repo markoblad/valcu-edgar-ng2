@@ -14,6 +14,7 @@ import { XbrlVReportInterface, XbrlVStatementInterface, XbrlReportInterface, Xbr
 import { XbrlService } from '../edgar';
 import { VChartComponent } from '../v-chart';
 import * as nlp from 'compromise/builds/compromise.es6.js';
+import * as ml from 'machine_learning';
 import * as JsDiff from 'diff/dist/diff.min.js';
 
 @Component({
@@ -135,6 +136,7 @@ export class HomeComponent implements OnInit {
     // this.parsedOut = this.parsed.normalize().out('terms');
     // this.parsedOut = JsDiff.diffWords('Mark Edward Oblad', 'Henry Mark Oblad');
     // this.title.getData().subscribe(data => this.data = data);
+    this.tryMl();
   }
 
   public submitState(value: string) {
@@ -389,6 +391,51 @@ export class HomeComponent implements OnInit {
   public setNlpMode(nlpMode: string): void {
     this.nlpMode = nlpMode;
     this.nlpDisplay = !XbrlUtility.isBlank(nlpMode);
+  }
+
+  public tryMl() {
+    let x = [
+      [1, 1, 1, 0, 0, 0],
+      [1, 0, 1, 0, 0, 0],
+      [1, 1, 1, 0, 0, 0],
+      [0, 0, 1, 1, 1, 0],
+      [0, 0, 1, 1, 0, 0],
+      [0, 0, 1, 1, 1, 0]
+    ];
+
+    let y = [
+      [1, 0],
+      [1, 0],
+      [1, 0],
+      [0, 1],
+      [0, 1],
+      [0, 1]
+    ];
+
+    let classifier = new ml.LogisticRegression({
+      input: x,
+      label: y,
+      n_in: 6,
+      n_out: 2
+    });
+
+    classifier.set('log level', 1);
+
+    let trainingEpochs = 800;
+    let lr = 0.01;
+
+    classifier.train({
+      lr,
+      epochs: trainingEpochs
+    });
+
+    x = [
+      [1, 1, 0, 0, 0, 0],
+      [0, 0, 0, 1, 1, 0],
+      [1, 1, 1, 1, 1, 0]
+    ];
+
+    console.log('Result : ', JSON.stringify(classifier.predict(x)));
   }
 
 }

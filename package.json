@@ -96,6 +96,7 @@
     "ie-shim": "^0.1.0",
     "jasmine-core": "^2.5.2",
     "lato-font": "^3.0.0",
+    "machine_learning": "^0.1.1",
     "moment": "^2.18.1",
     "ng2-fontawesome": "0.0.6",
     "reflect-metadata": "^0.1.9",
