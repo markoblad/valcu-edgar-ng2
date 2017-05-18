@@ -21,7 +21,7 @@ import * as JsDiff from 'diff/dist/diff.min.js';
   // The selector is what angular internally uses
   // for `document.querySelectorAll(selector)` in our index.html
   // where, in this case, selector is the string 'home'
-  selector: 'home',  // <home></home>
+  selector: 'home', // <home></home>
   // We need to tell Angular's Dependency Injection which providers are in our app.
   providers: [
     Title
@@ -136,7 +136,12 @@ export class HomeComponent implements OnInit {
     // this.parsedOut = this.parsed.normalize().out('terms');
     // this.parsedOut = JsDiff.diffWords('Mark Edward Oblad', 'Henry Mark Oblad');
     // this.title.getData().subscribe(data => this.data = data);
-    this.tryMl();
+    // this.tryLogisticRegression();
+    // this.tryMultiLayerPerceptron();
+    // this.trySupportVectorMachine();
+    // this.tryKNN();
+    // this.tryKMeansClustering();
+    this.tryHillClimbing();
   }
 
   public submitState(value: string) {
@@ -348,7 +353,7 @@ export class HomeComponent implements OnInit {
     let pieces = (((((this.selectedXbrlVReport.xbrls || {}).xsd || {}).roleTypes || {})[roleURI] || {}).definition || '').split(/\s+-\s+/);
     return XbrlUtility.manageLabelBreaks(pieces[pieces.length - 1]);
      // ||
-      // (XbrlUtility.getLastSlash(roleURI) || '').replace(/[A-Z]/g,  (letter) => ' ' + letter).trim();
+      // (XbrlUtility.getLastSlash(roleURI) || '').replace(/[A-Z]/g, (letter) => ' ' + letter).trim();
   }
 
   public displayPeriodKey(periodKey): string {
@@ -393,7 +398,7 @@ export class HomeComponent implements OnInit {
     this.nlpDisplay = !XbrlUtility.isBlank(nlpMode);
   }
 
-  public tryMl() {
+  public tryLogisticRegression() {
     let x = [
       [1, 1, 1, 0, 0, 0],
       [1, 0, 1, 0, 0, 0],
@@ -435,7 +440,193 @@ export class HomeComponent implements OnInit {
       [1, 1, 1, 1, 1, 0]
     ];
 
-    console.log('Result : ', JSON.stringify(classifier.predict(x)));
+    console.log('tryLogisticRegression Result: ', JSON.stringify(classifier.predict(x)));
   }
 
+  public tryMultiLayerPerceptron() {
+    let x = [
+      [0.4, 0.5, 0.5, 0.0, 0.0, 0.0],
+      [0.5, 0.3, 0.5, 0.0, 0.0, 0.0],
+      [0.4, 0.5, 0.5, 0.0, 0.0, 0.0],
+      [0.0, 0.0, 0.5, 0.3, 0.5, 0.0],
+      [0.0, 0.0, 0.5, 0.4, 0.5, 0.0],
+      [0.0, 0.0, 0.5, 0.5, 0.5, 0.0]
+    ];
+
+    let y = [
+      [1, 0],
+      [1, 0],
+      [1, 0],
+      [0, 1],
+      [0, 1],
+      [0, 1]
+    ];
+
+    let mlp = new ml.MLP({
+      input: x,
+      label: y,
+      n_ins: 6,
+      n_outs: 2,
+      hidden_layer_sizes: [4, 4, 5]
+    });
+
+    mlp.set('log level', 1); // 0 : nothing, 1 : info, 2 : warning.
+
+    mlp.train({
+      lr: 0.6,
+      epochs: 20000
+    });
+
+    let a = [
+      [0.5, 0.5, 0.0, 0.0, 0.0, 0.0],
+      [0.0, 0.0, 0.0, 0.5, 0.5, 0.0],
+      [0.5, 0.5, 0.5, 0.5, 0.5, 0.0]
+    ];
+
+    console.log('tryMultiLayerPerceptron: ', JSON.stringify(mlp.predict(a)));
+   }
+
+  public trySupportVectorMachine() {
+    let x = [
+      [0.4, 0.5, 0.5, 0.0, 0.0, 0.0],
+      [0.5, 0.3, 0.5, 0.0, 0.0, 0.01],
+      [0.4, 0.8, 0.5, 0.0, 0.1, 0.2],
+      [1.4, 0.5, 0.5, 0.0, 0.0, 0.0],
+      [1.5, 0.3, 0.5, 0.0, 0.0, 0.0],
+      [0.0, 0.9, 1.5, 0.0, 0.0, 0.0],
+      [0.0, 0.7, 1.5, 0.0, 0.0, 0.0],
+      [0.5, 0.1, 0.9, 0.0, -1.8, 0.0],
+      [0.8, 0.8, 0.5, 0.0, 0.0, 0.0],
+      [0.0, 0.9, 0.5, 0.3, 0.5, 0.2],
+      [0.0, 0.0, 0.5, 0.4, 0.5, 0.0],
+      [0.0, 0.0, 0.5, 0.5, 0.5, 0.0],
+      [0.3, 0.6, 0.7, 1.7, 1.3, -0.7],
+      [0.0, 0.0, 0.5, 0.3, 0.5, 0.2],
+      [0.0, 0.0, 0.5, 0.4, 0.5, 0.1],
+      [0.0, 0.0, 0.5, 0.5, 0.5, 0.01],
+      [0.2, 0.01, 0.5, 0.0, 0.0, 0.9],
+      [0.0, 0.0, 0.5, 0.3, 0.5, -2.3],
+      [0.0, 0.0, 0.5, 0.4, 0.5, 4],
+      [0.0, 0.0, 0.5, 0.5, 0.5, -2]
+    ];
+
+    let y = [-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+
+    let svm = new ml.SVM({
+      x,
+      y
+    });
+
+    svm.train({
+      C: 1.1, // default : 1.0. C in SVM.
+      tol: 1e-5, // default : 1e-4. Higher tolerance --> Higher precision
+      max_passes: 20, // default : 20. Higher max_passes --> Higher precision
+      alpha_tol: 1e-5, // default : 1e-5. Higher alpha_tolerance --> Higher precision
+
+      kernel: {type: 'polynomial', c: 1, d: 5}
+      // default : {type : "gaussian", sigma : 1.0}
+      // {type : "gaussian", sigma : 0.5}
+      // {type : "linear"} // x*y
+      // {type : "polynomial", c : 1, d : 8} // (x*y + c)^d
+      // Or you can use your own kernel.
+      // kernel : function(vecx,vecy) { return dot(vecx,vecy);}
+    });
+    console.log('trySupportVectorMachine Predict: ', JSON.stringify(svm.predict([1.3, 1.7, 0.5, 0.5, 1.5, 0.4])));
+  }
+
+  public tryKNN() {
+    let data = [
+      [1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0],
+      [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0],
+      [1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0],
+      [1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0],
+      [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1],
+      [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0],
+      [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0],
+      [0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0],
+      [0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1],
+      [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
+      [1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0]
+    ];
+
+    let result = [23, 12, 23, 23, 45, 70, 123, 73, 146, 158, 64];
+
+    let knn = new ml.KNN({
+      data,
+      result
+    });
+
+    let y = knn.predict({
+      x: [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1],
+      k: 3,
+
+      weightf: {type: 'gaussian', sigma: 10.0},
+      // default : {type : 'gaussian', sigma : 10.0}
+      // {type : 'none'}. weight == 1
+      // Or you can use your own weight f
+      // weightf : function(distance) {return 1./distance}
+
+      distance: {type: 'euclidean'}
+      // default : {type : 'euclidean'}
+      // {type : 'pearson'}
+      // Or you can use your own distance function
+      // distance : function(vecx, vecy) {return Math.abs(dot(vecx,vecy));}
+    });
+    console.log('tryKNN: ', JSON.stringify(y));
+  }
+
+  public tryKMeansClustering() {
+    let data = [
+      [1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0],
+      [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 0],
+      [1, 1, 1, 0, 1, 1, 1, 0, 1, 0, 0, 0, 1, 0],
+      [1, 0, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 1, 0],
+      [1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1],
+      [0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 1, 1, 1, 0],
+      [0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 1, 1, 0],
+      [0, 0, 0, 0, 0, 1, 1, 1, 0, 1, 0, 1, 1, 0],
+      [0, 0, 1, 0, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1],
+      [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1],
+      [1, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0]
+    ];
+
+    let result = ml.kmeans.cluster({
+      data,
+      k: 4,
+      epochs: 100,
+
+      distance: {type: 'pearson'}
+      // default : {type : 'euclidean'}
+      // {type : 'pearson'}
+      // Or you can use your own distance function
+      // distance : function(vecx, vecy) {return Math.abs(dot(vecx,vecy));}
+    });
+
+    console.log('clusters: ', JSON.stringify(result.clusters));
+    console.log('means: ', JSON.stringify(result.means));
+  }
+
+  public tryHillClimbing() {
+    let costf = (vec) => {
+      let cost = 0;
+      for (let i = 0; i < 14; i++) { // 15-dimensional vector
+        cost += (0.5 * i * vec[i] * Math.exp(-vec[i] + vec[i + 1]) / vec[i + 1]);
+      }
+      cost += (3.0 * vec[14] / vec[0]);
+      return cost;
+    };
+
+    let domain = [];
+    for (let i = 0; i < 15; i++) {
+      domain.push([1, 70]); // domain[idx][0] : minimum of vec[idx], domain[idx][1] : maximum of vec[idx].
+    }
+
+    let vec = ml.optimize.hillclimb({
+      domain,
+      costf
+    });
+
+    console.log('vec: ', JSON.stringify(vec));
+    console.log('cost: ', JSON.stringify(costf(vec)));
+  }
 }
