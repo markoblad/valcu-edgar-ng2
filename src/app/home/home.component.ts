@@ -141,7 +141,11 @@ export class HomeComponent implements OnInit {
     // this.trySupportVectorMachine();
     // this.tryKNN();
     // this.tryKMeansClustering();
-    this.tryHillClimbing();
+    // this.tryHillClimbing();
+    // this.trySimulatedAnnealing();
+    // this.tryGeneticAlgorithm();
+    // this.tryDecisionTree();
+    this.tryNonNegativeMatrixFactorization();
   }
 
   public submitState(value: string) {
@@ -168,7 +172,8 @@ export class HomeComponent implements OnInit {
                       let urlPieces = (edgarArchiveFiles[0].url || '').split('/');
                       let xbrlVReportKey = urlPieces[urlPieces.length - 2];
                       // console.log('xbrlVReportKey: ', xbrlVReportKey);
-                      this.getXbrlReport(xbrlVReportKey, xbrlVReport, this.verbose);
+                      // this.getXbrlReport(xbrlVReportKey, xbrlVReport, this.verbose);
+                      this.xbrlService.addParsedXbrls(xbrlVReportKey, [], xbrlVReport.edgarArchiveFiles);
                     }
                   },
                   (error) => console.log(error)
@@ -244,11 +249,15 @@ export class HomeComponent implements OnInit {
   public selectXbrlVReport(xbrlVReportKey): void {
     this.selectedXbrlVReport = ((this.xbrlService || {xbrlVReports: {}}).xbrlVReports || {})[xbrlVReportKey] || {};
     this.selectedXbrlVReportKey = xbrlVReportKey;
-    // if (XbrlUtility.isBlank(this.selectedXbrlVStatementRoleURI) ||
-      // !(Object.keys((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {}).indexOf(this.selectedXbrlVStatementRoleURI) >= 0)) {
-    let xbrlVStatementKeys = Object.keys((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {});
-    this.selectXbrlVStatement((xbrlVStatementKeys.indexOf(this.selectedXbrlVStatementRoleURI) >= 0) ? this.selectedXbrlVStatementRoleURI : xbrlVStatementKeys[0]);
-    // }
+    if (XbrlUtility.isBlank(this.selectedXbrlVReport.xbrls)) {
+      this.getXbrlReport(xbrlVReportKey, this.selectedXbrlVReport, this.verbose);
+    } else {
+      // if (XbrlUtility.isBlank(this.selectedXbrlVStatementRoleURI) ||
+        // !(Object.keys((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {}).indexOf(this.selectedXbrlVStatementRoleURI) >= 0)) {
+      let xbrlVStatementKeys = Object.keys((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {});
+      this.selectXbrlVStatement((xbrlVStatementKeys.indexOf(this.selectedXbrlVStatementRoleURI) >= 0) ? this.selectedXbrlVStatementRoleURI : xbrlVStatementKeys[0]);
+      // }
+    }
   }
 
   public selectPriorXbrlVReport(xbrlVReportKey): void {
@@ -628,5 +637,115 @@ export class HomeComponent implements OnInit {
 
     console.log('vec: ', JSON.stringify(vec));
     console.log('cost: ', JSON.stringify(costf(vec)));
+  }
+
+  public trySimulatedAnnealing() {
+    let costf = (vec) => {
+      let cost = 0;
+      for (let i = 0; i < 14; i++) { // 15-dimensional vector
+        cost += (0.5 * i * vec[i] * Math.exp(-vec[i] + vec[i + 1]) / vec[i + 1]);
+      }
+      cost += (3.0 * vec[14] / vec[0]);
+      return cost;
+    };
+
+    let domain = [];
+    for (let i = 0; i < 15; i++) {
+      domain.push([1, 70]); // domain[idx][0] : minimum of vec[idx], domain[idx][1] : maximum of vec[idx].
+    }
+
+    let vec = ml.optimize.anneal({
+      domain,
+      costf,
+      temperature: 100000.0,
+      cool: 0.999,
+      step: 4
+    });
+
+    console.log('vec: ', JSON.stringify(vec));
+    console.log('cost: ', JSON.stringify(costf(vec)));
+  }
+
+  public tryGeneticAlgorithm() {
+    let costf = (vec) => {
+      let cost = 0;
+      for (let i = 0; i < 14; i++) { // 15-dimensional vector
+        cost += (0.5 * i * vec[i] * Math.exp(-vec[i] + vec[i + 1]) / vec[i + 1]);
+      }
+      cost += (3.0 * vec[14] / vec[0]);
+      return cost;
+    };
+
+    let domain = [];
+    for (let i = 0; i < 15; i++) {
+      domain.push([1, 70]); // domain[idx][0] : minimum of vec[idx], domain[idx][1] : maximum of vec[idx].
+    }
+
+    let vec = ml.optimize.genetic({
+      domain,
+      costf,
+      population: 50,
+      elite: 2, // elitism. number of elite chromosomes.
+      epochs: 300,
+      q: 0.3 // Rank-Based Fitness Assignment. fitness = q * (1-q)^(rank-1)
+      // higher q --> higher selection pressure
+    });
+
+    console.log('vec: ', JSON.stringify(vec));
+    console.log('cost: ', JSON.stringify(costf(vec)));
+  }
+
+  public tryDecisionTree() {
+    let data = [
+      ['slashdot', 'USA', 'yes', 18],
+      ['google', 'France', 'yes', 23],
+      ['digg', 'USA', 'yes', 24],
+      ['kiwitobes', 'France', 'yes', 23],
+      ['google', 'UK', 'no', 21],
+      ['(direct)', 'New Zealand', 'no', 12],
+      ['(direct)', 'UK', 'no', 21],
+      ['google', 'USA', 'no', 24],
+      ['slashdot', 'France', 'yes', 19],
+      ['digg', 'USA', 'no', 18],
+      ['google', 'UK', 'no', 18],
+      ['kiwitobes', 'UK', 'no', 19],
+      ['digg', 'New Zealand', 'yes', 12],
+      ['slashdot', 'UK', 'no', 21],
+      ['google', 'UK', 'yes', 18],
+      ['kiwitobes', 'France', 'yes', 19]
+    ];
+
+    let result = ['None', 'Premium', 'Basic', 'Basic', 'Premium', 'None', 'Basic', 'Premium',
+      'None', 'None', 'None', 'None', 'Basic', 'None', 'Basic', 'Basic'];
+
+    let dt = new ml.DecisionTree({
+      data,
+      result
+    });
+
+    dt.build();
+    // dt.print();
+
+    console.log('Classify: ', JSON.stringify(dt.classify(['(direct)', 'USA', 'yes', 5])));
+
+    dt.prune(1.0); // 1.0 : mingain.
+    // dt.print();
+  }
+
+  public tryNonNegativeMatrixFactorization() {
+    let matrix = [
+      [22, 28],
+      [49, 64]
+    ];
+
+    let result = ml.nmf.factorize({
+      matrix,
+      features: 3,
+      epochs: 100
+    });
+
+    console.log('First Matrix: ', JSON.stringify(result[0]));
+    console.log('Second Matrix: ', JSON.stringify(result[1]));
+    console.log('Result: ', JSON.stringify(result));
   }
 }
