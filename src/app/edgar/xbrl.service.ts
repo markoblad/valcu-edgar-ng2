@@ -68,7 +68,7 @@ export class XbrlService {
     xbrlVReport.units = ((xbrlVReport.xbrls || {}).ins || {}).units;
     xbrlVReport.status = XbrlUtility.isBlank(parsedXbrls) ? 2 : 4;
     if (this.xbrlVReportKeys.indexOf(xbrlVReportKey) < 0) {
-      this.xbrlVReportKeys.push(xbrlVReportKey);
+      this.xbrlVReportKeys = (this.xbrlVReportKeys.concat([xbrlVReportKey])).sort((a, b) => parseInt(b.substring(10), 10) - parseInt(a.substring(10), 10));
     }
     // console.log('this.xbrlVReportKeys: ', JSON.stringify(this.xbrlVReportKeys));
     this.xbrlVReports[xbrlVReportKey] = xbrlVReport;
@@ -260,8 +260,18 @@ export class XbrlService {
     return XbrlUtility.manageLabelBreaks(periodKey);
   }
 
-  public getContent(item, contextRef): any {
-    return this.displayContent((((item || {}).instances || {})[contextRef] || {}).textContent || '');
+  public getContent(item, contextRef, decimals): any {
+    let textContent = (((item || {}).instances || {})[contextRef] || {}).textContent || '';
+    let instanceDecimals = (((item || {}).instances || {})[contextRef] || {}).decimals;
+    let value = textContent;
+    if (XbrlUtility.isNumber(textContent)) {
+      value = parseFloat(textContent);
+      if (XbrlUtility.isNumber(instanceDecimals)) {
+        value = value * Math.pow(10, parseFloat(instanceDecimals));
+      }
+      value = value.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+    }
+    return this.displayContent(value);
   }
 
   public getPriorContent(item, contextRef): any {

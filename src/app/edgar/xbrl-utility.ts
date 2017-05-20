@@ -537,6 +537,7 @@ export class XbrlUtility {
                 'type', // 'xlink:type'
                 'lang', // 'xml:lang'
               ],
+              transformFn: XbrlUtility.objsArrayToObjObjsByLabelTransform,
             },
           },
           transformFn: XbrlUtility.linksLocsArcsInterleaveTransform,
@@ -562,6 +563,7 @@ export class XbrlUtility {
           transformFn: XbrlUtility.objsArrayToObjObjsObjsByNodeNameContextTransform,
         },
       },
+      transformFn: XbrlUtility.instanceFootnotesInterleaveTransform,
     };
     // #item names map to xsd elements, with first underscore changed to colon;
     // #item unitRefs map internally to unit id
@@ -668,6 +670,32 @@ export class XbrlUtility {
 
   public static linksLocsArcsInterleaveTransform(linkObjs) {
     return (linkObjs || []).map((linkObj) => XbrlUtility.linkLocsArcsInterleaveTransform(linkObj));
+  }
+
+  public static instanceFootnotesInterleaveTransform(obj) {
+    let instances = (obj || {}).instances;
+    let footnoteLink = ((obj || {}).footnoteLinks || [])[0] || {};
+    console.log('footnoteLink: ', JSON.stringify(footnoteLink);
+    let arcs = footnoteLink.arcs;
+    console.log('arcs: ', JSON.stringify(arcs));
+    let footnotes = footnoteLink.footnotes;
+    if (!XbrlUtility.isBlank(arcs)) {
+      Object.keys(instances).map((contextRef) => {
+        let contextRefInstances = instances[contextRef];
+        Object.keys(contextRefInstances).map((instanceKey) => {
+          let instance = contextRefInstances[instanceKey] || {};
+          let arc = arcs['#' + instance.id];
+          if (!XbrlUtility.isBlank(arc)) {
+            let footnote = footnotes[arc.to];
+            if (!XbrlUtility.isBlank(footnote)) {
+              let instanceFootnotes = instance.footnotes || [];
+              instance.footnotes.push(footnote);
+            }
+          }
+        });
+      });
+    }
+    return obj;
   }
 
   public static processDoc(doc: XMLDocument, verbose: boolean, fn: (doc: XMLDocument, nsHref: string, nsPrefix: string, nss: {}) => {}): any {
@@ -1138,12 +1166,12 @@ export class XbrlUtility {
       // 'dei_DocumentFiscalPeriodFocus',
       // 'dei_CurrentFiscalYearEndDate'
     ].forEach((insKey) => {
-      let instance = instances[insKey];
-      console.log('JSON.stringify(instance): ', JSON.stringify(instance));
+      let instance = instances[insKey] || {};
+      // console.log('JSON.stringify(instance): ', JSON.stringify(instance));
       let textContent = ((instance || {})[Object.keys(instance)[0]] || {}).textContent;
       // console.log('JSON.stringify(Object.keys(instances)): ', JSON.stringify(Object.keys(instances)));
-      console.log('XbrlUtility.isBlank(instances): ', XbrlUtility.isBlank(instances));
-      console.log('textContent: ', textContent);
+      // console.log('XbrlUtility.isBlank(instances): ', XbrlUtility.isBlank(instances));
+      // console.log('textContent: ', textContent);
       if (!XbrlUtility.isBlank(textContent)) {
         if (insKey === 'dei_AmendmentFlag') {
           if (textContent.toString() === 'true') {
