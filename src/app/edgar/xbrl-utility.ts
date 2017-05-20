@@ -25,6 +25,7 @@ export interface XbrlVReportInterface {
   contexts?: any;
   units?: any;
   xbrlVStatements?: {};
+  status?: number;
 }
 
 export interface XbrlVStatementInterface {

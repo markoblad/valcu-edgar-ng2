@@ -85,29 +85,29 @@
 
     <div class="row">
       <div class="col align-self-end">
-        <div *ngIf="nlpMode === 'redline'" ngbDropdown [up]="false" class="pull-right d-inline-block">
+        <div *ngIf="xbrlService.nlpMode === 'redline'" ngbDropdown [up]="false" class="pull-right d-inline-block">
           <button class="btn btn-outline-primary btn-sm" id="dropdownComparisonStatement" ngbDropdownToggle (click)="false">Comparison Statement</button>
           <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownComparisonStatement">
-            <button *ngFor="let roleURI of (priorXbrlVReport || {}).roleURIs"
-              [ngClass]="{'dropdown-item btn-sm': true, 'active': roleURI === priorXbrlVStatementRoleURI}"
-              (click)="selectPriorXbrlVStatement(roleURI)">{{displayRoleURI(roleURI)}}</button>
+            <button *ngFor="let roleURI of (xbrlService.priorXbrlVReport || {}).roleURIs"
+              [ngClass]="{'dropdown-item btn-sm': true, 'active': roleURI === xbrlService.priorXbrlVStatementRoleURI}"
+              (click)="xbrlService.selectPriorXbrlVStatement(roleURI)">{{xbrlService.displayRoleURI(roleURI)}}</button>
           </div>
         </div>
-        <div *ngIf="nlpMode === 'redline'" ngbDropdown [up]="false" [open]="true" class="pull-right d-inline-block">
+        <div *ngIf="xbrlService.nlpMode === 'redline'" ngbDropdown [up]="false" [open]="true" class="pull-right d-inline-block">
           <button class="btn btn-outline-primary btn-sm" id="dropdownComparisonReport" ngbDropdownToggle (click)="false">Comparison Report</button>
           <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownComparisonReport">
             <button *ngFor="let xbrlVReportKey of xbrlService.xbrlVReportKeys"
-              [ngClass]="{'dropdown-item btn-sm': true, 'active': xbrlVReportKey === priorXbrlVReportKey}"
-            (click)="selectPriorXbrlVReport(xbrlVReportKey)">{{xbrlVReportKey}}</button>
+              [ngClass]="{'dropdown-item btn-sm': true, 'active': xbrlVReportKey === xbrlService.priorXbrlVReportKey}"
+            (click)="xbrlService.selectPriorXbrlVReport(xbrlVReportKey)">{{xbrlVReportKey}}</button>
           </div>
         </div>
         <div class="btn-group btn-group-sm pull-right" role="group" aria-label="...">
-          <button [ngClass]="{btn: true, 'btn-success': nlpMode === 'places', 'btn-primary': nlpMode != 'places'}"
-          (click)="setNlpMode(nlpMode === 'places' ? null : 'places')"><span class="fa fa-map-marker"></span></button>
-          <button [ngClass]="{btn: true, 'btn-success': nlpMode === 'people', 'btn-primary': nlpMode != 'people'}"
-          (click)="setNlpMode(nlpMode === 'people' ? null : 'people')"><span class="fa fa-user-circle"></span></button>
-          <button [ngClass]="{btn: true, 'btn-success': nlpMode === 'redline', 'btn-primary': nlpMode != 'redline'}"
-          (click)="setNlpMode(nlpMode === 'redline' ? null : 'redline')"><span class="fa fa-strikethrough"></span></button>
+          <button [ngClass]="{btn: true, 'btn-success': xbrlService.nlpMode === 'places', 'btn-primary': xbrlService.nlpMode != 'places'}"
+          (click)="xbrlService.setNlpMode(xbrlService.nlpMode === 'places' ? null : 'places')"><span class="fa fa-map-marker"></span></button>
+          <button [ngClass]="{btn: true, 'btn-success': nlpMode === 'people', 'btn-primary': xbrlService.nlpMode != 'people'}"
+          (click)="xbrlService.setNlpMode(xbrlService.nlpMode === 'people' ? null : 'people')"><span class="fa fa-user-circle"></span></button>
+          <button [ngClass]="{btn: true, 'btn-success': xbrlService.nlpMode === 'redline', 'btn-primary': xbrlService.nlpMode != 'redline'}"
+          (click)="xbrlService.setNlpMode(xbrlService.nlpMode === 'redline' ? null : 'redline')"><span class="fa fa-strikethrough"></span></button>
           <button class="btn btn-danger pull-right" (click)="clearXbrlReports()">&times;</button>
         </div>
       </div>
@@ -117,22 +117,22 @@
         <nav class="nav nav-tabs d-flex flex-wrap">
           <li *ngFor="let xbrlVReportKey of xbrlService.xbrlVReportKeys" class="nav-item">
             <small>
-              <a [ngClass]="{'nav-link': true, active: xbrlVReportKey === selectedXbrlVReportKey}"
-                (click)="selectXbrlVReport(xbrlVReportKey)">{{xbrlVReportKey}}</a>
+              <a [ngClass]="{'nav-link': true, active: xbrlVReportKey === xbrlService.selectedXbrlVReportKey}"
+                (click)="xbrlService.selectXbrlVReport(xbrlVReportKey)">{{xbrlVReportKey}}</a>
             </small>
           </li>
         </nav>
       </div>
     </div>
     
-    <div *ngIf="selectedXbrlVReport" class="row pt-2">
+    <div *ngIf="xbrlService.selectedXbrlVReportDisplayable()" class="row pt-2">
       <div class="col-sm-3">
         <ul class="nav flex-column flex-sm-row nav-pills xbrl-statement-nav scroll-column bg-faded rounded-left">
           <li class="nav-item flex-sm-fill">
             <small>
-              <a *ngFor="let roleURI of (selectedXbrlVReport || {}).roleURIs"
-              [ngClass]="{'flex-sm-fill': false, 'nav-link': true, 'active': roleURI === selectedXbrlVStatementRoleURI}"
-              (click)="selectXbrlVStatement(roleURI)">{{displayRoleURI(roleURI)}}</a>
+              <a *ngFor="let roleURI of (xbrlService.selectedXbrlVReport || {}).roleURIs"
+              [ngClass]="{'flex-sm-fill': false, 'nav-link': true, 'active': roleURI === xbrlService.selectedXbrlVStatementRoleURI}"
+              (click)="xbrlService.selectXbrlVStatement(roleURI)">{{xbrlService.displayRoleURI(roleURI)}}</a>
             </small>
           </li>
         </ul>
@@ -140,22 +140,22 @@
 
       <div class="col-sm-9">
         <small class="bg-faded rounded-right">
-          <table *ngIf="selectedXbrlVStatementRoleURI" class="table table-striped table-sm">
+          <table *ngIf="xbrlService.selectedXbrlVStatementRoleURI" class="table table-striped table-sm">
             <thead class="thead-inverse">
               <tr>
-                <th>{{displayRoleURI(selectedXbrlVStatementRoleURI)}}</th>
-                <th *ngFor="let periodKey of selectedXbrlVStatement.paredPeriodKeys"><span placement="top" ngbTooltip="Tooltip on top" [innerHTML]="displayPeriodKey(periodKey)"></span></th>
+                <th>{{xbrlService.displayRoleURI(xbrlService.selectedXbrlVStatementRoleURI)}}</th>
+                <th *ngFor="let periodKey of xbrlService.selectedXbrlVStatement.paredPeriodKeys"><span placement="top" ngbTooltip="Tooltip on top" [innerHTML]="xbrlService.displayPeriodKey(periodKey)"></span></th>
               </tr>
             </thead>
-            <tbody *ngFor="let dimension of lineItemIterators(selectedXbrlVStatement.dimensions)">
+            <tbody *ngFor="let dimension of xbrlService.lineItemIterators(xbrlService.selectedXbrlVStatement.dimensions)">
               <tr *ngIf="dimension.member" class="table-inverse bg-primary">
-                <td>{{getHeadDimensionedRectangleItemLabel(selectedXbrlVStatement.rectangleKeys, dimension)}}</td>
-                <td *ngFor="let periodKey of selectedXbrlVStatement.paredPeriodKeys" [innerHTML]="displayPeriodKey(periodKey)"></td>
+                <td>{{xbrlService.getHeadDimensionedRectangleItemLabel(xbrlService.selectedXbrlVStatement.rectangleKeys, dimension)}}</td>
+                <td *ngFor="let periodKey of xbrlService.selectedXbrlVStatement.paredPeriodKeys" [innerHTML]="xbrlService.displayPeriodKey(periodKey)"></td>
               </tr>
-              <tr *ngFor="let rectangleItem of getDimensionedRectangleItems(selectedXbrlVStatement.rectangleKeys, dimension)" [ngClass]="{'thead-inverse': rectangleItem.domainMember}">
-                <td><span>{{repeat('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', rectangleItem.level - 1)}}</span><span *ngIf="rectangleItem.level !== 0">{{rectangleItem.lastChild ? '└──' : '├──'}}</span>{{getLabel(rectangleItem.toHref, rectangleItem.preferredLabel)}}</td>
-                <td *ngFor="let instanceObj of instanceObjIterators(dimension, rectangleItem, selectedXbrlVStatement.paredPeriodKeys)">
-                  <div *ngIf="!rectangleItem.domainMember"><span *ngIf="nlpMode != 'redline'" [innerHTML]="getContent(rectangleItem, instanceObj.contextRef)"></span><span *ngIf="nlpMode === 'redline'"><diff [diffType]="'diffWords'" [priorContent]="getPriorContent(rectangleItem, instanceObj.contextRef)"  [postContent]="getContent(rectangleItem, instanceObj.contextRef)"></diff></span></div>
+              <tr *ngFor="let rectangleItem of xbrlService.getDimensionedRectangleItems(xbrlService.selectedXbrlVStatement.rectangleKeys, dimension)" [ngClass]="{'thead-inverse': rectangleItem.domainMember}">
+                <td><span>{{repeat('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', rectangleItem.level - 1)}}</span><span *ngIf="rectangleItem.level !== 0">{{rectangleItem.lastChild ? '└──' : '├──'}}</span>{{xbrlService.getLabel(rectangleItem.toHref, rectangleItem.preferredLabel)}}</td>
+                <td *ngFor="let instanceObj of xbrlService.instanceObjIterators(dimension, rectangleItem, xbrlService.selectedXbrlVStatement.paredPeriodKeys)">
+                  <div *ngIf="!rectangleItem.domainMember"><span *ngIf="xbrlService.nlpMode != 'redline'" [innerHTML]="xbrlService.getContent(rectangleItem, instanceObj.contextRef)"></span><span *ngIf="xbrlService.nlpMode === 'redline'"><diff [diffType]="'diffWords'" [priorContent]="xbrlService.getPriorContent(rectangleItem, instanceObj.contextRef)"  [postContent]="xbrlService.getContent(rectangleItem, instanceObj.contextRef)"></diff></span></div>
                 </td>
               </tr>
             </tbody>
@@ -166,15 +166,15 @@
     </div>
 
     <pre *ngIf="false">this.localState = {{ localState | json }}</pre>
-    <div *ngIf="false">{{(selectedXbrlVReport || {}).roleURIs | json}}</div>
+    <div *ngIf="false">{{(xbrlService.selectedXbrlVReport || {}).roleURIs | json}}</div>
 
-    <div *ngIf="false">{{(((selectedXbrlVReport || {}).xbrls || {}).lab || {}).labels | json}}</div>
-    <div *ngIf="false">{{(((selectedXbrlVReport || {}).xbrls || {}).lab || {}).arcs | json}}</div>
+    <div *ngIf="false">{{(((xbrlService.selectedXbrlVReport || {}).xbrls || {}).lab || {}).labels | json}}</div>
+    <div *ngIf="false">{{(((xbrlService.selectedXbrlVReport || {}).xbrls || {}).lab || {}).arcs | json}}</div>
 
-    <pre *ngIf="false">selectedXbrlVStatement = {{ selectedXbrlVStatement | json }}</pre>
-    <pre *ngIf="false">selectedXbrlVStatement.xbrlStatements = {{ selectedXbrlVStatement.xbrlStatements | json }}</pre>
-    <pre *ngIf="false">selectedXbrlVReport.xbrls = {{ selectedXbrlVReport.xbrls | json }}</pre>
-    <pre *ngIf="false">selectedXbrlVReport.xbrls.xsd = {{ ((selectedXbrlVReport.xbrls || {})).xsd | json }}</pre>
+    <pre *ngIf="false">xbrlService.selectedXbrlVStatement = {{ xbrlService.selectedXbrlVStatement | json }}</pre>
+    <pre *ngIf="false">xbrlService.selectedXbrlVStatement.xbrlStatements = {{ xbrlService.selectedXbrlVStatement.xbrlStatements | json }}</pre>
+    <pre *ngIf="false">xbrlService.selectedXbrlVReport.xbrls = {{ xbrlService.selectedXbrlVReport.xbrls | json }}</pre>
+    <pre *ngIf="false">xbrlService.selectedXbrlVReport.xbrls.xsd = {{ ((xbrlService.selectedXbrlVReport.xbrls || {})).xsd | json }}</pre>
 
   </div>
 
