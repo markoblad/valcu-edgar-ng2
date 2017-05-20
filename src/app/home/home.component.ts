@@ -145,22 +145,38 @@ export class HomeComponent implements OnInit {
             (cikObjs) => {
               // console.log('cikObjs: ', JSON.stringify(cikObjs || ''));
               cikObjs.forEach((cikObj) => {
-                this.edgarArchiveService.getArchive(cikObj.href).subscribe(
-                  (archiveObjs) => {
-                    // console.log('archiveObjs: ', JSON.stringify(archiveObjs || ''));
-                    let edgarArchiveFiles = this.edgarArchiveService.archiveUrlObjsToEdgarArchiveFiles(archiveObjs);
-                    if (edgarArchiveFiles) {
-                      let xbrlVReport = {edgarArchiveFiles};
-                      // console.log('xbrlVReport: ', JSON.stringify(xbrlVReport));
-                      let urlPieces = (edgarArchiveFiles[0].url || '').split('/');
-                      let xbrlVReportKey = urlPieces[urlPieces.length - 2];
-                      // console.log('xbrlVReportKey: ', xbrlVReportKey);
-                      // this.getXbrlReport(xbrlVReportKey, xbrlVReport, this.verbose);
-                      this.xbrlService.addParsedXbrls(xbrlVReportKey, [], xbrlVReport.edgarArchiveFiles);
-                    }
-                  },
-                  (error) => console.log(error)
-                );
+                // this.edgarArchiveService.getArchiveXbrlZip(cikObj.href).subscribe(
+                //   (archiveObjs) => {
+                //     let edgarArchiveFiles = this.edgarArchiveService.archiveUrlObjsToEdgarArchiveFiles(archiveObjs);
+                //     if (edgarArchiveFiles) {
+                //       let xbrlVReport = {edgarArchiveFiles};
+                //       // console.log('xbrlVReport: ', JSON.stringify(xbrlVReport));
+                //       let urlPieces = (edgarArchiveFiles[0].url || '').split('/');
+                //       let xbrlVReportKey = urlPieces[urlPieces.length - 2];
+                //       // console.log('xbrlVReportKey: ', xbrlVReportKey);
+                //       // this.getXbrlReport(xbrlVReportKey, xbrlVReport, this.xbrlService.verbose);
+                //       this.xbrlService.addParsedXbrls(xbrlVReportKey, [], xbrlVReport.edgarArchiveFiles);
+                //     }
+                //   }, (getArchiveXbrlZipError) => {
+                //     console.log('getArchiveXbrlZip error: ', getArchiveXbrlZipError);
+                    this.edgarArchiveService.getArchive(cikObj.href).subscribe(
+                      (archiveObjs) => {
+                        // console.log('archiveObjs: ', JSON.stringify(archiveObjs || ''));
+                        let edgarArchiveFiles = this.edgarArchiveService.archiveUrlObjsToEdgarArchiveFiles(archiveObjs);
+                        if (edgarArchiveFiles) {
+                          let xbrlVReport = {edgarArchiveFiles};
+                          // console.log('xbrlVReport: ', JSON.stringify(xbrlVReport));
+                          let urlPieces = (edgarArchiveFiles[0].url || '').split('/');
+                          let xbrlVReportKey = urlPieces[urlPieces.length - 2];
+                          // console.log('xbrlVReportKey: ', xbrlVReportKey);
+                          // this.getXbrlReport(xbrlVReportKey, xbrlVReport, this.xbrlService.verbose);
+                          this.xbrlService.addParsedXbrls(xbrlVReportKey, [], xbrlVReport.edgarArchiveFiles);
+                        }
+                      },
+                      (error) => console.log(error)
+                    );
+                //   }
+                // );
               });
             },
             (error) => console.log(error)
@@ -173,7 +189,7 @@ export class HomeComponent implements OnInit {
       Object.keys(this.xbrlService.xbrlVReports).forEach((xbrlVReportKey) => {
         // console.log('xbrlVReportKey: ', xbrlVReportKey);
         let xbrlVReport = this.xbrlService.xbrlVReports[xbrlVReportKey];
-        this.xbrlService.getXbrlReport(xbrlVReportKey, xbrlVReport, this.verbose);
+        this.xbrlService.getXbrlReport(xbrlVReportKey, xbrlVReport, this.xbrlService.verbose);
       });
     }
   }

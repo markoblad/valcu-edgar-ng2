@@ -34,7 +34,6 @@ export class XbrlService {
   ) {}
 
   public addParsedXbrls(xbrlVReportKey: string, parsedXbrls: any[] = [], edgarArchiveFiles: any[]): void {
-
     let xbrlVReport: XbrlVReportInterface = {
       edgarArchiveFiles,
       xbrls: {},
@@ -42,9 +41,13 @@ export class XbrlService {
       contexts: {},
       units: {},
       xbrlVStatements: {},
+      description: null,
     };
     parsedXbrls.map((parsedXbrl) => {
       xbrlVReport.xbrls[parsedXbrl.type] = parsedXbrl;
+      if (parsedXbrl.type === 'ins') {
+        xbrlVReport.description = XbrlUtility.getXbrlVReportDescription(xbrlVReport);
+      }
     });
     xbrlVReport.roleURIs = XbrlUtility.getXbrlsRoleURIs(parsedXbrls);
 
@@ -239,6 +242,10 @@ export class XbrlService {
     return XbrlUtility.manageLabelBreaks(XbrlUtility.getLabel((this.selectedXbrlVReport.xbrls || {}).lab, toHref, role) || toHref);
   }
 
+  public getXbrlVReportDescriptionByKey(xbrlVReportKey: string): string {
+    return this.xbrlVReports[xbrlVReportKey].description || xbrlVReportKey;
+  }
+
   public getLastSlash(str): string {
     return XbrlUtility.getLastSlash(str);
   }
@@ -275,7 +282,7 @@ export class XbrlService {
   }
 
   public displayContent(content): any {
-    console.log('displaying');
+    // console.log('displaying');
     if (this.nlpDisplay && !XbrlUtility.isBlank(content) && !XbrlUtility.isNumber(content)) {
       // return nlp(XbrlUtility.htmlToMDA(content).join('\n')).normalize().out('normal');
       // return XbrlUtility.htmlToMDA(content).join('\n').replace(/\s*\n+\s*/g, '\<br \/\>');

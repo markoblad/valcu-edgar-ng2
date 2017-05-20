@@ -4,6 +4,8 @@ import { Observable } from 'rxjs/Observable';
 import 'rxjs/Rx';
 import 'rxjs/add/observable/throw';
 import 'rxjs/add/observable/forkJoin';
+import * as JSZipUtils from 'jszip-utils';
+import * as JSZip from 'jszip';
 import { XbrlUtility } from '../edgar';
 
 @Injectable()
@@ -78,6 +80,21 @@ export class EdgarArchiveService {
     .map(this.checkForError)
     .catch((err) => Observable.throw(err))
     .map((resp) => this.toArchiveUrlObjs(resp, archivePath));
+  }
+
+  public getArchiveXbrlZip(archivePath: string): Observable<any> {
+    let url = this.proxyUrl + (archivePath || '').replace(/^\//, '').trim() + '/' + this.archivePathtoXbrlZipFolder(archivePath);
+    console.log('getArchiveXbrlZip: ', url);
+    return this.http.get(url)
+    .map(this.checkForError)
+    .catch((err) => Observable.throw(err))
+    .map((resp) => this.toUnZipped(resp));
+  }
+
+  public archivePathtoXbrlZipFolder(archivePath: string): string {
+    // https://www.sec.gov/Archives/edgar/data/1564408/000156459017010357/0001564590-17-010357-xbrl.zip
+    let archiveFolder = XbrlUtility.getLastSlash((archivePath || '').replace(/^\//, '').replace(/\/$/, '').trim());
+    return `${archiveFolder.substring(0, 10)}-${archiveFolder.substring(10, 12)}-${archiveFolder.substring(12)}-xbrl.zip`;
   }
 
   public getCikInfo(cik: string): Observable<any> {
@@ -192,6 +209,12 @@ export class EdgarArchiveService {
     let selection = (<Element> doc.lastChild);
     let urlObjs = XbrlUtility.getNodeTagsAtts(selection, 'a', null, ['href'], true, (objs) => objs.filter((obj) => (obj.href || '').indexOf(path) >= 0), null, null, null, null);
     return urlObjs;
+  }
+
+  private toUnZipped(resp: Response): any {
+    let zipObj = resp.text();
+    console.log('zipObj: ', zipObj);
+    return 'return';
   }
 
   private toCikInfoObj(resp: Response): {} {

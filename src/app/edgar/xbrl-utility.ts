@@ -25,6 +25,7 @@ export interface XbrlVReportInterface {
   contexts?: any;
   units?: any;
   xbrlVStatements?: {};
+  description?: string;
   status?: number;
 }
 
@@ -1118,6 +1119,42 @@ export class XbrlUtility {
     }
     // console.log('label: ', JSON.stringify(label));
     return (label || {textContent: ''}).textContent;
+  }
+
+  public static getXbrlVReportDescription(xbrlVReport: XbrlVReportInterface): string {
+    // DocumentDocumentAndEntityInformation
+    // let documentAndEntityInformationRoleURI = (xbrlVReport || {roleURIs: []}).roleURIs.find((roleURI) => roleURI && roleURI.match(/DocumentAndEntityInformation/i));
+    // let xbrlVStatement = ((xbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {})[documentAndEntityInformationRoleURI] || {};
+    // let xbrlStatementKeys = xbrlVStatement.xbrlStatementKeys || [];
+    // let periodEnd = xbrlStatementKeys.find((xbrlStatementKey) => xbrlStatementKey && xbrlStatementKey.match(/PeriodEnd/i));
+    let instances = ((xbrlVReport.xbrls || {}).ins || {}).instances || {};
+    // console.log('instances: ', JSON.stringify(instances));
+    let values = [];
+    [
+      'dei_DocumentPeriodEndDate',
+      'dei_DocumentType',
+      'dei_AmendmentFlag',
+      // 'dei_DocumentFiscalYearFocus',
+      // 'dei_DocumentFiscalPeriodFocus',
+      // 'dei_CurrentFiscalYearEndDate'
+    ].forEach((insKey) => {
+      let instance = instances[insKey];
+      console.log('JSON.stringify(instance): ', JSON.stringify(instance));
+      let textContent = ((instance || {})[Object.keys(instance)[0]] || {}).textContent;
+      // console.log('JSON.stringify(Object.keys(instances)): ', JSON.stringify(Object.keys(instances)));
+      console.log('XbrlUtility.isBlank(instances): ', XbrlUtility.isBlank(instances));
+      console.log('textContent: ', textContent);
+      if (!XbrlUtility.isBlank(textContent)) {
+        if (insKey === 'dei_AmendmentFlag') {
+          if (textContent.toString() === 'true') {
+            values.push('(amended)');
+          }
+        } else {
+          values.push(textContent);
+        }
+      }
+    });
+    return values.join(' ');
   }
 
   public static rectangularizeTree(tree: any, rectangle: any = {}, level: number = 0, hypercubeDimension?: string): any {

@@ -118,7 +118,7 @@
           <li *ngFor="let xbrlVReportKey of xbrlService.xbrlVReportKeys" class="nav-item">
             <small>
               <a [ngClass]="{'nav-link': true, active: xbrlVReportKey === xbrlService.selectedXbrlVReportKey}"
-                (click)="xbrlService.selectXbrlVReport(xbrlVReportKey)">{{xbrlVReportKey}}</a>
+                (click)="xbrlService.selectXbrlVReport(xbrlVReportKey)" [innerHTML]="xbrlService.getXbrlVReportDescriptionByKey(xbrlVReportKey)"></a>
             </small>
           </li>
         </nav>
@@ -144,7 +144,7 @@
             <thead class="thead-inverse">
               <tr>
                 <th>{{xbrlService.displayRoleURI(xbrlService.selectedXbrlVStatementRoleURI)}}</th>
-                <th *ngFor="let periodKey of xbrlService.selectedXbrlVStatement.paredPeriodKeys"><span placement="top" ngbTooltip="Tooltip on top" [innerHTML]="xbrlService.displayPeriodKey(periodKey)"></span></th>
+                <th *ngFor="let periodKey of xbrlService.selectedXbrlVStatement.paredPeriodKeys"><span placement="top" [innerHTML]="xbrlService.displayPeriodKey(periodKey)"></span></th>
               </tr>
             </thead>
             <tbody *ngFor="let dimension of xbrlService.lineItemIterators(xbrlService.selectedXbrlVStatement.dimensions)">
@@ -172,6 +172,7 @@
     <div *ngIf="false">{{(((xbrlService.selectedXbrlVReport || {}).xbrls || {}).lab || {}).arcs | json}}</div>
 
     <pre *ngIf="false">xbrlService.selectedXbrlVStatement = {{ xbrlService.selectedXbrlVStatement | json }}</pre>
+    <pre *ngIf="false && xbrlService.selectedXbrlVStatement">xbrlService.selectedXbrlVStatement.xbrlStatementKeys = {{ xbrlService.selectedXbrlVStatement.xbrlStatementKeys | json }}</pre>
     <pre *ngIf="false">xbrlService.selectedXbrlVStatement.xbrlStatements = {{ xbrlService.selectedXbrlVStatement.xbrlStatements | json }}</pre>
     <pre *ngIf="false">xbrlService.selectedXbrlVReport.xbrls = {{ xbrlService.selectedXbrlVReport.xbrls | json }}</pre>
     <pre *ngIf="false">xbrlService.selectedXbrlVReport.xbrls.xsd = {{ ((xbrlService.selectedXbrlVReport.xbrls || {})).xsd | json }}</pre>
