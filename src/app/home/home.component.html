@@ -154,8 +154,8 @@
               </tr>
               <tr *ngFor="let rectangleItem of xbrlService.getDimensionedRectangleItems(xbrlService.selectedXbrlVStatement.rectangleKeys, dimension)" [ngClass]="{'thead-inverse': rectangleItem.domainMember}">
                 <td><span>{{repeat('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', rectangleItem.level - 1)}}</span><span *ngIf="rectangleItem.level !== 0">{{rectangleItem.lastChild ? '└──' : '├──'}}</span>{{xbrlService.getLabel(rectangleItem.toHref, rectangleItem.preferredLabel)}}</td>
-                <td *ngFor="let instanceObj of xbrlService.instanceObjIterators(dimension, rectangleItem, xbrlService.selectedXbrlVStatement.paredPeriodKeys)" class="text-right">
-                  <div *ngIf="!rectangleItem.domainMember"><span *ngIf="xbrlService.nlpMode != 'redline'" [innerHTML]="xbrlService.getContent(rectangleItem, instanceObj.contextRef)"></span><span *ngIf="xbrlService.nlpMode === 'redline'"><diff [diffType]="'diffWords'" [priorContent]="xbrlService.getPriorContent(rectangleItem, instanceObj.contextRef)"  [postContent]="xbrlService.getContent(rectangleItem, instanceObj.contextRef)"></diff></span></div>
+                <td *ngFor="let instanceObj of xbrlService.instanceObjIterators(dimension, rectangleItem, xbrlService.selectedXbrlVStatement.paredPeriodKeys)" class="text-right xbrl-instance-display">
+                  <div *ngIf="!rectangleItem.domainMember"><span *ngIf="xbrlService.nlpMode != 'redline'" [innerHTML]="xbrlService.getContent(rectangleItem, instanceObj.contextRef, null, xbrlService.selectedXbrlVReport.xbrls.ins.units)"></span><span *ngIf="xbrlService.nlpMode === 'redline'"><diff [diffType]="'diffWords'" [priorContent]="xbrlService.getPriorContent(rectangleItem, instanceObj.contextRef)"  [postContent]="xbrlService.getContent(rectangleItem, instanceObj.contextRef, null, xbrlService.selectedXbrlVReport.xbrls.ins.units)"></diff></span></div>
                 </td>
               </tr>
             </tbody>

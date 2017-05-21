@@ -76,7 +76,7 @@ module.exports = function (options) {
        *
        * See: http://webpack.github.io/docs/configuration.html#resolve-extensions
        */
-      extensions: ['.ts', '.js', '.json'],
+      extensions: ['.ts', '.js', '.json', '.less'],
 
       // An array of directory names to be resolved to the current directory
       modules: [helpers.root('src'), helpers.root('node_modules')],
@@ -155,6 +155,12 @@ module.exports = function (options) {
           test: /\.css$/,
           use: ['to-string-loader', 'css-loader'],
           exclude: [helpers.root('src', 'styles')]
+        },
+
+        {
+          test: /\.less$/,
+          exclude: /node_modules/,
+          loader: 'raw-loader!less-loader'
         },
 
         /*

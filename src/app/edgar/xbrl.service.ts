@@ -260,18 +260,23 @@ export class XbrlService {
     return XbrlUtility.manageLabelBreaks(periodKey);
   }
 
-  public getContent(item, contextRef, decimals): any {
-    let textContent = (((item || {}).instances || {})[contextRef] || {}).textContent || '';
+  public getContent(item, contextRef, decimals?: any, unitsPool?: any): any {
+    let instance = ((item || {}).instances || {})[contextRef] || {};
+    let textContent = (instance).textContent || '';
     let instanceDecimals = (((item || {}).instances || {})[contextRef] || {}).decimals;
     let value = textContent;
-    if (XbrlUtility.isNumber(textContent)) {
-      value = parseFloat(textContent);
-      if (XbrlUtility.isNumber(instanceDecimals)) {
-        value = value * Math.pow(10, parseFloat(instanceDecimals));
+    let details = '';
+    if (!XbrlUtility.isBlank(instance.unitRef) && !XbrlUtility.isBlank(unitsPool)) {
+      if (XbrlUtility.isNumber(textContent)) {
+        value = parseFloat(textContent);
+        if (XbrlUtility.isNumber(instanceDecimals)) {
+          value = value * Math.pow(10, parseFloat(instanceDecimals));
+        }
+        value = value.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
       }
-      value = value.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
+      details = '<br /><span class="details">' + (((unitsPool || {})[instance.unitRef] || {}).display || 'N/A') + '</span>';
     }
-    return this.displayContent(value);
+    return this.displayContent(value) + details;
   }
 
   public getPriorContent(item, contextRef): any {

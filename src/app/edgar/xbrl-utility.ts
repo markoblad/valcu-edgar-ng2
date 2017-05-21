@@ -488,30 +488,38 @@ export class XbrlUtility {
           tags: {
             measure: { // xbrli:measure
               textContent: true,
+              transformFn: XbrlUtility.justTextTransform,
             },
             divide: { // xbrli:divide
               textContent: false,
               tags: {
                 unitNumerator: { // xbrli:unitNumerator
-                  textContent: true,
+                  // textContent: true,
                   tags: {
                     measure: { // xbrli:measure
                       textContent: true,
+                      transformFn: XbrlUtility.justTextTransform,
                     },
                   },
+                  transformFn: XbrlUtility.firstArrayItemTransform,
                 },
                 unitDenominator: { // xbrli:unitDenominator
-                  textContent: true,
+                  // textContent: true,
                   tags: {
                     measure: { // xbrli:measure
                       textContent: true,
+                      transformFn: XbrlUtility.justTextTransform,
                     },
                   },
+                  transformFn: XbrlUtility.firstArrayItemTransform,
                 },
               },
+              transformFn: XbrlUtility.firstArrayItemTransform,
             },
+            transformFn: XbrlUtility.firstArrayItemTransform,
           },
-          transformFn: XbrlUtility.objsArrayToObjObjsByIdTransform,
+          // transformFn: XbrlUtility.objsArrayToObjObjsByIdTransform,
+          transformFn: XbrlUtility.handleUnitsTransform,
         },
         footnoteLink: {
           rename: 'footnoteLinks',
@@ -675,7 +683,7 @@ export class XbrlUtility {
   public static instanceFootnotesInterleaveTransform(obj) {
     let instances = (obj || {}).instances;
     let footnoteLink = ((obj || {}).footnoteLinks || [])[0] || {};
-    console.log('footnoteLink: ', JSON.stringify(footnoteLink);
+    console.log('footnoteLink: ', JSON.stringify(footnoteLink));
     let arcs = footnoteLink.arcs;
     console.log('arcs: ', JSON.stringify(arcs));
     let footnotes = footnoteLink.footnotes;
@@ -696,6 +704,23 @@ export class XbrlUtility {
       });
     }
     return obj;
+  }
+
+  public static handleUnitsTransform(objs: any[]): any {
+    let revisedObjs = objs.map((obj) => {
+      if (!XbrlUtility.isBlank((obj || {}).measure)) {
+        obj.display = obj.measure;
+      } else if (!XbrlUtility.isBlank((obj || {}).divide)) {
+        let numerator = ((obj.divide || {}).unitNumerator || {}).measure;
+        let denominator = ((obj.divide || {}).unitDenominator || {}).measure;
+        obj.display = (numerator || '--') + '/' + (denominator || '--');
+      } else {
+        console.log('unhandled handleUnitsTransform: ', JSON.stringify(obj));
+      }
+      return obj;
+    });
+    console.log('handleUnitsTransform: ', JSON.stringify(revisedObjs));
+    return XbrlUtility.objsArrayToObjObjsByIdTransform(revisedObjs);
   }
 
   public static processDoc(doc: XMLDocument, verbose: boolean, fn: (doc: XMLDocument, nsHref: string, nsPrefix: string, nss: {}) => {}): any {

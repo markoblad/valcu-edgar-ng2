@@ -1,7 +1,8 @@
 import {
   Component,
   OnInit,
-  Input
+  Input,
+  ViewEncapsulation
 } from '@angular/core';
 
 import { AppState } from '../app.service';
@@ -27,7 +28,8 @@ import * as JsDiff from 'diff/dist/diff.min.js';
     Title
   ],
   // Our list of styles in our component. We may add more to compose many styles together
-  styleUrls: [ './home.component.css' ],
+  styleUrls: [ './home.component.less' ],
+  encapsulation: ViewEncapsulation.None,
   // Every Angular template is first compiled by the browser before Angular runs it's compiler
   templateUrl: './home.component.html'
 })
