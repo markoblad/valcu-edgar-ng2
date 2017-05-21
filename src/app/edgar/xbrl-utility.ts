@@ -418,7 +418,7 @@ export class XbrlUtility {
           ],
         },
       },
-      transformFn: XbrlUtility.linkLabelsLocsArcsInterleaveTransform,
+      transformFn: XbrlUtility.linkLocsArcsIndexedInterleaveTransform,
       // loc href maps to xsd; loc label maps to labelArc from; labelArc to maps to label label
       // roleRef dont seem to be come in in the lab files
     };
@@ -548,7 +548,8 @@ export class XbrlUtility {
               transformFn: XbrlUtility.objsArrayToObjObjsByLabelTransform,
             },
           },
-          transformFn: XbrlUtility.linksLocsArcsInterleaveTransform,
+          // transformFn: XbrlUtility.linksLocsArcsInterleaveTransform,
+          transformFn: XbrlUtility.linkLocsArcsIndexedInterleaveTransform,
         },
   //     @ins["foot_arcs"].each do |i|
   //       foot = begin @ins["foots"].select {|foot| foot["label"] == i["to"] }.first rescue {} end
@@ -662,7 +663,7 @@ export class XbrlUtility {
     return linkObj;
   }
 
-  public static linkLabelsLocsArcsInterleaveTransform(linkObj) {
+  public static linkLocsArcsIndexedInterleaveTransform(linkObj) {
     // let labels = linkObj.locs || {};
     let locs = linkObj.locs || {};
     let arcs = linkObj.arcs || [];
@@ -680,13 +681,19 @@ export class XbrlUtility {
     return (linkObjs || []).map((linkObj) => XbrlUtility.linkLocsArcsInterleaveTransform(linkObj));
   }
 
+  public static linksLocsArcsIndexedInterleaveTransform(linkObjs) {
+    return (linkObjs || []).map((linkObj) => XbrlUtility.linkLocsArcsIndexedInterleaveTransform(linkObj));
+  }
+
   public static instanceFootnotesInterleaveTransform(obj) {
     let instances = (obj || {}).instances;
+    console.log('(obj || {}).footnoteLinks: ', JSON.stringify((obj || {}).footnoteLinks));
     let footnoteLink = ((obj || {}).footnoteLinks || [])[0] || {};
     console.log('footnoteLink: ', JSON.stringify(footnoteLink));
     let arcs = footnoteLink.arcs;
     console.log('arcs: ', JSON.stringify(arcs));
     let footnotes = footnoteLink.footnotes;
+    console.log('footnotes: ', JSON.stringify(footnotes));
     if (!XbrlUtility.isBlank(arcs)) {
       Object.keys(instances).map((contextRef) => {
         let contextRefInstances = instances[contextRef];
@@ -698,6 +705,7 @@ export class XbrlUtility {
             if (!XbrlUtility.isBlank(footnote)) {
               let instanceFootnotes = instance.footnotes || [];
               instance.footnotes.push(footnote);
+              console.log('instance.footnotes: ', JSON.stringify(instance.footnotes));
             }
           }
         });

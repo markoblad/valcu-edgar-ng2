@@ -274,7 +274,10 @@ export class XbrlService {
         }
         value = value.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
       }
-      details = '<br /><span class="details">' + (((unitsPool || {})[instance.unitRef] || {}).display || 'N/A') + '</span>';
+      details += '<div class="details"><span>Units: ' + (((unitsPool || {})[instance.unitRef] || {}).display || 'N/A') + '</span></div>';
+    }
+    if (!XbrlUtility.isBlank(instance.footnotes)) {
+      details += '<div class="details"><span>Footnotes: ' + JSON.stringify(instance.footnotes || {}) + '</span></div>';
     }
     return this.displayContent(value) + details;
   }
