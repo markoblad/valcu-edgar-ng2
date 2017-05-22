@@ -672,8 +672,9 @@ export class XbrlUtility {
       arc.fromHref = (locs[arc.from] || {}).href;
     });
     // linkObj.arcs = XbrlUtility.objsArrayToObjObjsByFromTransform(arcs);
-    linkObj.arcs = XbrlUtility.objsArrayToObjObjsByFromHrefTransform(arcs);
+    linkObj.arcs = XbrlUtility.objsArrayToObjObjsByFromHrefTransform(linkObj.arcs);
     // linkObj.arcs = arcs;
+    console.log('linkObj.arcs: ', JSON.stringify(linkObj.arcs));
     return linkObj;
   }
 
@@ -687,9 +688,9 @@ export class XbrlUtility {
 
   public static instanceFootnotesInterleaveTransform(obj) {
     let instances = (obj || {}).instances;
-    console.log('(obj || {}).footnoteLinks: ', JSON.stringify((obj || {}).footnoteLinks));
+    // console.log('(obj || {}).footnoteLinks: ', JSON.stringify((obj || {}).footnoteLinks));
     let footnoteLink = ((obj || {}).footnoteLinks || [])[0] || {};
-    console.log('footnoteLink: ', JSON.stringify(footnoteLink));
+    // console.log('footnoteLink: ', JSON.stringify(footnoteLink));
     let arcs = footnoteLink.arcs;
     console.log('arcs: ', JSON.stringify(arcs));
     let footnotes = footnoteLink.footnotes;
@@ -723,11 +724,11 @@ export class XbrlUtility {
         let denominator = ((obj.divide || {}).unitDenominator || {}).measure;
         obj.display = (numerator || '--') + '/' + (denominator || '--');
       } else {
-        console.log('unhandled handleUnitsTransform: ', JSON.stringify(obj));
+        // console.log('unhandled handleUnitsTransform: ', JSON.stringify(obj));
       }
       return obj;
     });
-    console.log('handleUnitsTransform: ', JSON.stringify(revisedObjs));
+    // console.log('handleUnitsTransform: ', JSON.stringify(revisedObjs));
     return XbrlUtility.objsArrayToObjObjsByIdTransform(revisedObjs);
   }
 
