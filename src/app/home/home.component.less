@@ -1,3 +1,53 @@
+
+@transition-color: #0275d8;
+
+@-webkit-keyframes flashin {
+  0% {
+    // transforms don't work with datetimepicker
+    // opacity:0;
+    // -webkit-transform: translateY(100%);
+    //         transform: translateY(100%);
+    visibility: visible;
+  }
+  10% {
+    background-color: lighten(@transition-color, 45%);
+  }
+
+  50% {
+    // opacity: 1;
+  }
+
+  100% {
+    // background-color: #fff;
+    // opacity:1;
+    // -webkit-transform: translateY(0);
+    //         transform: translateY(0);
+  }
+}
+
+@keyframes flashin {
+  0% {
+    // opacity:0;
+    // -webkit-transform: translateY(100%);
+    //         transform: translateY(100%);
+    visibility: visible;
+  }
+  10% {
+    background-color: lighten(@transition-color, 45%);
+  }
+
+  50% {
+    // opacity: 1;
+  }
+
+  100% {
+    // background-color: #fff;
+    // opacity:1;
+    // -webkit-transform: translateY(0);
+    //         transform: translateY(0);
+  }
+}
+
 button.active {
   // background-color: gray;
 }
@@ -8,6 +58,7 @@ button.active {
 
 .xbrl-instance-display .xbrl-details {
   display: none;
+  // .ease-in-out-0-25;
 }
 
 .xbrl-instance-display:hover .xbrl-details {
@@ -21,10 +72,48 @@ button.active {
   // border: 2px solid #292b2c;
   padding: 5px;
   word-wrap: break-word;
+  -webkit-animation-name: flashin;
+  -webkit-animation-duration: 200ms;
+  -webkit-animation-iteration-count: 1;
+  -webkit-animation-timing-function: ease-in-out;
+  -webkit-animation-fill-mode: both;
+          animation-fill-mode: both;
 }
 
 .scroll-column {
   // height:700px;
   height: 80vh;
   overflow-y: scroll;
+}
+
+.ease-in-out-0-1 {
+  -webkit-transition: all 0.1s ease-in-out;
+  -moz-transition: all 0.1s ease-in-out;
+  -o-transition: all 0.1s ease-in-out;
+  -ms-transition: all 0.1s ease-in-out;
+  transition: all 0.1s ease-in-out;
+}
+
+.ease-in-out-0-25 {
+  -webkit-transition: all 0.25s ease-in-out;
+  -moz-transition: all 0.25s ease-in-out;
+  -o-transition: all 0.25s ease-in-out;
+  -ms-transition: all 0.25s ease-in-out;
+  transition: all 0.25s ease-in-out;
+}
+
+.ease-in-out-0-5 {
+  -webkit-transition: all 0.5s ease-in-out;
+  -moz-transition: all 0.5s ease-in-out;
+  -o-transition: all 0.5s ease-in-out;
+  -ms-transition: all 0.5s ease-in-out;
+  transition: all 0.5s ease-in-out;
+}
+
+.ease-in-out-1 {
+  -webkit-transition: all 1s ease-in-out;
+  -moz-transition: all 1s ease-in-out;
+  -o-transition: all 1s ease-in-out;
+  -ms-transition: all 1s ease-in-out;
+  transition: all 1s ease-in-out;
 }

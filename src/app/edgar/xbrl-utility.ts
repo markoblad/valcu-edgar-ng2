@@ -549,7 +549,7 @@ export class XbrlUtility {
             },
           },
           // transformFn: XbrlUtility.linksLocsArcsInterleaveTransform,
-          transformFn: XbrlUtility.linkLocsArcsIndexedInterleaveTransform,
+          transformFn: XbrlUtility.linksLocsArcsIndexedInterleaveTransform,
         },
   //     @ins["foot_arcs"].each do |i|
   //       foot = begin @ins["foots"].select {|foot| foot["label"] == i["to"] }.first rescue {} end
@@ -674,7 +674,8 @@ export class XbrlUtility {
     // linkObj.arcs = XbrlUtility.objsArrayToObjObjsByFromTransform(arcs);
     linkObj.arcs = XbrlUtility.objsArrayToObjObjsByFromHrefTransform(linkObj.arcs);
     // linkObj.arcs = arcs;
-    console.log('linkObj.arcs: ', JSON.stringify(linkObj.arcs));
+    // console.log('linkObj: ', JSON.stringify(linkObj));
+    // console.log('linkObj.arcs: ', JSON.stringify(linkObj.arcs));
     return linkObj;
   }
 
@@ -692,9 +693,10 @@ export class XbrlUtility {
     let footnoteLink = ((obj || {}).footnoteLinks || [])[0] || {};
     // console.log('footnoteLink: ', JSON.stringify(footnoteLink));
     let arcs = footnoteLink.arcs;
-    console.log('arcs: ', JSON.stringify(arcs));
+    // console.log('arcs: ', JSON.stringify(arcs));
+    // console.log('typeof arcs: ', typeof arcs);
     let footnotes = footnoteLink.footnotes;
-    console.log('footnotes: ', JSON.stringify(footnotes));
+    // console.log('footnotes: ', JSON.stringify(footnotes));
     if (!XbrlUtility.isBlank(arcs)) {
       Object.keys(instances).map((contextRef) => {
         let contextRefInstances = instances[contextRef];
@@ -704,7 +706,7 @@ export class XbrlUtility {
           if (!XbrlUtility.isBlank(arc)) {
             let footnote = footnotes[arc.to];
             if (!XbrlUtility.isBlank(footnote)) {
-              let instanceFootnotes = instance.footnotes || [];
+              instance.footnotes = instance.footnotes || [];
               instance.footnotes.push(footnote);
               console.log('instance.footnotes: ', JSON.stringify(instance.footnotes));
             }
@@ -802,36 +804,6 @@ export class XbrlUtility {
     // return doc.getElementsByTagName(tag);
     return nsHref ? doc.getElementsByTagNameNS(nsHref, tag) : doc.getElementsByTagName(tag);
   }
-//         @r = doc.xpath("//ns:#{tag}", "ns" => nsHref)
-//         raise ArgumentError, "Xpath of //ns:#{tag} is blank." if @r.blank?
-// for ins
-//           @r = doc.xpath("//xbrli:#{tag}")
-//           @r = doc.xpath("//link:#{tag}")
-// for ins
-//               @r = doc.xpath("//xbrldi:#{tag}")
-//             @r = doc.css("//#{tag}")
-//               @r = doc.xpath("//xsd:#{tag}")
-// not for ins?
-//                 @r = doc.xpath("//xs:#{tag}")
-//                   no_namespace_doc = ""
-//                   no_namespace_doc = doc.dup
-//                   no_namespace_doc = doc.remove_namespaces!
-//                   @r = no_namespace_doc.xpath("//#{tag}")
-
-//         @r = doc.css("/ns|#{tag}", "ns" => nsHref)
-//         raise ArgumentError, "CSS of /ns|#{tag} is blank." if @r.blank?
-// for ins
-//           @r = doc.css("/xbrli|#{tag}")
-//           @r = doc.css("/link|#{tag}")
-// for ins
-//               @r = doc.css("/xbrldi|#{tag}")
-//             @r = doc.css("/#{tag}")
-//               @r = doc.css("/xsd|#{tag}")
-//                 @r = doc.css("/xs|#{tag}")
-//                   no_namespace_doc = ""
-//                   no_namespace_doc = doc.dup
-//                   no_namespace_doc = doc.remove_namespaces!
-//                   @r = no_namespace_doc.css("/#{tag}")
 
   public static getNodeAtts(node, atts: any, nsHref, nsPrefix, nss, obj?: any): any {
     // console.log('atts: ', JSON.stringify(atts));
@@ -1410,9 +1382,6 @@ export class XbrlUtility {
   // http://xbrl.org/int/dim/arcrole/domain-member - member MinimumMember MaximumMember
   // http://xbrl.org/int/dim/arcrole/dimension-default - hierarchy domain - default RangeMember
 
-  // def self.construct_statement(role, data)
-
-  //   # Here is the ruby hash map of the statement created by this method
   //   # @statement =
   //   # {
   //   #   "role" => "",
@@ -1512,138 +1481,5 @@ export class XbrlUtility {
   //   #   "divide_denominator_measure" => ""
   //   #   }]
   //   # }
-
-  //   @statement = {}
-  //   @role = role
-
-  //   begin
-  //     @ins = {}
-  //     @ins = data["ins"] || {}
-  //   rescue Exception => e
-  //     @ins = {}
-  //     str = "Error in EdgarBuilder::construct_statement trying to assign ins to @ins for #{@role}."
-  //     ValcuErrorHandling::log_and_show_rescue({calling_object: "EdgarBuilder", calling_method: __method__, description: str,
-  //     message: e.message.truncate(10000, :separator => ' '), backtrace: e.backtrace.inspect.truncate(10000, :separator => ' '), log_file: LOG_FILE, addressed: 'f'})
-  //   end
-
-  //   @item_a = []
-
-  //   used_context_xbrl_ids = []
-  //   used_context_xbrl_ids = create_context_pool(@item_a, {contexts_plain: @ins["contexts_plain"], contexts_segments: @ins["contexts_segments"], contexts_scenarios: @ins["contexts_scenarios"]})
-
-  //   @context_refs = []
-  //   @units = []
-  //   @labels = []
-
-  //   @item_a.map! do |a|
-  //     #generate a pre_from_href for each that is blank
-  //     if a["pre_from_href"].blank?
-  //       a["pre_from_href"] = "valcu_generated_pre_from_href"
-  //     end
-
-  //     xsd_element = @xsd.select { |e| e["id"] == a["to_href"].split('#')[-1] }.first
-  //     a["xsd_to_id"] = begin xsd_element["id"] || "" rescue "" end
-  //     a["xsd_to_name"] = begin xsd_element["name"] || "" rescue "" end
-  //     a["xsd_to_nillable"] = begin xsd_element["nillable"] || "" rescue "" end
-  //     a["xsd_to_substitution_group"] = begin xsd_element["substitution_group"] || "" rescue "" end
-  //     a["xsd_to_type"] = begin xsd_element["type"] || "" rescue "" end
-  //     a["xsd_to_period_type"] = begin xsd_element["period_type"] || "" rescue "" end
-  //     a["xsd_to_abstract"] = begin xsd_element["abstract"] || "" rescue "" end
-  //     a["xsd_to_balance"] = begin xsd_element["balance"] || "" rescue "" end
-
-  //     a["to_instances"] = []
-  //     a["labels"] = []
-  //     href = a["to_href"] || ""
-  //     unless href.blank?
-  //       ins_tag = href.split('#')[-1].gsub('_', ':') || ""
-  //       ins_elements = begin @ins["doc"].xpath("//#{ins_tag}") rescue @ins["doc"].css("//#{ins_tag.gsub(':', '|')}") rescue @ins["doc"].css("//#{ins_tag.split(':')[-1]}") rescue [] end
-  //       ins_elements.each do |ie|
-  //         if used_context_xbrl_ids.include?(ie["contextRef"])
-  //           @to_instance_h = {}
-  //           @to_instance_h =
-  //           {
-  //             "context" => EdgarFileGrabber::get_edgar_attribute(ie, "contextRef"),
-  //             "value" => begin clean_edgar_text(ie.text.to_s).strip || "" rescue "" end,
-  //             "decimals" => EdgarFileGrabber::get_edgar_attribute(ie, "decimals"),
-  //             "xbrl_id" => EdgarFileGrabber::get_edgar_attribute(ie, "id"),
-  //             "unit" => EdgarFileGrabber::get_edgar_attribute(ie, "unitRef"),
-  //             "nil" => EdgarFileGrabber::get_edgar_attribute(ie, "nil"),
-  //             "language" => EdgarFileGrabber::get_edgar_attribute(ie, "lang")
-  //             # the below order can be used if comparing to objects created before xbrl_file ~ 140000 (when ruby 1.8.7 was used)
-  //             # "xbrl_id" => EdgarFileGrabber::get_edgar_attribute(ie, "id"),
-  //             # "decimals" => EdgarFileGrabber::get_edgar_attribute(ie, "decimals"),
-  //             # "value" => begin clean_edgar_text(ie.text.to_s).strip || "" rescue "" end,
-  //             # "unit" => EdgarFileGrabber::get_edgar_attribute(ie, "unitRef"),
-  //             # "nil" => EdgarFileGrabber::get_edgar_attribute(ie, "nil"),
-  //             # "language" => EdgarFileGrabber::get_edgar_attribute(ie, "lang"),
-  //             # "context" => EdgarFileGrabber::get_edgar_attribute(ie, "contextRef")
-  //           }
-  //           a["to_instances"] << @to_instance_h
-  //           # collect the contexts and units from the items while we're looping through
-  //           @context_refs << @to_instance_h["context"]
-  //           @units << @to_instance_h["unit"]
-  //         end
-  //       end
-
-  //       # collect the labels that apply to the item/a
-  //       a["labels"] = construct_label(@lab_locs, @lab_labarcs, @lab_labels, href)
-  //       a["labels"].each {|label| @labels << label }
-  //       a
-  //     else
-  //       a["to_instances"] = []
-  //       a["labels"] = []
-  //       a
-  //     end
-  //     a
-  //   end
-
-  //   # puts DateTime.now.utc.to_s + " - EdgarBuilder::construct_statement finished instance and label gathering; starting context collecting."
-
-  //   # gather info on contexts and units and add to hash outside of the items
-  //   @context_refs.compact! unless @context_refs.blank?
-  //   @context_refs.uniq! unless @context_refs.blank?
-  //   @context_a = []
-  //   unless @context_refs.blank?
-  //     @context_refs.each do |context_ref|
-  //       @context_a << @ins["contexts_segments"].select {|instance_context| instance_context["xbrl_id"] == context_ref }.first unless @ins["contexts_segments"].blank?
-  //       @context_a << @ins["contexts_plain"].select {|instance_context| instance_context["xbrl_id"] == context_ref }.first unless @ins["contexts_plain"].blank?
-  //       @context_a << @ins["contexts_scenarios"].select {|instance_context| instance_context["xbrl_id"] == context_ref }.first unless @ins["contexts_scenarios"].blank?
-  //     end
-  //     @context_a.compact! unless @context_a.blank?
-  //   end
-  //   # puts DateTime.now.utc.to_s + " - EdgarBuilder::construct_statement finished context collecting; starting unit collecting."
-
-  //   @units.compact!
-  //   unless @units.blank?
-  //     @units.uniq!
-  //     @unit_a = []
-
-  //     @units.each do |u|
-  //       begin unit = @ins["units"].select {|iu| iu["xbrl_id"] == u }.first rescue unit = "" end
-  //       @unit_a << {
-  //         "xbrl_id" => u,
-  //         "plain_measure" => begin unit["plain_measure"] || "" rescue "" end,
-  //         "divide_numerator_measure" => begin unit["divide_numerator_measure"] || "" rescue "" end,
-  //         "divide_denominator_measure" => begin unit["divide_denominator_measure"] || "" rescue "" end
-  //       }
-  //     end
-  //   end
-
-  //   # puts DateTime.now.utc.to_s + " - EdgarBuilder::construct_statement finished unit collecting."
-
-  //   @statement = {
-  //     "role" => @role,
-  //     "role_definition" => @role_definition,
-  //     "role_use" => @role_use,
-  //     "pre_link_type" => @pre_link_type,
-  //     "def_link_type" => @def_link_type,
-  //     "cal_link_type" => @cal_link_type,
-  //     "items" => begin @item_a rescue [] end,
-  //     "contexts" => begin @context_a rescue [] end,
-  //     "units" => begin @unit_a rescue [] end,
-  //     "labels" => begin @labels rescue [] end
-  //   }
-  //   return @statement
-  // end
 
 }

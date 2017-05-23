@@ -266,7 +266,7 @@ export class XbrlService {
     let instanceDecimals = (((item || {}).instances || {})[contextRef] || {}).decimals;
     let value = textContent;
     let details = '<div class="xbrl-details bg-primary text-white text-left">';
-    details += '<div class="xbrl-details-footnotes">Instance: ' + JSON.stringify(instance) + '</div>';
+    // details += '<div class="xbrl-details-footnotes">Instance: ' + JSON.stringify(instance) + '</div>';
     if (!XbrlUtility.isBlank(instance.unitRef) && !XbrlUtility.isBlank(unitsPool)) {
       if (XbrlUtility.isNumber(textContent)) {
         value = parseFloat(textContent);
@@ -278,7 +278,7 @@ export class XbrlService {
       details += '<div class="xbrl-details-units">Units: ' + (((unitsPool || {})[instance.unitRef] || {}).display || 'N/A') + '</div>';
     }
     if (!XbrlUtility.isBlank(instance.footnotes)) {
-      details += '<div class="xbrl-details-footnotes">Footnotes: ' + JSON.stringify(instance.footnotes || {}) + '</div>';
+      details += '<div class="xbrl-details-footnotes">Footnotes: ' + (instance.footnotes || []).map((footnote) => footnote.textContent).join('<br />') + '</div>';
     }
     details += '</div>';
     return this.displayContent(value) + details;
