@@ -162,6 +162,30 @@ export class XbrlUtility {
     // xbrldt
   }
 
+  public static get BALANCE_SHEET_TERMS(): any[] {
+    return ['balance sheet', 'condition', 'position', ['assets', 'liabilities', 'shareholder']];
+  }
+
+  public static get INCOME_STATEMENT_TERMS(): any[] {
+    return ['operation', 'income', 'earning'];
+  }
+
+  public static get CASH_FLOW_TERMS(): any[] {
+    return ['cash flow'];
+  }
+
+  public static get CHANGE_IN_EQUITY_TERMS(): any[] {
+    return ['equity', 'capital', 'deficit'];
+  }
+
+  public static get PARENTHETICAL_TERMS(): any[] {
+    return ['parenthetical'];
+  }
+
+  public static get CALC2_TERMS(): any[] {
+    return ['calc2'];
+  }
+
   // http://www.xbrl.org/2003/role/label
   // http://www.xbrl.org/2003/role/terseLabel
   // http://www.xbrl.org/2003/role/verboseLabel
@@ -957,6 +981,10 @@ export class XbrlUtility {
     return XbrlUtility.uniqueCompact(roleURIs);
   }
 
+  public static getRoleURIDefinition(xbrlVReport, roleURI): string {
+    return (((((xbrlVReport || {}).xbrls || {}).xsd || {}).roleTypes || {})[roleURI] || {}).definition;
+  }
+
   public static unique(array?: any[]): any[] {
     return (array || []).filter((v, i, a) => a.indexOf(v) === i);
   }
@@ -981,6 +1009,10 @@ export class XbrlUtility {
       return false;
     }
     return !!obj.match(/^[+-]?(\d+)?(\.\d+(e(\+|\-)\d+)?)?$/);
+  }
+
+  public static isArray(obj: any): boolean {
+    return Object.prototype.toString.call(obj) === '[object Array]';
   }
 
   public static splitXbrlHref(href): string { return (href || '').replace(/(.*?_)/, ''); }
@@ -1374,6 +1406,92 @@ export class XbrlUtility {
       });
     }
     return lines;
+  }
+
+  public static categorizeStatement(definition): any {
+    let statementCategoryObj = {coreStatement: 0, statementCategory: 0};
+    let lowerDefinition = definition.toLowerCase();
+    let pieces = lowerDefinition.split('-');
+    if (pieces[1] && pieces[1].toLowerCase().match(/statement/)) {
+      statementCategoryObj.coreStatement = 1;
+    }
+
+  //   if (statementCategoryObj.coreStatement) {
+  //     if (XbrlUtility.BALANCE_SHEET_TERMS.some((terms) => {
+  //       return XbrlUtility.isArray(terms) ? terms.every((term) => lowerDefinition.match(new RegExp(term))) : lowerDefinition.match(new RegExp(terms));
+  //     }) {
+  //       statementCategoryObj.statementCategory = statementCategoryObj.statementCategory + 1001;
+  //     }
+  //         @match = 0
+  //         income_statement_terms.each do |term|
+  //           if term.class == Array 
+  //             @match = 1 unless term.collect { |sub_term| /#{sub_term}/.match(item.downcase)}.include?(nil)
+  //           else 
+  //             @match = 1 unless (/#{term}/.match(item.downcase).nil? || (term == "income" && !/equity/.match(item.downcase).nil?) || 
+  //               (term == "earning" && !/retained/.match(item.downcase).nil?))
+  //           end
+  //         end
+  //         if @match == 1            
+  //           if /comprehensive/.match(item.downcase).nil?
+  //             @result["statement_category"] += 2001
+  //           else
+  //             @result["statement_category"] += 5001
+  //           end
+  //         end
+
+  //         @match = 0
+  //         cash_flow_terms.each do |term|
+  //           if term.class == Array 
+  //             @match = 1 unless term.collect { |sub_term| /#{sub_term}/.match(item.downcase)}.include?(nil)
+  //           else 
+  //             @match = 1 unless /#{term}/.match(item.downcase).nil?
+  //           end
+  //         end
+  //         if @match == 1
+  //           @result["statement_category"] += 3001
+  //         end
+
+  //         @match = 0
+  //         change_in_equity_terms.each do |term|
+  //           if term.class == Array 
+  //             @match = 1 unless term.collect { |sub_term| /#{sub_term}/.match(item.downcase)}.include?(nil)
+  //           else 
+  //             @match = 1 unless /#{term}/.match(item.downcase).nil?
+  //           end
+  //         end
+  //         if @match == 1
+  //           @result["statement_category"] += 4001
+  //         end
+        
+  //         @match = 0
+  //         parenthetical_terms.each do |term|
+  //           if term.class == Array 
+  //             @match = 1 unless term.collect { |sub_term| /#{sub_term}/.match(item.downcase)}.include?(nil)
+  //           else 
+  //             @match = 1 unless /#{term}/.match(item.downcase).nil?
+  //           end
+  //         end
+  //         if @match == 1
+  //           @result["statement_category"] += 100
+  //         end
+
+  //         @match = 0
+  //         calc2_terms.each do |term|
+  //           if term.class == Array 
+  //             @match = 1 unless term.collect { |sub_term| /#{sub_term}/.match(item.downcase)}.include?(nil)
+  //           else 
+  //             @match = 1 unless /#{term}/.match(item.downcase).nil?
+  //           end
+  //         end
+  //         if @match == 1
+  //           @result["statement_category"] += 10
+  //         end
+
+  //       end
+  //     end
+      
+  //   return @result
+  // end
   }
 
   // http://xbrl.org/int/dim/arcrole/all - table
