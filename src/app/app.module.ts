@@ -33,6 +33,7 @@ import { NoContentComponent } from './no-content';
 import { XLargeDirective } from './home/x-large';
 import { DiffComponent } from './diff';
 import { XbrlUtility } from './edgar';
+import { XbrlVStatementUtility } from './edgar';
 import { XbrlService } from './edgar';
 import { EdgarArchiveService } from './edgar';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
@@ -80,6 +81,7 @@ type StoreType = {
     ENV_PROVIDERS,
     APP_PROVIDERS,
     XbrlUtility,
+    XbrlVStatementUtility,
     XbrlService,
     EdgarArchiveService
   ]

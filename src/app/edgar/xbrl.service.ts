@@ -251,7 +251,7 @@ export class XbrlService {
   }
 
   public displayRoleURI(roleURI): string {
-    let pieces = (XbrlUtility.getRoleURIDefinition(this.selectedXbrlVReport.xbrls, roleURI) || '').split(/\s+-\s+/);
+    let pieces = (XbrlUtility.getRoleURIDefinition(this.selectedXbrlVReport, roleURI) || '').split(/\s+-\s+/);
     return XbrlUtility.manageLabelBreaks(pieces[pieces.length - 1]);
     // || (XbrlUtility.getLastSlash(roleURI) || '').replace(/[A-Z]/g, (letter) => ' ' + letter).trim();
   }

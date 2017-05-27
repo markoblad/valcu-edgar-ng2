@@ -42,68 +42,6 @@ export interface XbrlVStatementInterface {
   dimensions?: any[];
 }
 
-export interface XbrlToInstanceInterface {
-  context: string;
-  value: string;
-  decimals: string;
-  xbrlId: string;
-  unit: string;
-  nil: string;
-  language: string;
-}
-
-export interface XbrlLabelInterface {
-  labelArcFrom: string;
-  labelArcTo: string;
-  labelArcOrder: string;
-  labelArcArcrole: string;
-  labelArcType: string;
-  labelRole: string;
-  labelValue: string;
-  labelLanguage: string;
-  labelID: string;
-}
-
-export interface XbrlStatementItemInterface {
-  toHref: string;
-
-  prePreferredLabel: string;
-  preFromHref: string;
-  preOrder: string;
-  preArcrole: string;
-  preType: string;
-  prePriority: string;
-  preUse: string;
-
-  defFromHref: string;
-  defOrder: string;
-  defArcrole: string;
-  defType: string;
-  defClosed: string;
-  defContextElement: string;
-  defTargetRole: string;
-
-  calFromHref: string;
-  calOrder: string;
-  calArcrole: string;
-  calType: string;
-  calPriority: string;
-  calUse: string;
-  calWeight: string;
-
-  xsdToID: string;
-  xsdToName: string;
-  xsdToNillable: string;
-  xsdToSubstitutionGroup: string;
-  xsdToType: string;
-  xsdToPeriodType: string;
-  xsdToAbstract: string;
-  xsdToBalance: string;
-
-  toInstances: [XbrlToInstanceInterface];
-  labels: [XbrlLabelInterface];
-}
-
 export interface XbrlSegmentInterface {
   segmentExplicitMemberDimension?: string;
   segmentExplicitMemberText?: string;
@@ -160,30 +98,6 @@ export class XbrlUtility {
   public static get INS_NSPREFIXES(): string[] {
     return ['ns', 'xbrli', 'link', 'xlink', 'xbrldi', 'xsd', 'xs'];
     // xbrldt
-  }
-
-  public static get BALANCE_SHEET_TERMS(): any[] {
-    return ['balance sheet', 'condition', 'position', ['assets', 'liabilities', 'shareholder']];
-  }
-
-  public static get INCOME_STATEMENT_TERMS(): any[] {
-    return ['operation', 'income', 'earning'];
-  }
-
-  public static get CASH_FLOW_TERMS(): any[] {
-    return ['cash flow'];
-  }
-
-  public static get CHANGE_IN_EQUITY_TERMS(): any[] {
-    return ['equity', 'capital', 'deficit'];
-  }
-
-  public static get PARENTHETICAL_TERMS(): any[] {
-    return ['parenthetical'];
-  }
-
-  public static get CALC2_TERMS(): any[] {
-    return ['calc2'];
   }
 
   // http://www.xbrl.org/2003/role/label
@@ -1406,92 +1320,6 @@ export class XbrlUtility {
       });
     }
     return lines;
-  }
-
-  public static categorizeStatement(definition): any {
-    let statementCategoryObj = {coreStatement: 0, statementCategory: 0};
-    let lowerDefinition = definition.toLowerCase();
-    let pieces = lowerDefinition.split('-');
-    if (pieces[1] && pieces[1].toLowerCase().match(/statement/)) {
-      statementCategoryObj.coreStatement = 1;
-    }
-
-  //   if (statementCategoryObj.coreStatement) {
-  //     if (XbrlUtility.BALANCE_SHEET_TERMS.some((terms) => {
-  //       return XbrlUtility.isArray(terms) ? terms.every((term) => lowerDefinition.match(new RegExp(term))) : lowerDefinition.match(new RegExp(terms));
-  //     }) {
-  //       statementCategoryObj.statementCategory = statementCategoryObj.statementCategory + 1001;
-  //     }
-  //         @match = 0
-  //         income_statement_terms.each do |term|
-  //           if term.class == Array 
-  //             @match = 1 unless term.collect { |sub_term| /#{sub_term}/.match(item.downcase)}.include?(nil)
-  //           else 
-  //             @match = 1 unless (/#{term}/.match(item.downcase).nil? || (term == "income" && !/equity/.match(item.downcase).nil?) || 
-  //               (term == "earning" && !/retained/.match(item.downcase).nil?))
-  //           end
-  //         end
-  //         if @match == 1            
-  //           if /comprehensive/.match(item.downcase).nil?
-  //             @result["statement_category"] += 2001
-  //           else
-  //             @result["statement_category"] += 5001
-  //           end
-  //         end
-
-  //         @match = 0
-  //         cash_flow_terms.each do |term|
-  //           if term.class == Array 
-  //             @match = 1 unless term.collect { |sub_term| /#{sub_term}/.match(item.downcase)}.include?(nil)
-  //           else 
-  //             @match = 1 unless /#{term}/.match(item.downcase).nil?
-  //           end
-  //         end
-  //         if @match == 1
-  //           @result["statement_category"] += 3001
-  //         end
-
-  //         @match = 0
-  //         change_in_equity_terms.each do |term|
-  //           if term.class == Array 
-  //             @match = 1 unless term.collect { |sub_term| /#{sub_term}/.match(item.downcase)}.include?(nil)
-  //           else 
-  //             @match = 1 unless /#{term}/.match(item.downcase).nil?
-  //           end
-  //         end
-  //         if @match == 1
-  //           @result["statement_category"] += 4001
-  //         end
-        
-  //         @match = 0
-  //         parenthetical_terms.each do |term|
-  //           if term.class == Array 
-  //             @match = 1 unless term.collect { |sub_term| /#{sub_term}/.match(item.downcase)}.include?(nil)
-  //           else 
-  //             @match = 1 unless /#{term}/.match(item.downcase).nil?
-  //           end
-  //         end
-  //         if @match == 1
-  //           @result["statement_category"] += 100
-  //         end
-
-  //         @match = 0
-  //         calc2_terms.each do |term|
-  //           if term.class == Array 
-  //             @match = 1 unless term.collect { |sub_term| /#{sub_term}/.match(item.downcase)}.include?(nil)
-  //           else 
-  //             @match = 1 unless /#{term}/.match(item.downcase).nil?
-  //           end
-  //         end
-  //         if @match == 1
-  //           @result["statement_category"] += 10
-  //         end
-
-  //       end
-  //     end
-      
-  //   return @result
-  // end
   }
 
   // http://xbrl.org/int/dim/arcrole/all - table
