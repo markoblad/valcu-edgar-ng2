@@ -4,7 +4,8 @@ import 'rxjs/Rx';
 import { XbrlUtility } from '../edgar';
 import { XbrlVReportInterface, XbrlVStatementInterface, XbrlReportInterface, XbrlStatementInterface } from './';
 import { EdgarArchiveService } from '../edgar';
-import * as nlp from 'compromise/builds/compromise.es6.js';
+// import * as nlp from 'compromise/builds/compromise.es6.js';
+import * as nlp from 'compromise';
 
 @Injectable()
 export class XbrlService {
@@ -27,11 +28,70 @@ export class XbrlService {
   public nlpDisplay: boolean = false;
   public nlpMode: string = null;
 
-  private verbose: boolean = false;
+  public verbose: boolean = false;
 
   constructor(
     public edgarArchiveService: EdgarArchiveService
-  ) {}
+  ) {
+    this.xbrlVReports = {
+      '000121390016011346': {
+        edgarArchiveFiles: [
+          {
+            type: 'xsd',
+            url: 'Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xsd',
+          },
+          {
+            type: 'pre',
+            url: 'Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_pre.xml',
+          },
+          {
+            type: 'def',
+            url: 'Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_def.xml',
+          },
+          {
+            type: 'cal',
+            url: 'Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_cal.xml',
+          },
+          {
+            type: 'lab',
+            url: 'Archives/edgar/data/1371128/000121390016011346/bsrc-20151231_lab.xml',
+          },
+          {
+            type: 'ins',
+            url: 'Archives/edgar/data/1371128/000121390016011346/bsrc-20151231.xml',
+          },
+        ],
+      },
+      '000121390017002526': {
+        edgarArchiveFiles: [
+          {
+            type: 'xsd',
+            url: 'Archives/edgar/data/1371128/000121390017002526/bsrc-20161231.xsd',
+          },
+          {
+            type: 'pre',
+            url: 'Archives/edgar/data/1371128/000121390017002526/bsrc-20161231_pre.xml',
+          },
+          {
+            type: 'def',
+            url: 'Archives/edgar/data/1371128/000121390017002526/bsrc-20161231_def.xml',
+          },
+          {
+            type: 'cal',
+            url: 'Archives/edgar/data/1371128/000121390017002526/bsrc-20161231_cal.xml',
+          },
+          {
+            type: 'lab',
+            url: 'Archives/edgar/data/1371128/000121390017002526/bsrc-20161231_lab.xml',
+          },
+          {
+            type: 'ins',
+            url: 'Archives/edgar/data/1371128/000121390017002526/bsrc-20161231.xml',
+          },
+        ],
+      },
+    };
+  }
 
   public addParsedXbrls(xbrlVReportKey: string, parsedXbrls: any[] = [], edgarArchiveFiles: any[]): void {
     let xbrlVReport: XbrlVReportInterface = {

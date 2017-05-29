@@ -1236,7 +1236,7 @@ export class XbrlUtility {
 
     let items = {};
     let contextRefs = [];
-    ([['presentation', presentationLinks], ['definition', definitionLinks], ['calculation', calculationLinks]]).forEach((pair) => {
+    ([['presentation', presentationLinks], ['definition', definitionLinks], ['calculation', calculationLinks]]).forEach((pair: any[]) => {
       let str = pair[0];
       let links = pair[1];
 
@@ -1291,7 +1291,7 @@ export class XbrlUtility {
     return xbrlStatement;
   }
 
-  public static getXbrlStatementDimensions(xbrlStatement: XbrlStatementInterface = {}): any {
+  public static getXbrlStatementDimensions(xbrlStatement: XbrlStatementInterface = <XbrlStatementInterface> {}): any {
     let xbrlStatementDimensions = [];
     let xbrlStatementLines = [];
     let definitionCompositeLinkTree = xbrlStatement.definitionCompositeLinkTree;

@@ -133,7 +133,7 @@ module.exports = function (options) {
               loader: 'angular2-template-loader'
             }
           ],
-          exclude: [/\.(spec|e2e)\.ts$/, /node_modules\/(?!(ng2-bootstrap|angular2-token))/]
+          exclude: [/\.(spec|e2e)\.ts$/, /node_modules\/(?!(ng2-bootstrap|angular2-token|diff|compromise|machine_learning))/]
         },
 
         /*

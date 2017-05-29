@@ -42,7 +42,7 @@ export class XbrlVStatementUtility {
         'CommitmentsAndContingencies',
         'TemporaryEquityCarryingAmountIncludingPortionAttributableToNoncontrollingInterests',
         'StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest',
-    ]
+    ];
   }
 
   public static get BALANCE_SHEET_BROKER(): any {
@@ -586,7 +586,6 @@ export class XbrlVStatementUtility {
     };
   }
 
-
   public static get INCOME_STATEMENT_SECTION_SCHEMA_HASH(): any {
     return {
       '+*NetIncomeLossAvailableToCommonStockholdersBasic': 'Net Income/Loss Available to Common Stockholders',
@@ -615,17 +614,21 @@ export class XbrlVStatementUtility {
       '-**PreferredStockDividendsAndOtherAdjustments': 'Preferred Stock Dividends and Other Adjustments',
       '*EarningsPerShareBasicAndDiluted': 'Earnings Per Share Basic And Diluted',
       '**IncomeLossFromExtraordinaryItemsNetOfTaxPerBasicAndDilutedShare': 'Income/Loss From Extraordinary Items (Net Of Tax) Per Basic And Diluted Share',
-      '**IncomeLossFromOperationsBeforeExtraordinaryItemsPerBasicAndDilutedShare': 'Income/Loss From Operations Before Extraordinary Items Per Basic And Diluted Share',
-      '***IncomeLossFromContinuingOperationsPerBasicAndDilutedShare': 'Income/Loss From Continuing Operations Per Basic And Diluted Share',
+      '**IncomeLossFromOperationsBeforeExtraordinaryItemsPerBasicAndDilutedShare':
+        'Income/Loss From Operations Before Extraordinary Items Per Basic And Diluted Share',
+      '***IncomeLossFromContinuingOperationsPerBasicAndDilutedShare':
+        'Income/Loss From Continuing Operations Per Basic And Diluted Share',
       '***IncomeLossFromDiscontinuedOperationsNetOfTaxPerBasicAndDilutedShare': 'Income/Loss From Discontinued Operations (Net Of Tax) Per Basic And Diluted Share',
       '*EarningsPerShareBasic': 'Earnings Per Share Basic',
       '**IncomeLossFromExtraordinaryItemsNetOfTaxPerBasicShare': 'Income/Loss From Extraordinary Items (Net Of Tax) Per Basic Share',
-      '**IncomeLossBeforeExtraordinaryItemsAndCumulativeEffectOfChangeInAccountingPrinciplePerBasicShare': 'Income/Loss Before Extraordinary Items And Cumulative Effect Of Change In Accounting Principle Per Basic Share',
+      '**IncomeLossBeforeExtraordinaryItemsAndCumulativeEffectOfChangeInAccountingPrinciplePerBasicShare':
+        'Income/Loss Before Extraordinary Items And Cumulative Effect Of Change In Accounting Principle Per Basic Share',
       '***IncomeLossFromContinuingOperationsPerBasicShare': 'IncomeLossFromContinuingOperationsPerBasicShare',
       '***IncomeLossFromDiscontinuedOperationsNetOfTaxPerBasicShare': 'Income/Loss From Discontinued Operations (Net Of Tax) Per Basic Share',
       '*EarningsPerShareDiluted': 'Earnings Per Share Diluted',
       '**IncomeLossFromExtraordinaryItemsNetOfTaxPerDilutedShare': 'Income/Loss From Extraordinary Items (Net Of Tax) Per Diluted Share',
-      '**IncomeLossBeforeExtraordinaryItemsAndCumulativeEffectOfChangeInAccountingPrinciplePerDilutedShare': 'Income/Loss Before Extraordinary Items And Cumulative Effect Of Change In Accounting Principle Per Diluted Share',
+      '**IncomeLossBeforeExtraordinaryItemsAndCumulativeEffectOfChangeInAccountingPrinciplePerDilutedShare':
+        'Income/Loss Before Extraordinary Items And Cumulative Effect Of Change In Accounting Principle Per Diluted Share',
       '***IncomeLossFromContinuingOperationsPerDilutedShare': 'Income/Loss From Continuing Operations Per Diluted Share',
       '***IncomeLossFromDiscontinuedOperationsNetOfTaxPerDilutedShare': 'Income Loss From Discontinued Operations (Net Of Tax) Per Diluted Share',
     };
@@ -902,36 +905,49 @@ export class XbrlVStatementUtility {
           },
         ],
       },
-      parentheticalStatement: [
-        {
-          w: ['parenthetical'],
-          add: 100,
-        },
-      ],
-      calc2Statement: [
-        {
-          w: ['calc2'],
-          add: 10,
-        },
-      ]
+      parentheticalStatement: {
+        add: 100,
+        isParenthetical: true,
+        matches: [
+          {
+            w: ['parenthetical'],
+          },
+        ],
+      },
+      calc2Statement: {
+        add: 10,
+        isCalc2: true,
+        matches: [
+          {
+            w: ['calc2'],
+          },
+        ],
+      }
     };
   }
+  // tables
+  // details
+  // details 1
+  // details textual
+  // parenthetical
+  // disclosure
+  // policies
 
-        // section_schema = EdgarStatementItemCategorizer::BALANCE_SHEET_SECTION_SCHEMA_HASH
-        // parenthetical = statement_categorization.values.first == 1101 ? true : false
+  // section_schema = EdgarStatementItemCategorizer::BALANCE_SHEET_SECTION_SCHEMA_HASH
+  // parenthetical = statement_categorization.values.first == 1101 ? true : false
 
-        // section_schema = EdgarStatementItemCategorizer::INCOME_STATEMENT_SECTION_SCHEMA_HASH
-        // parenthetical = statement_categorization.values.first == 2101 ? true : false
+  // section_schema = EdgarStatementItemCategorizer::INCOME_STATEMENT_SECTION_SCHEMA_HASH
+  // parenthetical = statement_categorization.values.first == 2101 ? true : false
 
-        // section_schema = EdgarStatementItemCategorizer::CASH_FLOW_STATEMENT_SECTION_SCHEMA_HASH
-        // parenthetical = statement_categorization.values.first == 3101 ? true : false
+  // section_schema = EdgarStatementItemCategorizer::CASH_FLOW_STATEMENT_SECTION_SCHEMA_HASH
+  // parenthetical = statement_categorization.values.first == 3101 ? true : false
 
-        // section_schema = EdgarStatementItemCategorizer::SHAREHOLDERS_EQUITY_STATEMENT_SECTION_SCHEMA
-        // component_schema = EdgarStatementItemCategorizer::TEST_EQUITY_COMPONENT_SCHEMA
-        // parenthetical = statement_categorization.values.first == 4101 ? true : false
+  // section_schema = EdgarStatementItemCategorizer::SHAREHOLDERS_EQUITY_STATEMENT_SECTION_SCHEMA
+  // component_schema = EdgarStatementItemCategorizer::TEST_EQUITY_COMPONENT_SCHEMA
+  // parenthetical = statement_categorization.values.first == 4101 ? true : false
 
-        // # section_schema = EdgarStatementItemCategorizer::COMPREHENSIVE_INCOME_STATEMENT_SECTION_SCHEMA
-        // # standard_statement_class = ComprehensiveIncomeStatement
+  // # section_schema = EdgarStatementItemCategorizer::COMPREHENSIVE_INCOME_STATEMENT_SECTION_SCHEMA
+  // # standard_statement_class = ComprehensiveIncomeStatement
 
   public static categorizeStatement(definition): any {
     let statementCategoryObj = {coreStatement: 0, statementCategory: 0};
@@ -942,12 +958,12 @@ export class XbrlVStatementUtility {
     }
 
     // Object.keys(XbrlVStatementUtility.STATEMENT_CATEGORIZER_GRAMMER).forEach()
-    if (statementCategoryObj.coreStatement) {
-      if (XbrlUtility.BALANCE_SHEET_TERMS.some((terms) => {
-        return XbrlUtility.isArray(terms) ? terms.every((term) => lowerDefinition.match(new RegExp(term))) : lowerDefinition.match(new RegExp(terms));
-      }) {
-        statementCategoryObj.statementCategory = statementCategoryObj.statementCategory + 1001;
-      }
-    }
+    // if (statementCategoryObj.coreStatement) {
+    //   if (XbrlUtility.BALANCE_SHEET_TERMS.some((terms) => {
+    //     return XbrlUtility.isArray(terms) ? terms.every((term) => lowerDefinition.match(new RegExp(term))) : lowerDefinition.match(new RegExp(terms));
+    //   }) {
+    //     statementCategoryObj.statementCategory = statementCategoryObj.statementCategory + 1001;
+    //   }
+    // }
   }
 }
