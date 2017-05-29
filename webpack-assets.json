@@ -1,0 +1,12 @@
+{
+  "vendor": {
+    "js": "/valcu-edgar-ng2/vendor.28e83dcc623ac40a5e36.bundle.js"
+  },
+  "main": {
+    "js": "/valcu-edgar-ng2/main.05e95d8484768e46b2ae.bundle.js",
+    "css": "/valcu-edgar-ng2/main.9f90703e0a8e82ca6daa9da0669d0782.css"
+  },
+  "polyfills": {
+    "js": "/valcu-edgar-ng2/polyfills.1049f529fe382b129019.bundle.js"
+  }
+}
