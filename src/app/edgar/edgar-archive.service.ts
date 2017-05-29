@@ -18,14 +18,11 @@ export class EdgarArchiveService {
     return (selection);
   }
 
-  // edgarBrowseUrl: string = 'https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&type=10-k&count=10&CIK=';
-  public edgarBrowseUrl: string = '//localhost:3003/edgar/cgi-bin/browse-edgar?action=getcompany&type=10-k&count=10&CIK=';
+  // public proxyUrl: string = '//localhost:3003/edgar/'; // ${cik}/${accountNumberNoDash}/${accountNumber}-index.htm
+  public proxyUrl: string = '/edgar/'; // ${cik}/${accountNumberNoDash}/${accountNumber}-index.htm
   public edgarCikBrowsePathStub: string = 'cgi-bin/browse-edgar?action=getcompany&type=10-k&count=10&CIK=';
   // https://www.sec.gov/cgi-bin/browse-edgar?CIK=0001375796&owner=exclude&action=getcompany&Find=Search
-  // edgarBrowseUrl: string = 'https://valcu.co/?CIK=';
-  // proxyUrl: string = 'https://valcu.co';
   // edgarArchiveUrl: string = 'https://www.sec.gov/Archives/edgar/data/'; // ${cik}/${accountNumberNoDash}/${accountNumber}-index.htm
-  public proxyUrl: string = '//localhost:3003/edgar/'; // ${cik}/${accountNumberNoDash}/${accountNumber}-index.htm
   public edgarArchivePathStub: string = 'Archives/edgar/data/'; // ${cik}/${accountNumberNoDash}/${accountNumber}-index.htm
   // 0001213900-16-011346
   // 000121390016011346
@@ -109,9 +106,7 @@ export class EdgarArchiveService {
   public getParsedXbrls(edgarArchiveFiles: any[] = [], verbose?: boolean): Observable<any> {
     console.log('edgarArchiveFiles: ', JSON.stringify(edgarArchiveFiles));
     // console.log('this.headers: ', JSON.stringify(this.headers));
-    // console.log("getting: ", `${this.edgarBrowseUrl}${cik}`);
     // console.log('getting: ', `${this.edgarArchiveFileUrl}`);
-    // return this.http.get(`${this.edgarBrowseUrl}${cik}`, this.headers)
     let observableBatch = [];
     edgarArchiveFiles.forEach((obj) => {
       // console.log('obj.url: ', obj.url);
