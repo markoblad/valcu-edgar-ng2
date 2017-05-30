@@ -1,6 +1,24 @@
 import { Injectable } from '@angular/core';
 import { XbrlUtility } from '../edgar';
 
+export interface StatementMatchInterface {
+  w?: string | string[];
+  wo?: string | string[];
+}
+
+export interface StatementCategorizationInterface {
+  rules?: StatementMatchInterface[];
+  add?: number;
+  statementType?: string;
+  industry?: string;
+  standardStatementId?: number;
+  typeExtension?: string;
+  isParenthetical?: boolean;
+  isCalc2?: boolean;
+  xbrlIndex?: string;
+  xbrlCategory?: string;
+}
+
 @Injectable()
 export class XbrlVStatementUtility {
 
@@ -811,7 +829,7 @@ export class XbrlVStatementUtility {
     ];
   }
 
-  public static get STATEMENT_CATEGORIZER_GRAMMER(): any {
+  public static get PRIMARY_STATEMENT_CATEGORIZER_GRAMMER(): any {
     return {
       balanceSheet: {
         add: 1001,
@@ -819,7 +837,7 @@ export class XbrlVStatementUtility {
         industry: 'ci',
         standardStatementId: 1,
         typeExtension: 'cls',
-        matches: [
+        rules: [
           {
             w: 'balance sheet',
           },
@@ -840,7 +858,7 @@ export class XbrlVStatementUtility {
         industry: 'ci',
         standardStatementId: 2,
         typeExtension: null,
-        matches: [
+        rules: [
           {
             w: ['operation', 'comprehensive'],
           },
@@ -860,7 +878,7 @@ export class XbrlVStatementUtility {
         industry: 'ci',
         standardStatementId: 3,
         typeExtension: 'indir',
-        matches: [
+        rules: [
           {
             w: ['cash flow'],
           },
@@ -872,7 +890,7 @@ export class XbrlVStatementUtility {
         industry: 'ci',
         standardStatementId: 4,
         typeExtension: null,
-        matches: [
+        rules: [
           {
             w: ['equity'],
           },
@@ -890,7 +908,7 @@ export class XbrlVStatementUtility {
         industry: 'ci',
         standardStatementId: 5,
         typeExtension: null,
-        matches: [
+        rules: [
           {
             w: 'operation',
             wo: 'comprehensive',
@@ -905,19 +923,29 @@ export class XbrlVStatementUtility {
           },
         ],
       },
+    };
+  }
+
+  public static get PARENTHETICAL_STATEMENT_CATEGORIZER_GRAMMER(): any {
+    return {
       parentheticalStatement: {
         add: 100,
         isParenthetical: true,
-        matches: [
+        rules: [
           {
             w: ['parenthetical'],
           },
         ],
       },
+    };
+  }
+
+  public static get CALC2_STATEMENT_CATEGORIZER_GRAMMER(): any {
+    return {
       calc2Statement: {
         add: 10,
         isCalc2: true,
-        matches: [
+        rules: [
           {
             w: ['calc2'],
           },
@@ -925,6 +953,7 @@ export class XbrlVStatementUtility {
       }
     };
   }
+
   // tables
   // details
   // details 1
@@ -950,20 +979,53 @@ export class XbrlVStatementUtility {
   // # standard_statement_class = ComprehensiveIncomeStatement
 
   public static categorizeStatement(definition): any {
-    let statementCategoryObj = {coreStatement: 0, statementCategory: 0};
+    let statementCategoryObj = {coreStatement: 0, statementCategory: 0, xbrlIndex: null, xbrlCategory: null};
     let lowerDefinition = definition.toLowerCase();
     let pieces = lowerDefinition.split('-');
+    statementCategoryObj.xbrlIndex = pieces[0];
+    statementCategoryObj.xbrlCategory = pieces[1];
     if (pieces[1] && pieces[1].toLowerCase().match(/statement/)) {
       statementCategoryObj.coreStatement = 1;
     }
+    [
+      XbrlVStatementUtility.PRIMARY_STATEMENT_CATEGORIZER_GRAMMER,
+      XbrlVStatementUtility.PARENTHETICAL_STATEMENT_CATEGORIZER_GRAMMER,
+      XbrlVStatementUtility.CALC2_STATEMENT_CATEGORIZER_GRAMMER
+    ].forEach((grammar) => {
+      Object.keys(grammar).find((key) => {
+        let categorizer = grammar[key];
+        let rules = categorizer.rules;
+        let match = rules.find((rule) => {
+          let terms = rule.w;
+          let nonTerms = rule.wo;
+          return (
+            XbrlUtility.isArray(terms) ?
+            terms.every((term) => lowerDefinition.match(new RegExp(term))) :
+            (!XbrlUtility.isBlank(terms) && lowerDefinition.match(new RegExp(terms)))
+          ) &&
+          (
+            XbrlUtility.isArray(nonTerms) ?
+            nonTerms.every((nonTerm) => !lowerDefinition.match(new RegExp(nonTerm))) :
+            (XbrlUtility.isBlank(nonTerms) || !lowerDefinition.match(new RegExp(nonTerms)))
+          );
+        });
+        if (match) {
+          if (categorizer.add) {
+            statementCategoryObj.statementCategory = statementCategoryObj.statementCategory + categorizer.add;
+          }
+          let atts = Object.keys(categorizer).filter((att) => att !== 'rules' && att !== 'add');
+          atts.forEach((att) => {
+            let value = categorizer[att];
+            if (!XbrlUtility.isBlank(value)) {
+              statementCategoryObj[att] = value;
+            }
 
-    // Object.keys(XbrlVStatementUtility.STATEMENT_CATEGORIZER_GRAMMER).forEach()
-    // if (statementCategoryObj.coreStatement) {
-    //   if (XbrlUtility.BALANCE_SHEET_TERMS.some((terms) => {
-    //     return XbrlUtility.isArray(terms) ? terms.every((term) => lowerDefinition.match(new RegExp(term))) : lowerDefinition.match(new RegExp(terms));
-    //   }) {
-    //     statementCategoryObj.statementCategory = statementCategoryObj.statementCategory + 1001;
-    //   }
-    // }
+          });
+          return true;
+        }
+        return false;
+      });
+    });
+    return statementCategoryObj;
   }
 }

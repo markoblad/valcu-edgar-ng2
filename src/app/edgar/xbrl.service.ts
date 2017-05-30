@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/Rx';
-import { XbrlUtility } from '../edgar';
+import { XbrlUtility, XbrlVStatementUtility } from '../edgar';
 import { XbrlVReportInterface, XbrlVStatementInterface, XbrlReportInterface, XbrlStatementInterface } from './';
 import { EdgarArchiveService } from '../edgar';
 // import * as nlp from 'compromise/builds/compromise.es6.js';
@@ -311,8 +311,10 @@ export class XbrlService {
   }
 
   public displayRoleURI(roleURI): string {
-    let pieces = (XbrlUtility.getRoleURIDefinition(this.selectedXbrlVReport, roleURI) || '').split(/\s+-\s+/);
-    return XbrlUtility.manageLabelBreaks(pieces[pieces.length - 1]);
+    let definition = XbrlUtility.getRoleURIDefinition(this.selectedXbrlVReport, roleURI);
+    let categorization = XbrlVStatementUtility.categorizeStatement(definition);
+    let pieces = (definition || '').split(/\s+-\s+/);
+    return XbrlUtility.manageLabelBreaks(pieces[pieces.length - 1] + ' ' + JSON.stringify(categorization));
     // || (XbrlUtility.getLastSlash(roleURI) || '').replace(/[A-Z]/g, (letter) => ' ' + letter).trim();
   }
 
