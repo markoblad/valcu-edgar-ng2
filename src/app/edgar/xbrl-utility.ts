@@ -621,7 +621,7 @@ export class XbrlUtility {
         let taxonomyName = value.split('#')[0];
         obj[prefix + 'TaxonomyName'] = taxonomyName;
         // (taxonomyName.match(/(\w+-\w+)+\./) || '').split('.')[0];
-        obj[prefix + 'TaxonomyYear'] = (taxonomyName.match(/(?:\w+-\w+)+\./) || '').split('.')[0];
+        obj[prefix + 'TaxonomyYear'] = (taxonomyName.match(/(\w+-\w+)+\./) || '').split('.')[0];
       }
     });
     return obj;
@@ -1026,7 +1026,7 @@ export class XbrlUtility {
     if (!XbrlUtility.isBlank(itemInstances)) { newArc.instances = itemInstances; }
     let arcGlobalWeight = globalWeight * (parseInt(arc.weight, 10) || 1);
     arc.globalWeight = arcGlobalWeight;
-    let branch = XbrlUtility.growTree(to, arcsPool, instances, arcGlobalWeight);
+    let branch = XbrlUtility.growTree(treeKey || to, arcsPool, instances, arcGlobalWeight);
     if (!XbrlUtility.isBlank(branch)) {
       newArc.branch = branch;
     } else {
