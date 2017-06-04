@@ -42,6 +42,18 @@ export interface XbrlVStatementInterface {
   dimensions?: any[];
 }
 
+export interface XbrlVArcInterface {
+  globalWeight?: number;
+  branch?: any;
+  leaf?: boolean;
+  toTaxonomyName?: string;
+  toTaxonomyYear?: string;
+  toTaxonomyItemName?: string;
+  fromTaxonomyName?: string;
+  fromTaxonomyYear?: string;
+  fromTaxonomyItemName?: string;
+}
+
 export interface XbrlSegmentInterface {
   segmentExplicitMemberDimension?: string;
   segmentExplicitMemberText?: string;
@@ -251,6 +263,7 @@ export class XbrlUtility {
                 'priority',
                 'use',
               ],
+              transformFn: XbrlUtility.objsTaxonomyInfoTransform,
             },
           },
           transformFn: XbrlUtility.linksLocsArcsInterleaveTransform,
@@ -293,6 +306,7 @@ export class XbrlUtility {
                 'contextElement', // xbrldt:contextElement
                 'targetRole', // xbrldt:targetRole
               ],
+              transformFn: XbrlUtility.objsTaxonomyInfoTransform,
             },
           },
           transformFn: XbrlUtility.linksLocsArcsInterleaveTransform,
@@ -331,6 +345,7 @@ export class XbrlUtility {
                 'priority',
                 'use',
               ],
+              transformFn: XbrlUtility.objsTaxonomyInfoTransform,
             },
           },
           transformFn: XbrlUtility.linksLocsArcsInterleaveTransform,
@@ -354,6 +369,7 @@ export class XbrlUtility {
             'to', // 'xlink:to',
             'type', // 'xlink:type'
           ],
+          transformFn: XbrlUtility.objsTaxonomyInfoTransform,
         },
       },
       transformFn: XbrlUtility.linkLocsArcsIndexedInterleaveTransform,
@@ -473,6 +489,7 @@ export class XbrlUtility {
                 'to', // 'xlink:to',
                 'type', // 'xlink:type'
               ],
+              transformFn: XbrlUtility.objsTaxonomyInfoTransform,
             },
             footnote: { // link:loc
               rename: 'footnotes',
@@ -545,6 +562,8 @@ export class XbrlUtility {
     });
   }
 
+  public static objsArrayTransform(objs: any[], fn: Function) { return (objs || []).map((obj) => fn(obj || {}) ); }
+
   public static arrayedTextTransform(objs: any[]) { return (objs || []).map((i) => (i || {}).textContent ); }
 
   public static firstArrayItemTransform(objs: any[]) { return (objs || [])[0]; }
@@ -589,6 +608,24 @@ export class XbrlUtility {
     (i.nodeName || '').replace(':', '_'), 'contextRef'); }
 
   public static objsArrayToObjObjsByLabelHrefTransform(objs: any []) { return XbrlUtility.objsArrayToObjObjsMultipleIndexedTransform(objs, ['label', 'href']); }
+
+  public static objsTaxonomyInfoTransform(objs: any []) { return XbrlUtility.objsArrayTransform(objs, XbrlUtility.taxonomyInfoTransform); }
+
+  public static taxonomyInfoTransform(obj: any): any {
+    ['toHref', 'fromHref'].forEach((att) => {
+      let value = obj[att];
+      let prefix = att.replace('Href', '');
+      if (!XbrlUtility.isBlank(value)) {
+        let pieces = value.split('_');
+        obj[prefix + 'TaxonomyItemName'] = pieces.slice(1, pieces.length).join('_');
+        let taxonomyName = value.split('#')[0];
+        obj[prefix + 'TaxonomyName'] = taxonomyName;
+        // (taxonomyName.match(/(\w+-\w+)+\./) || '').split('.')[0];
+        obj[prefix + 'TaxonomyYear'] = (taxonomyName.match(/(?:\w+-\w+)+\./) || '').split('.')[0];
+      }
+    });
+    return obj;
+  }
 
   public static linkLocsArcsInterleaveTransform(linkObj) {
     let locs = linkObj.locs || {};
@@ -939,29 +976,6 @@ export class XbrlUtility {
     return (XbrlUtility.isBlank(str) ? '' : str).toString().replace(/[ -]/g, (m, i) => (i % 80 > 60) ? m : (m.match(/ /) ? '\u00a0' : '\u2011'));
   }
 
-  public static growTree(from: string, arcs: any[] = [], instances: any): any {
-    let tree: any = {};
-    let arcsPool = arcs.slice(0);
-    arcs.forEach((arc) => {
-      if (from === (arc || {}).from) {
-        let newArc = JSON.parse(JSON.stringify(arc));
-        let index = arcsPool.indexOf(arc);
-        if (index > -1) { arcsPool.splice(index, 1); }
-        let to = arc.to;
-        let instanceTo = (arc.toHref || '').split('#')[1];
-        let itemInstances = (instances || {})[instanceTo];
-        if (!XbrlUtility.isBlank(itemInstances)) { newArc.instances = itemInstances; }
-        let branch = XbrlUtility.growTree(to, arcsPool, instances);
-        if (!XbrlUtility.isBlank(branch)) { newArc.branch = branch; }
-        tree[to] = newArc;
-        // console.log('branch: ', JSON.stringify(branch));
-      }
-    });
-    // console.log('tree: ', JSON.stringify(tree));
-    // return XbrlUtility.isBlank(tree) ? null : tree;
-    return tree;
-  }
-
   public static constructTrees(links: any[] = [], instances: any): any {
     let trees = [];
     links.forEach((link) => {
@@ -973,7 +987,6 @@ export class XbrlUtility {
   }
 
   public static constructTree(arcs: any[] = [], instances: any): any {
-    let trees = [];
     let froms = XbrlUtility.uniqueCompact(arcs.map((i) => (i || {}).from));
     let tos = XbrlUtility.uniqueCompact(arcs.map((i) => (i || {}).to));
     let rootFroms = froms.filter((i) => tos.indexOf(i) < 0);
@@ -982,19 +995,45 @@ export class XbrlUtility {
     //   console.log('rootFroms: ', JSON.stringify(rootFroms));
     // }
     let tree = {};
+    let arcsPool = arcs.slice(0);
     (rootFroms || []).forEach((rootFrom) => {
       let arc = arcs.find((i) => (i || {}).from === rootFrom);
-      let newArc = JSON.parse(JSON.stringify(arc));
-      let instanceTo = (arc.fromHref || '').split('#')[1];
-      let itemInstances = (instances || {})[instanceTo];
-      if (!XbrlUtility.isBlank(itemInstances)) { newArc.instances = itemInstances; }
-      let branch = XbrlUtility.growTree(rootFrom, arcs, instances);
-      if (!XbrlUtility.isBlank(branch)) { newArc.branch = branch; }
-      tree[rootFrom] = newArc;
-      // trees.push(tree);
+      ({tree, arcsPool} = XbrlUtility.growArc(tree, arcsPool, rootFrom, arc, instances, 1));
     });
-    // return trees;
     return tree;
+  }
+
+  public static growTree(from: string, arcs: any[] = [], instances: any, globalWeight: number = 1): any {
+    let tree: any = {};
+    let arcsPool = arcs.slice(0);
+    arcs.forEach((arc) => {
+      if (from === (arc || {}).from) {
+        ({tree, arcsPool} = XbrlUtility.growArc(tree, arcsPool, null, arc, instances, globalWeight));
+      }
+    });
+    // console.log('tree: ', JSON.stringify(tree));
+    // return XbrlUtility.isBlank(tree) ? null : tree;
+    return tree;
+  }
+
+  public static growArc(tree: any, arcsPool: any, treeKey: string, arc: any, instances: any, globalWeight: number = 1): any {
+    let newArc = JSON.parse(JSON.stringify(arc));
+    let index = arcsPool.indexOf(arc);
+    if (index > -1) { arcsPool.splice(index, 1); }
+    let to = arc.to;
+    let instanceTo = (arc.toHref || '').split('#')[1];
+    let itemInstances = (instances || {})[instanceTo];
+    if (!XbrlUtility.isBlank(itemInstances)) { newArc.instances = itemInstances; }
+    let arcGlobalWeight = globalWeight * (parseInt(arc.weight, 10) || 1);
+    arc.globalWeight = arcGlobalWeight;
+    let branch = XbrlUtility.growTree(to, arcsPool, instances, arcGlobalWeight);
+    if (!XbrlUtility.isBlank(branch)) {
+      newArc.branch = branch;
+    } else {
+      newArc.leaf = true;
+    }
+    tree[treeKey || to] = newArc;
+    return {tree, arcsPool};
   }
 
   public static getContextRefs(tree: any, definitionTree?: any): string[] {
