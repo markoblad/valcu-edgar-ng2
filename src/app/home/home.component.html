@@ -174,7 +174,7 @@
     <pre *ngIf="false">xbrlService.selectedXbrlVStatement = {{ xbrlService.selectedXbrlVStatement | json }}</pre>
     <pre *ngIf="false && xbrlService.selectedXbrlVStatement">xbrlService.selectedXbrlVStatement.xbrlStatementKeys = {{ xbrlService.selectedXbrlVStatement.xbrlStatementKeys | json }}</pre>
     <pre *ngIf="false">xbrlService.selectedXbrlVStatement.xbrlStatements = {{ xbrlService.selectedXbrlVStatement.xbrlStatements | json }}</pre>
-    <pre *ngIf="false">xbrlService.selectedXbrlVReport.xbrls = {{ xbrlService.selectedXbrlVReport.xbrls | json }}</pre>
+    <pre *ngIf="true && xbrlService.selectedXbrlVReport">xbrlService.selectedXbrlVReport.xbrls = {{ xbrlService.selectedXbrlVReport.xbrls | json }}</pre>
     <pre *ngIf="false">xbrlService.selectedXbrlVReport.xbrls.xsd = {{ ((xbrlService.selectedXbrlVReport.xbrls || {})).xsd | json }}</pre>
 
   </div>

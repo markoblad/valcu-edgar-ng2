@@ -19,7 +19,7 @@ export class EdgarArchiveService {
   }
 
   // public proxyUrl: string = '//localhost:3003/edgar/'; // ${cik}/${accountNumberNoDash}/${accountNumber}-index.htm
-  public proxyUrl: string = '/edgar/'; // ${cik}/${accountNumberNoDash}/${accountNumber}-index.htm
+  public edgarProxyUrl: string = '/edgar/'; // ${cik}/${accountNumberNoDash}/${accountNumber}-index.htm
   public edgarCikBrowsePathStub: string = 'cgi-bin/browse-edgar?action=getcompany&type=10-k&count=10&CIK=';
   // https://www.sec.gov/cgi-bin/browse-edgar?CIK=0001375796&owner=exclude&action=getcompany&Find=Search
   // edgarArchiveUrl: string = 'https://www.sec.gov/Archives/edgar/data/'; // ${cik}/${accountNumberNoDash}/${accountNumber}-index.htm
@@ -34,6 +34,12 @@ export class EdgarArchiveService {
   // https://www.sec.gov/Archives/edgar/monthly/xbrlrss-2007-08.xml
 
   public edgarCompanyKeysObj: any = {};
+
+  // http://xbrl.fasb.org/us-gaap/2012/stm/us-gaap-stm-com-2012-01-31.xsd
+  public fasbXbrlProxyUrl: string = '/fasb/xbrl/';
+  // http://xbrl.fasb.org/us-gaap/2012/stm/
+  // public fasbXbrlAcctSystemYearPathStub: string = 'us-gaap-2012-01-31/stm/';
+  public fasbXbrlAcctSystemYearPathStub: string = 'us-gaap/2012/stm/';
 
   private headers: Headers = new Headers({
     // Origin: 'https://valcu.co',
@@ -53,7 +59,7 @@ export class EdgarArchiveService {
   }
 
   public get(path: string): Observable<any> {
-    return this.http.get(`${this.proxyUrl}${this.edgarArchivePathStub}${path}`, this.headers)
+    return this.http.get(`${this.edgarProxyUrl}${this.edgarArchivePathStub}${path}`, this.headers)
     .map(this.checkForError)
     .catch((err) => Observable.throw(err))
     .map(this.getJson);
@@ -62,7 +68,7 @@ export class EdgarArchiveService {
   public getCikArchive(cik: string): Observable<any> {
     let path = this.edgarArchivePathStub + (cik || '').toString().trim().replace(/^0+/, '').trim();
     // console.log('path: ', path);
-    let url = this.proxyUrl + path;
+    let url = this.edgarProxyUrl + path;
     // console.log('url: ', url);
     return this.http.get(url)
     .map(this.checkForError)
@@ -71,7 +77,7 @@ export class EdgarArchiveService {
   }
 
   public getArchive(archivePath: string): Observable<any> {
-    let url = this.proxyUrl + (archivePath || '').replace(/^\//, '').trim();
+    let url = this.edgarProxyUrl + (archivePath || '').replace(/^\//, '').trim();
     // console.log('url: ', url);
     return this.http.get(url)
     .map(this.checkForError)
@@ -80,7 +86,7 @@ export class EdgarArchiveService {
   }
 
   public getArchiveXbrlZip(archivePath: string): Observable<any> {
-    let url = this.proxyUrl + (archivePath || '').replace(/^\//, '').trim() + '/' + this.archivePathtoXbrlZipFolder(archivePath);
+    let url = this.edgarProxyUrl + (archivePath || '').replace(/^\//, '').trim() + '/' + this.archivePathtoXbrlZipFolder(archivePath);
     console.log('getArchiveXbrlZip: ', url);
     return this.http.get(url)
     .map(this.checkForError)
@@ -95,7 +101,7 @@ export class EdgarArchiveService {
   }
 
   public getCikInfo(cik: string): Observable<any> {
-    let url = this.proxyUrl + this.edgarCikBrowsePathStub + (cik || '').toString().trim().replace(/^\//, '').trim();
+    let url = this.edgarProxyUrl + this.edgarCikBrowsePathStub + (cik || '').toString().trim().replace(/^\//, '').trim();
     // console.log('url: ', url);
     return this.http.get(url)
     .map(this.checkForError)
@@ -110,7 +116,10 @@ export class EdgarArchiveService {
     let observableBatch = [];
     edgarArchiveFiles.forEach((obj) => {
       // console.log('obj.url: ', obj.url);
-      let url = this.proxyUrl + (obj.url || '').replace(/^\//, '');
+      let proxyUrl = obj.source === 'fasb' ? this.fasbXbrlProxyUrl : this.edgarProxyUrl;
+      let pathStub = obj.source === 'fasb' ? this.fasbXbrlAcctSystemYearPathStub : this.edgarArchivePathStub;
+      // VM38693:1 GET http://localhost:3003/fasb/xbrl/us-gaap-2012-01-31/stm/us-gaap-stm-sfp-cls-cal-2012-01-31.xml
+      let url = proxyUrl + pathStub + (obj.url || '').replace(/^\//, '').replace(pathStub, '');
       observableBatch.push(this.http.get(url, this.headers)
         .map(this.checkForError)
         .catch((err) => Observable.throw(err))
@@ -122,7 +131,7 @@ export class EdgarArchiveService {
 
   public post(path, body): Observable<any> {
     return this.http.post(
-      `${this.proxyUrl}${this.edgarArchivePathStub}${path}`,
+      `${this.edgarProxyUrl}${this.edgarArchivePathStub}${path}`,
       // JSON.stringify(body),
       {headers: this.headers}
     )
@@ -132,7 +141,7 @@ export class EdgarArchiveService {
   }
 
   public delete(path: string): Observable<any> {
-    return this.http.delete(`${this.proxyUrl}${this.edgarArchivePathStub}${path}`, this.headers)
+    return this.http.delete(`${this.edgarProxyUrl}${this.edgarArchivePathStub}${path}`, this.headers)
     .map(this.checkForError)
     .catch((err) => Observable.throw(err))
     .map(this.getJson);

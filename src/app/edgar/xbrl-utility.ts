@@ -1302,7 +1302,8 @@ export class XbrlUtility {
       //   );
       //   links = updatedLinks;
       // }
-      let trees = XbrlUtility.constructTrees(links, xbrlReport.ins.instances);
+      let instances = (xbrlReport.ins || {}).instances;
+      let trees = XbrlUtility.constructTrees(links, instances);
       xbrlStatement[str + 'LinkTrees'] = trees;
       trees.forEach((tree) => contextRefs = contextRefs.concat(XbrlUtility.getContextRefs(tree)));
       contextRefs.push();
@@ -1310,7 +1311,7 @@ export class XbrlUtility {
       links.map((link) => arcs = arcs.concat(link.arcs));
       // if (trees.length > 1) {
       if (trees.length > 0) {
-        let tree = XbrlUtility.constructTree(arcs, xbrlReport.ins.instances);
+        let tree = XbrlUtility.constructTree(arcs, instances);
         xbrlStatement[str + 'CompositeLinkTree'] = tree;
       }
       links.forEach((link) => {

@@ -978,7 +978,7 @@ export class XbrlVStatementUtility {
   // # section_schema = EdgarStatementItemCategorizer::COMPREHENSIVE_INCOME_STATEMENT_SECTION_SCHEMA
   // # standard_statement_class = ComprehensiveIncomeStatement
 
-  public static categorizeStatement(definition): any {
+  public static categorizeStatement(definition: string = ''): any {
     let statementCategoryObj = {coreStatement: 0, statementCategory: 0, xbrlIndex: null, xbrlCategory: null};
     let lowerDefinition = definition.toLowerCase();
     let pieces = lowerDefinition.split('-');

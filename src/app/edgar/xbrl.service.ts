@@ -90,6 +90,15 @@ export class XbrlService {
           },
         ],
       },
+      'taxonomy': {
+        edgarArchiveFiles: [
+          {
+            type: 'cal',
+            url: 'us-gaap-stm-sfp-cls-cal-2012-01-31.xml',
+            source: 'fasb',
+          },
+        ],
+      },
     };
   }
 
