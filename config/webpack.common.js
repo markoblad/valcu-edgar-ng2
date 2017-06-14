@@ -27,7 +27,7 @@ const ngcWebpack = require('ngc-webpack');
 const HMR = helpers.hasProcessFlag('hot');
 const AOT = helpers.hasNpmFlag('aot');
 const METADATA = {
-  title: 'valcu-edgar-ng2',
+  title: 'Valcu Viewer',
   baseUrl: '/',
   isDevServer: helpers.isWebpackDevServer()
 };

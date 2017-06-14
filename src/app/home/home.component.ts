@@ -5,6 +5,10 @@ import {
   ViewEncapsulation
 } from '@angular/core';
 
+import { Router, ActivatedRoute, Params } from '@angular/router';
+
+import 'rxjs/add/operator/switchMap';
+
 import { AppState } from '../app.service';
 import { Title } from './title';
 import { XLargeDirective } from './x-large';
@@ -55,15 +59,37 @@ export class HomeComponent implements OnInit {
     public appState: AppState,
     public title: Title,
     public edgarArchiveService: EdgarArchiveService,
-    public xbrlService: XbrlService
+    public xbrlService: XbrlService,
+    private router: Router,
+    private route: ActivatedRoute,
   ) {
   }
 
 // https://www.sec.gov/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231.xml
   public ngOnInit() {
     console.log('hello `Home` component');
+    console.log('this.route.params: ', JSON.stringify(this.route.params));
+    let value = this.route.params['_value']['id'];
+    if (XbrlUtility.isBlank(value)) {
+      console.log('blank');
+    } else {
+      this.runSearch(value);
+    }
+
+    // .switchMap((params: Params) => {
+    //   if (XbrlUtility.isBlank(params['id'])) {
+    //     console.log('params: ', JSON.stringify(params));
+    //   } else {
+    //     console.log('search params: ', JSON.stringify(params));
+    //     return this.runSearch(params['id']);
+    //   }
+    // });
+    // .subscribe((a?: any) => console.log('made it'));
+      // console.log(this.route.params['id']);
+
     this.parsed = nlp('Now this is a story all about how..');
     this.parsedOut = this.parsed.normalize().out('terms');
+
     // this.parsedOut = JsDiff.diffWords('Mark Edward Oblad', 'Henry Mark Oblad');
     // this.title.getData().subscribe(data => this.data = data);
     // this.tryLogisticRegression();
@@ -84,53 +110,7 @@ export class HomeComponent implements OnInit {
       this.clearXbrlReports();
       this.appState.set('searchTerm', value);
       this.localState.value = '';
-      this.edgarArchiveService.getCikInfo(value).subscribe(
-        (cikInfoObj) => {
-          this.appState.set('companyName', (cikInfoObj || {}).companyName);
-          this.appState.set('cik', (cikInfoObj || {}).cik);
-          this.edgarArchiveService.getCikArchive(this.appState.get('cik')).subscribe(
-            (cikObjs) => {
-              // console.log('cikObjs: ', JSON.stringify(cikObjs || ''));
-              cikObjs.forEach((cikObj) => {
-                // this.edgarArchiveService.getArchiveXbrlZip(cikObj.href).subscribe(
-                //   (archiveObjs) => {
-                //     let edgarArchiveFiles = this.edgarArchiveService.archiveUrlObjsToEdgarArchiveFiles(archiveObjs);
-                //     if (edgarArchiveFiles) {
-                //       let xbrlVReport = {edgarArchiveFiles};
-                //       // console.log('xbrlVReport: ', JSON.stringify(xbrlVReport));
-                //       let urlPieces = (edgarArchiveFiles[0].url || '').split('/');
-                //       let xbrlVReportKey = urlPieces[urlPieces.length - 2];
-                //       // console.log('xbrlVReportKey: ', xbrlVReportKey);
-                //       // this.getXbrlReport(xbrlVReportKey, xbrlVReport, this.xbrlService.verbose);
-                //       this.xbrlService.addParsedXbrls(xbrlVReportKey, [], xbrlVReport.edgarArchiveFiles);
-                //     }
-                //   }, (getArchiveXbrlZipError) => {
-                //     console.log('getArchiveXbrlZip error: ', getArchiveXbrlZipError);
-                    this.edgarArchiveService.getArchive(cikObj.href).subscribe(
-                      (archiveObjs) => {
-                        // console.log('archiveObjs: ', JSON.stringify(archiveObjs || ''));
-                        let edgarArchiveFiles = this.edgarArchiveService.archiveUrlObjsToEdgarArchiveFiles(archiveObjs);
-                        if (edgarArchiveFiles) {
-                          let xbrlVReport = {edgarArchiveFiles};
-                          // console.log('xbrlVReport: ', JSON.stringify(xbrlVReport));
-                          let urlPieces = (edgarArchiveFiles[0].url || '').split('/');
-                          let xbrlVReportKey = urlPieces[urlPieces.length - 2];
-                          // console.log('xbrlVReportKey: ', xbrlVReportKey);
-                          // this.getXbrlReport(xbrlVReportKey, xbrlVReport, this.xbrlService.verbose);
-                          this.xbrlService.addParsedXbrls(xbrlVReportKey, [], xbrlVReport.edgarArchiveFiles);
-                        }
-                      },
-                      (error) => console.log(error)
-                    );
-                //   }
-                // );
-              });
-            },
-            (error) => console.log(error)
-          );
-        },
-        (error) => console.log(error)
-      );
+      this.router.navigate(['/search', value]);
     } else {
       // console.log('this.xbrlService.xbrlVReports: ', JSON.stringify(this.xbrlService.xbrlVReports));
       Object.keys(this.xbrlService.xbrlVReports).forEach((xbrlVReportKey) => {
@@ -139,6 +119,56 @@ export class HomeComponent implements OnInit {
         this.xbrlService.getXbrlReport(xbrlVReportKey, xbrlVReport, this.xbrlService.verbose);
       });
     }
+  }
+
+  public runSearch(value: string) {
+    this.edgarArchiveService.getCikInfo(value).subscribe(
+      (cikInfoObj) => {
+        this.appState.set('companyName', (cikInfoObj || {}).companyName);
+        this.appState.set('cik', (cikInfoObj || {}).cik);
+        this.edgarArchiveService.getCikArchive(this.appState.get('cik')).subscribe(
+          (cikObjs) => {
+            // console.log('cikObjs: ', JSON.stringify(cikObjs || ''));
+            cikObjs.forEach((cikObj) => {
+              // this.edgarArchiveService.getArchiveXbrlZip(cikObj.href).subscribe(
+              //   (archiveObjs) => {
+              //     let edgarArchiveFiles = this.edgarArchiveService.archiveUrlObjsToEdgarArchiveFiles(archiveObjs);
+              //     if (edgarArchiveFiles) {
+              //       let xbrlVReport = {edgarArchiveFiles};
+              //       // console.log('xbrlVReport: ', JSON.stringify(xbrlVReport));
+              //       let urlPieces = (edgarArchiveFiles[0].url || '').split('/');
+              //       let xbrlVReportKey = urlPieces[urlPieces.length - 2];
+              //       // console.log('xbrlVReportKey: ', xbrlVReportKey);
+              //       // this.getXbrlReport(xbrlVReportKey, xbrlVReport, this.xbrlService.verbose);
+              //       this.xbrlService.addParsedXbrls(xbrlVReportKey, [], xbrlVReport.edgarArchiveFiles);
+              //     }
+              //   }, (getArchiveXbrlZipError) => {
+              //     console.log('getArchiveXbrlZip error: ', getArchiveXbrlZipError);
+                  this.edgarArchiveService.getArchive(cikObj.href).subscribe(
+                    (archiveObjs) => {
+                      // console.log('archiveObjs: ', JSON.stringify(archiveObjs || ''));
+                      let edgarArchiveFiles = this.edgarArchiveService.archiveUrlObjsToEdgarArchiveFiles(archiveObjs);
+                      if (edgarArchiveFiles) {
+                        let xbrlVReport = {edgarArchiveFiles};
+                        // console.log('xbrlVReport: ', JSON.stringify(xbrlVReport));
+                        let urlPieces = (edgarArchiveFiles[0].url || '').split('/');
+                        let xbrlVReportKey = urlPieces[urlPieces.length - 2];
+                        // console.log('xbrlVReportKey: ', xbrlVReportKey);
+                        // this.getXbrlReport(xbrlVReportKey, xbrlVReport, this.xbrlService.verbose);
+                        this.xbrlService.addParsedXbrls(xbrlVReportKey, [], xbrlVReport.edgarArchiveFiles);
+                      }
+                    },
+                    (error) => console.log(error)
+                  );
+              //   }
+              // );
+            });
+          },
+          (error) => console.log(error)
+        );
+      },
+      (error) => console.log(error)
+    );
   }
 
   public clearXbrlReports() {
