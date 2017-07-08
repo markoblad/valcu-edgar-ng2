@@ -102,8 +102,10 @@ export class XbrlService {
     };
   }
 
-  public addParsedXbrls(xbrlVReportKey: string, parsedXbrls: any[] = [], edgarArchiveFiles: any[]): void {
+  public packageXbrlVReport(xbrlVReportKey: string, parsedXbrls: any[] = [], edgarArchiveFiles: any[]): XbrlVReportInterface {
     let xbrlVReport: XbrlVReportInterface = {
+      version: XbrlUtility.VERSION,
+      xbrlVReportKey,
       edgarArchiveFiles,
       xbrls: {},
       roleURIs: [],
@@ -136,11 +138,17 @@ export class XbrlService {
     xbrlVReport.contexts = ((xbrlVReport.xbrls || {}).ins || {}).contexts;
     xbrlVReport.units = ((xbrlVReport.xbrls || {}).ins || {}).units;
     xbrlVReport.status = XbrlUtility.isBlank(parsedXbrls) ? 2 : 4;
+
+    return xbrlVReport;
+  }
+
+  public addParsedXbrls(xbrlVReportKey: string, parsedXbrls: any[] = [], edgarArchiveFiles: any[]): XbrlVReportInterface {
+    let xbrlVReport = this.packageXbrlVReport(xbrlVReportKey, parsedXbrls, edgarArchiveFiles);
     if (this.xbrlVReportKeys.indexOf(xbrlVReportKey) < 0) {
       this.xbrlVReportKeys = (this.xbrlVReportKeys.concat([xbrlVReportKey])).sort((a, b) => parseInt(b.substring(10), 10) - parseInt(a.substring(10), 10));
     }
-    // console.log('this.xbrlVReportKeys: ', JSON.stringify(this.xbrlVReportKeys));
     this.xbrlVReports[xbrlVReportKey] = xbrlVReport;
+    return xbrlVReport;
   }
 
   public selectedXbrlVReportDisplayable(): any {
@@ -157,7 +165,11 @@ export class XbrlService {
     return this.edgarArchiveService.getParsedXbrls(xbrlVReport.edgarArchiveFiles, verbose).subscribe(
       (parsedXbrls) => {
         // console.log('parsedXbrls: ', JSON.stringify(parsedXbrls));
-        this.addParsedXbrls(xbrlVReportKey, parsedXbrls, xbrlVReport.edgarArchiveFiles);
+        xbrlVReport = this.addParsedXbrls(xbrlVReportKey, parsedXbrls, xbrlVReport.edgarArchiveFiles);
+        this.edgarArchiveService.postXbrlVReport(xbrlVReport).subscribe(
+          (returnObj) => {
+            console.log('postXbrlVReport returnObj: ', JSON.stringify(returnObj));
+        });
         if (XbrlUtility.isBlank(this.selectedXbrlVReportKey)) {
           this.selectXbrlVReport(xbrlVReportKey);
         } else {

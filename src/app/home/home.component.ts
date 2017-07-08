@@ -175,13 +175,12 @@ export class HomeComponent implements OnInit {
                         // console.log('archiveObjs: ', JSON.stringify(archiveObjs || ''));
                         let edgarArchiveFiles = this.edgarArchiveService.archiveUrlObjsToEdgarArchiveFiles(archiveObjs);
                         if (edgarArchiveFiles) {
-                          let xbrlVReport = {edgarArchiveFiles};
                           // console.log('xbrlVReport: ', JSON.stringify(xbrlVReport));
                           let urlPieces = (edgarArchiveFiles[0].url || '').split('/');
                           let xbrlVReportKey = urlPieces[urlPieces.length - 2];
                           // console.log('xbrlVReportKey: ', xbrlVReportKey);
                           // this.getXbrlReport(xbrlVReportKey, xbrlVReport, this.xbrlService.verbose);
-                          this.xbrlService.addParsedXbrls(xbrlVReportKey, [], xbrlVReport.edgarArchiveFiles);
+                          let xbrlVReport = this.xbrlService.addParsedXbrls(xbrlVReportKey, [], edgarArchiveFiles);
                         }
                       },
                       (error) => console.log(error)

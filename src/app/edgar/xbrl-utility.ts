@@ -19,6 +19,8 @@ export interface XbrlReportInterface {
 }
 
 export interface XbrlVReportInterface {
+  version?: string;
+  xbrlVReportKey?: string;
   edgarArchiveFiles?: any[];
   xbrls?: XbrlReportInterface;
   roleURIs?: string[];
@@ -101,6 +103,10 @@ export interface XbrlStatementInterface {
 export class XbrlUtility {
 
   // constructor() {}
+
+  public static get VERSION(): string {
+    return '0.0.1';
+  }
 
   public static get NSPREFIXES(): string[] {
     // return ['ns', 'link', 'xsd', 'xs'];

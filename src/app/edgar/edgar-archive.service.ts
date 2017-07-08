@@ -45,7 +45,9 @@ export class EdgarArchiveService {
     // Origin: 'https://valcu.co',
     // Referrer: 'https://valcu.co',
     'Content-Type': 'application/json',
-    'Accept': 'application/json'
+    'Accept': 'application/json',
+    'Access-Control-Allow-Methods': 'POST',
+    'Access-Control-Allow-Origin': 'http://localhost:3003'
 
     // 'Content-Type': '',
     // 'Access-Control-Allow-Origin:': '*',
@@ -171,6 +173,18 @@ export class EdgarArchiveService {
       }
     });
     return XbrlUtility.isBlank(edgarArchiveFiles) ? null : edgarArchiveFiles;
+  }
+
+  public postXbrlVReport(xbrlVReport): Observable<any> {
+    console.log('xbrlvreport:', JSON.stringify({data: xbrlVReport}));
+    return this.http.post(
+      `/xbrl_v_reports/`, // /${xbrlVReport.xbrlVReportKey}
+      {data: xbrlVReport},
+      {headers: this.headers}
+    )
+    .map(this.checkForError)
+    .catch((err) => Observable.throw(err))
+    .map(this.getJson);
   }
 
   private setHeaders(headers) {
