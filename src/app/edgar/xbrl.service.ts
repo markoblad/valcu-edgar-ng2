@@ -114,10 +114,11 @@ export class XbrlService {
       xbrlVStatements: {},
       description: null,
     };
+    let xbrls: XbrlReportInterface = {};
     parsedXbrls.map((parsedXbrl) => {
-      xbrlVReport.xbrls[parsedXbrl.type] = parsedXbrl;
-      if (parsedXbrl.type === 'ins') {
-        xbrlVReport.description = XbrlUtility.getXbrlVReportDescription(xbrlVReport);
+      xbrls[parsedXbrl.type] = parsedXbrl;
+      if (parsedXbrl.type === 'lab') {
+        xbrlVReport.lab = parsedXbrl;
       }
     });
     xbrlVReport.roleURIs = XbrlUtility.getXbrlsRoleURIs(parsedXbrls);
@@ -125,7 +126,7 @@ export class XbrlService {
     xbrlVReport.roleURIs.forEach((roleURI) => {
       let xbrlVStatement: XbrlVStatementInterface = {
         roleURI,
-        xbrlStatement: XbrlUtility.constructXbrlStatement(roleURI, xbrlVReport.xbrls),
+        xbrlStatement: XbrlUtility.constructXbrlStatement(roleURI, xbrls),
         xbrlStatementKeys: null,
         paredContextRefs: null,
         rectangle: null,
@@ -135,8 +136,11 @@ export class XbrlService {
       xbrlVReport.xbrlVStatements[roleURI] = xbrlVStatement;
       // console.log('after');
     });
-    xbrlVReport.contexts = ((xbrlVReport.xbrls || {}).ins || {}).contexts;
-    xbrlVReport.units = ((xbrlVReport.xbrls || {}).ins || {}).units;
+    let ins = xbrls.ins || {};
+    xbrlVReport.contexts = ins.contexts;
+    xbrlVReport.units = ins.units;
+    xbrlVReport.instances = ins.instances;
+    xbrlVReport.description = XbrlUtility.getXbrlVReportDescription(xbrlVReport);
     xbrlVReport.status = XbrlUtility.isBlank(parsedXbrls) ? 2 : 4;
 
     return xbrlVReport;
@@ -168,7 +172,7 @@ export class XbrlService {
         xbrlVReport = this.addParsedXbrls(xbrlVReportKey, parsedXbrls, xbrlVReport.edgarArchiveFiles);
         this.edgarArchiveService.postXbrlVReport(xbrlVReport).subscribe(
           (returnObj) => {
-            console.log('postXbrlVReport returnObj: ', JSON.stringify(returnObj));
+            // console.log('postXbrlVReport returnObj: ', JSON.stringify(returnObj));
         });
         if (XbrlUtility.isBlank(this.selectedXbrlVReportKey)) {
           this.selectXbrlVReport(xbrlVReportKey);
@@ -320,7 +324,7 @@ export class XbrlService {
   }
 
   public getLabel(toHref: string, role?: string): string {
-    return XbrlUtility.manageLabelBreaks(XbrlUtility.getLabel((this.selectedXbrlVReport.xbrls || {}).lab, toHref, role) || toHref);
+    return XbrlUtility.manageLabelBreaks(XbrlUtility.getLabel(this.selectedXbrlVReport.lab, toHref, role) || toHref);
   }
 
   public getXbrlVReportDescriptionByKey(xbrlVReportKey: string): string {
@@ -378,9 +382,9 @@ export class XbrlService {
       this.selectPriorXbrlVStatement(this.selectedXbrlVStatementRoleURI);
     }
     let priorItem = this.priorXbrlVStatement.rectangle[item.to];
-    console.log('priorItem: ', JSON.stringify(priorItem));
+    // console.log('priorItem: ', JSON.stringify(priorItem));
     let contextRefs = Object.keys((priorItem || {}).instances || {});
-    console.log('contextRefs: ', JSON.stringify(contextRefs));
+    // console.log('contextRefs: ', JSON.stringify(contextRefs));
     return this.displayContent((((priorItem || {}).instances || {})[contextRefs[0]] || {}).textContent || '');
   }
 

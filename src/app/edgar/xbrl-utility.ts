@@ -26,6 +26,8 @@ export interface XbrlVReportInterface {
   roleURIs?: string[];
   contexts?: any;
   units?: any;
+  instances?: any;
+  lab?: any;
   xbrlVStatements?: {};
   description?: string;
   status?: number;
@@ -689,7 +691,7 @@ export class XbrlUtility {
             if (!XbrlUtility.isBlank(footnote)) {
               instance.footnotes = instance.footnotes || [];
               instance.footnotes.push(footnote);
-              console.log('instance.footnotes: ', JSON.stringify(instance.footnotes));
+              // console.log('instance.footnotes: ', JSON.stringify(instance.footnotes));
             }
           }
         });
@@ -939,7 +941,7 @@ export class XbrlUtility {
   }
 
   public static getRoleURIDefinition(xbrlVReport, roleURI): string {
-    return (((((xbrlVReport || {}).xbrls || {}).xsd || {}).roleTypes || {})[roleURI] || {}).definition;
+    return ((xbrlVReport.xbrlVStatements[roleURI] || {}).xbrlStatement || {}).roleDefinition;
   }
 
   public static unique(array?: any[]): any[] {
@@ -1130,7 +1132,7 @@ export class XbrlUtility {
     // console.log('toHref: ', toHref);
     // console.log('to: ', to);
     // console.log('role: ', role);
-    let labels = lab.labels[to] || {};
+    let labels = (lab.labels || {})[to] || {};
     let label: any;
     if (!XbrlUtility.isBlank(role)) {
       let roleStub = XbrlUtility.getLastSlash(role);
@@ -1152,7 +1154,7 @@ export class XbrlUtility {
     // let xbrlVStatement = ((xbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {})[documentAndEntityInformationRoleURI] || {};
     // let xbrlStatementKeys = xbrlVStatement.xbrlStatementKeys || [];
     // let periodEnd = xbrlStatementKeys.find((xbrlStatementKey) => xbrlStatementKey && xbrlStatementKey.match(/PeriodEnd/i));
-    let instances = ((xbrlVReport.xbrls || {}).ins || {}).instances || {};
+    let instances = (xbrlVReport.instances || {}) || {};
     // console.log('instances: ', JSON.stringify(instances));
     let values = [];
     [

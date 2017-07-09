@@ -176,7 +176,8 @@ export class EdgarArchiveService {
   }
 
   public postXbrlVReport(xbrlVReport): Observable<any> {
-    console.log('xbrlvreport:', JSON.stringify({data: xbrlVReport}));
+    // console.log('xbrlvreport:', JSON.stringify({data: xbrlVReport}));
+    console.log('posting report');
     return this.http.post(
       `/xbrl_v_reports/`, // /${xbrlVReport.xbrlVReportKey}
       {data: xbrlVReport},
