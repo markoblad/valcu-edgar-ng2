@@ -148,10 +148,15 @@ export class HomeComponent implements OnInit {
       console.log('blank');
       return Observable.empty<Response>();
     } else {
-      return this.edgarArchiveService.getCikInfo(value).map(
+      return this.edgarArchiveService.getCachedEdgarTerm(value).map(
+      // return this.edgarArchiveService.getCikInfo(value).map(
         (cikInfoObj) => {
+          console.log('typeof cikInfoObj: ', Object.keys(cikInfoObj));
+          console.log('home cikInfoObj: ', JSON.stringify(cikInfoObj));
           this.appState.set('companyName', (cikInfoObj || {}).companyName);
           this.appState.set('cik', (cikInfoObj || {}).cik);
+          console.log('home app state: ', this.appState.get('cik'));
+          console.log('(cikInfoObj || {}).cik: ', (cikInfoObj || {}).cik);
           return this.edgarArchiveService.getCikArchive(this.appState.get('cik')).subscribe(
             (cikObjs) => {
               // console.log('cikObjs: ', JSON.stringify(cikObjs || ''));

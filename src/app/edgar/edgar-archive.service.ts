@@ -102,9 +102,46 @@ export class EdgarArchiveService {
     return `${archiveFolder.substring(0, 10)}-${archiveFolder.substring(10, 12)}-${archiveFolder.substring(12)}-xbrl.zip`;
   }
 
-  public getCikInfo(cik: string): Observable<any> {
-    let url = this.edgarProxyUrl + this.edgarCikBrowsePathStub + (cik || '').toString().trim().replace(/^\//, '').trim();
+  public getCachedEdgarTerm(term: string): Observable<any> {
+    console.log('term: ', term);
+    let url = `/edgar_terms/?term=` + (term || '').toString().trim().replace(/^\//, '').trim();
     // console.log('url: ', url);
+    return this.http.get(url)
+    .map(this.checkForError)
+    .catch((err) => Observable.throw(err))
+    .map((resp) => {
+      console.log('resp.json(): ', resp.json());
+      let obj = resp.json();
+      if (XbrlUtility.isBlank(obj)) {
+        console.log('term: ', term);
+        return this.getCikInfo(term).map(
+          (cikInfoObj) => {
+            return this.cacheEdgarTerm(term, cikInfoObj).map((cacheObj) => cacheObj);
+          }
+        );
+      } else {
+        return obj;
+      }
+    });
+  }
+
+  public cacheEdgarTerm(term: string, cikInfoObj: any): Observable<any> {
+    console.log('cacheEdgarTerm');
+    console.log('term2: ', term);
+    console.log('cikInfoObj: ', JSON.stringify(cikInfoObj));
+    return this.http.post(
+      `/edgar_terms/`, // /${xbrlVReport.xbrlVReportKey}
+      {term, cikInfoObj},
+      {headers: this.headers}
+    )
+    .map(this.checkForError)
+    .catch((err) => Observable.throw(err))
+    .map(this.getJson);
+  }
+
+  public getCikInfo(term: string): Observable<any> {
+    let url = this.edgarProxyUrl + this.edgarCikBrowsePathStub + (term || '').toString().trim().replace(/^\//, '').trim();
+    console.log('url: ', url);
     return this.http.get(url)
     .map(this.checkForError)
     .catch((err) => Observable.throw(err))
