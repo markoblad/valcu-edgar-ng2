@@ -170,10 +170,10 @@ export class XbrlService {
       (parsedXbrls) => {
         // console.log('parsedXbrls: ', JSON.stringify(parsedXbrls));
         xbrlVReport = this.addParsedXbrls(xbrlVReportKey, parsedXbrls, xbrlVReport.edgarArchiveFiles);
-        this.edgarArchiveService.postXbrlVReport(xbrlVReport).subscribe(
-          (returnObj) => {
-            // console.log('postXbrlVReport returnObj: ', JSON.stringify(returnObj));
-        });
+        // this.edgarArchiveService.postXbrlVReport(xbrlVReport).subscribe(
+        //   (returnObj) => {
+        //     // console.log('postXbrlVReport returnObj: ', JSON.stringify(returnObj));
+        // });
         if (XbrlUtility.isBlank(this.selectedXbrlVReportKey)) {
           this.selectXbrlVReport(xbrlVReportKey);
         } else {

@@ -4,6 +4,7 @@ import { Observable } from 'rxjs/Observable';
 import 'rxjs/Rx';
 import 'rxjs/add/observable/throw';
 import 'rxjs/add/observable/forkJoin';
+import 'rxjs/add/observable/of';
 import * as JSZipUtils from 'jszip-utils';
 import * as JSZip from 'jszip';
 import { XbrlUtility } from '../edgar';
@@ -67,6 +68,34 @@ export class EdgarArchiveService {
     .map(this.getJson);
   }
 
+  public getCachedCikArchive(cik: string): Observable<any> {
+    return this.getCikArchive(cik)
+    .flatMap((cikArchiveUrlObjs) => {
+      return this.cacheCikArchive(cik, cikArchiveUrlObjs);
+    })
+    .map(this.getJson);
+  }
+
+  public getCikArchiveCache(cik: string): Observable<any> {
+    let url = `/edgar_archives/?cik=` + (cik || '').toString().trim().replace(/^\//, '').trim();
+    return this.http.get(url)
+    .map(this.checkForError)
+    .catch((err) => Observable.throw(err))
+    .map(this.getJson);
+  }
+
+  public cacheCikArchive(cik: string, cikArchiveUrlObjs: any): Observable<any> {
+    console.log('cacheCikArchive');
+    return this.http.post(
+      `/edgar_archives/`, // /${xbrlVReport.xbrlVReportKey}
+      {cik, cikArchiveUrlObjs},
+      {headers: this.headers}
+    )
+    .map(this.checkForError)
+    .catch((err) => Observable.throw(err))
+    .map(this.getJson);
+  }
+
   public getCikArchive(cik: string): Observable<any> {
     let path = this.edgarArchivePathStub + (cik || '').toString().trim().replace(/^0+/, '').trim();
     // console.log('path: ', path);
@@ -104,31 +133,38 @@ export class EdgarArchiveService {
 
   public getCachedEdgarTerm(term: string): Observable<any> {
     console.log('term: ', term);
+    let cached: boolean = false;
+    return this.getEdgarTermCache(term)
+    .flatMap((obj) => {
+      if (XbrlUtility.isBlank(obj)) {
+        return this.getCikInfo(term);
+      } else {
+        console.log('cached');
+        cached = true;
+        return Observable.of(obj);
+      }
+    })
+    .flatMap((obj2) => {
+      if (!cached) {
+        this.cacheEdgarTerm(term, obj2).subscribe();
+      }
+      return Observable.of(obj2);
+    })
+    .map(this.getJson);
+  }
+
+  public getEdgarTermCache(term: string): Observable<any> {
     let url = `/edgar_terms/?term=` + (term || '').toString().trim().replace(/^\//, '').trim();
-    // console.log('url: ', url);
     return this.http.get(url)
     .map(this.checkForError)
     .catch((err) => Observable.throw(err))
-    .map((resp) => {
-      console.log('resp.json(): ', resp.json());
-      let obj = resp.json();
-      if (XbrlUtility.isBlank(obj)) {
-        console.log('term: ', term);
-        return this.getCikInfo(term).map(
-          (cikInfoObj) => {
-            return this.cacheEdgarTerm(term, cikInfoObj).map((cacheObj) => cacheObj);
-          }
-        );
-      } else {
-        return obj;
-      }
-    });
+    .map(this.getJson);
   }
 
   public cacheEdgarTerm(term: string, cikInfoObj: any): Observable<any> {
     console.log('cacheEdgarTerm');
     console.log('term2: ', term);
-    console.log('cikInfoObj: ', JSON.stringify(cikInfoObj));
+    // console.log('cikInfoObj: ', JSON.stringify(cikInfoObj));
     return this.http.post(
       `/edgar_terms/`, // /${xbrlVReport.xbrlVReportKey}
       {term, cikInfoObj},
@@ -191,18 +227,19 @@ export class EdgarArchiveService {
     (archiveUrlObjs || []).filter((archiveUrlObj) => archiveUrlObj.href.match(/\.(?:xsd)|(?:xml)$/))
     .forEach((archiveUrlObj) => {
       let edgarArchiveFile = {url: archiveUrlObj.href, type: null};
-      if (archiveUrlObj.href.match(/\.xsd$/)) {
+      let href = archiveUrlObj.href;
+      if (href.match(/\.xsd$/)) {
         edgarArchiveFile.type = 'xsd';
-      } else if (archiveUrlObj.href.match(/\_pre\.xml$/)) {
+      } else if (href.match(/\_pre\.xml$/)) {
         edgarArchiveFile.type = 'pre';
-      } else if (archiveUrlObj.href.match(/\_def\.xml$/)) {
+      } else if (href.match(/\_def\.xml$/)) {
         edgarArchiveFile.type = 'def';
-      } else if (archiveUrlObj.href.match(/\_cal\.xml$/)) {
+      } else if (href.match(/\_cal\.xml$/)) {
         edgarArchiveFile.type = 'cal';
-      } else if (archiveUrlObj.href.match(/\_lab\.xml$/)) {
+      } else if (href.match(/\_lab\.xml$/)) {
         edgarArchiveFile.type = 'lab';
-      } else if (archiveUrlObj.href.match(/\-\d{8}\.xml$/) && !archiveUrlObj.href.match(/FilingSummary\.xml$/)) {
-        console.log('archiveUrlObj.href: ', archiveUrlObj.href);
+      } else if (href.match(/\-\d{8}\.xml$/) && !href.match(/FilingSummary\.xml$/)) {
+        console.log('archiveUrlObj.href: ', href);
         edgarArchiveFile.type = 'ins';
       }
       if (!XbrlUtility.isBlank(edgarArchiveFile.type)) {
@@ -231,7 +268,7 @@ export class EdgarArchiveService {
   }
 
   private getJson(resp: Response) {
-    return resp.json();
+    return resp instanceof Response ? resp.json() : resp;
   }
 
   private toString(resp: Response) {
@@ -263,7 +300,18 @@ export class EdgarArchiveService {
     // console.log(txt);
     let doc = new DOMParser().parseFromString(txt, 'text/html');
     let selection = (<Element> doc.lastChild);
-    let urlObjs = XbrlUtility.getNodeTagsAtts(selection, 'a', null, ['href'], true, (objs) => objs.filter((obj) => (obj.href || '').indexOf(path) >= 0), null, null, null, null);
+    let urlObjs = XbrlUtility.getNodeTagsAtts(
+      selection,
+      'a',
+      null,
+      ['href'],
+      true,
+      (objs) => objs.filter((obj) => (obj.href || '').indexOf(path) >= 0),
+      null,
+      null,
+      null,
+      null
+    );
     return urlObjs;
   }
 
@@ -280,8 +328,8 @@ export class EdgarArchiveService {
     let selection = (<Element> doc.lastChild);
     // console.log('selection: ', JSON.stringify(selection));
     // let content = selection.querySelectorAll('.companyInfo')[0].textContent;
-    let companyName = (selection.querySelectorAll('.companyName')[0].firstChild.textContent || '').trim();
-    let cik = (selection.querySelectorAll('.companyName a')[0].firstChild.textContent || '').trim().substring(0, 10);
+    let companyName = (((selection.querySelectorAll('.companyName')[0] || {}).firstChild || {}).textContent || '').trim();
+    let cik = (((selection.querySelectorAll('.companyName a')[0] || {}).firstChild || {}).textContent || '').trim().substring(0, 10);
 
     console.log('content: ', companyName);
     return {companyName, cik};
