@@ -15,8 +15,10 @@ export class XbrlService {
 
   public selectedXbrlVReportKey: string;
   public selectedXbrlVReport: XbrlVReportInterface;
+  public selectingXbrlVReport: boolean = false;
   public selectedXbrlVStatementRoleURI: string;
   public selectedXbrlVStatement: XbrlVStatementInterface;
+  public selectingXbrlVStatement: boolean = false;
 
   public priorXbrlVReportKey: string;
   public priorXbrlVReport: XbrlVReportInterface;
@@ -170,15 +172,16 @@ export class XbrlService {
       (parsedXbrls) => {
         // console.log('parsedXbrls: ', JSON.stringify(parsedXbrls));
         xbrlVReport = this.addParsedXbrls(xbrlVReportKey, parsedXbrls, xbrlVReport.edgarArchiveFiles);
-        // this.edgarArchiveService.postXbrlVReport(xbrlVReport).subscribe(
-        //   (returnObj) => {
-        //     // console.log('postXbrlVReport returnObj: ', JSON.stringify(returnObj));
-        // });
+        this.edgarArchiveService.postXbrlVReport(xbrlVReport).subscribe(
+          (returnObj) => {
+            // console.log('postXbrlVReport returnObj: ', JSON.stringify(returnObj));
+        });
         if (XbrlUtility.isBlank(this.selectedXbrlVReportKey)) {
           this.selectXbrlVReport(xbrlVReportKey);
         } else {
           // this.selectDefaultXbrlVStatement();
         }
+        this.selectingXbrlVReport = false;
 
         // this.xbrlStatements.filter((xbrlStatement) => !XbrlUtility.isBlank(xbrlStatement.calculationLinkTrees)).map((xbrlStatement) => {
         //   let newMultiData = [];
@@ -225,6 +228,7 @@ export class XbrlService {
   }
 
   public selectXbrlVReport(xbrlVReportKey): void {
+    this.selectingXbrlVReport = true;
     let selectedXbrlVReport = (this.xbrlVReports || {})[xbrlVReportKey] || {};
     if (!selectedXbrlVReport.status || selectedXbrlVReport.status < 4) {
       this.selectedXbrlVReportKey = null;
@@ -237,6 +241,7 @@ export class XbrlService {
       // if (XbrlUtility.isBlank(this.selectedXbrlVStatementRoleURI) ||
         // !(Object.keys((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {}).indexOf(this.selectedXbrlVStatementRoleURI) >= 0)) {
       this.selectDefaultXbrlVStatement();
+      this.selectingXbrlVReport = false;
       // }
     }
   }
@@ -252,12 +257,14 @@ export class XbrlService {
   }
 
   public selectXbrlVStatement(xbrlVStatementRoleURI): void {
+    this.selectingXbrlVStatement = true;
     XbrlUtility.rectangularizeXbrlVStatement(
       ((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {})[xbrlVStatementRoleURI],
       (this.selectedXbrlVReport || {contexts: {}}).contexts
     );
     this.selectedXbrlVStatement = ((this.selectedXbrlVReport || {xbrlVStatements: {}}).xbrlVStatements || {})[xbrlVStatementRoleURI] || {};
     this.selectedXbrlVStatementRoleURI = xbrlVStatementRoleURI;
+    this.selectingXbrlVStatement = false;
   }
 
   public selectPriorXbrlVStatement(xbrlVStatementRoleURI): void {

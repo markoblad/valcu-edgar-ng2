@@ -22,7 +22,12 @@ import { Title } from './title';
 import { XLargeDirective } from './x-large';
 import { XbrlUtility } from '../edgar';
 import { EdgarArchiveService } from '../edgar';
-import { XbrlVReportInterface, XbrlVStatementInterface, XbrlReportInterface, XbrlStatementInterface } from '../edgar';
+import {
+  XbrlVReportInterface,
+  XbrlVStatementInterface,
+  XbrlReportInterface,
+  XbrlStatementInterface
+} from '../edgar';
 // import * as NlpCompromise from 'compromise';
 import { XbrlService } from '../edgar';
 import { VChartComponent } from '../v-chart';
@@ -57,7 +62,8 @@ export class HomeComponent implements OnInit {
   public url = '/';
   public isCollapsed = true;
 
-  public processing = false;
+  public searching = false;
+  public rectangularizing = false;
 
   public localState = { value: '1371128' };
   public edgarContents: any = [];
@@ -80,74 +86,37 @@ export class HomeComponent implements OnInit {
     public xbrlService: XbrlService,
     private router: Router,
     private route: ActivatedRoute,
-  ) {
-
-    // router.events.subscribe((val) => {
-    //   if (val instanceof NavigationEnd) {
-    //     console.log('hello `router event`');
-    //     let value = this.route.params['_value']['id'];
-    //     this.runSearch(value);
-    //   }
-    // });
-  }
+  ) {}
 
 // https://www.sec.gov/Archives/edgar/data/1371128/000121390017002526/bsrc-20161231.xml
   public ngOnInit() {
     console.log('hello `Home` component');
     console.log('this.route.params: ', JSON.stringify(this.route.params));
-    // let id = +this.route.snapshot.params['id'];
-    // this.runSearch(id).then((obs) => this.processing = false);
-    // this.route.params
-    // .switchMap((params: Params) => { this.processing = true; return this.runSearch(params['id']); })
-    // .subscribe((obs) => this.processing = false);
 
     this.route.params
     .switchMap((params: Params): Observable<any> => {
-      this.processing = true;
       this.id = params['id'];
-      return this.runSearch(this.id);
+      if (XbrlUtility.isBlank(this.id)) {
+        this.searching = false;
+        return Observable.empty<Response>();
+      } else {
+        return this.runSearch(this.id);
+      }
     })
-    .subscribe((edgarArchiveFiles) => {
-      // this.processing = false;
-      // console.log('searchSubscription instanceof Observable: ', searchSubscription instanceof Observable);
-      // console.log('typeof searchSubscription: ', typeof searchSubscription);
-      // searchSubscription.subscribe((edgarArchiveFiles) => {
-        if (edgarArchiveFiles) {
-          // console.log('xbrlVReport: ', JSON.stringify(xbrlVReport));
-          let urlPieces = (edgarArchiveFiles[0].url || '').split('/');
-          let xbrlVReportKey = urlPieces[urlPieces.length - 2];
-          // console.log('xbrlVReportKey: ', xbrlVReportKey);
-          // this.getXbrlReport(xbrlVReportKey, xbrlVReport, this.xbrlService.verbose);
-          let xbrlVReport = this.xbrlService.addParsedXbrls(xbrlVReportKey, [], edgarArchiveFiles);
-        }
-
-      // });
+    .flatMap((edgarArchiveFiles) => {
+      if (edgarArchiveFiles) {
+        // console.log('xbrlVReport: ', JSON.stringify(xbrlVReport));
+        let urlPieces = (edgarArchiveFiles[0].url || '').split('/');
+        let xbrlVReportKey = urlPieces[urlPieces.length - 2];
+        // console.log('xbrlVReportKey: ', xbrlVReportKey);
+        // this.getXbrlReport(xbrlVReportKey, xbrlVReport, this.xbrlService.verbose);
+        let xbrlVReport = this.xbrlService.addParsedXbrls(xbrlVReportKey, [], edgarArchiveFiles);
+      }
+      return Observable.of([]);
+    })
+    .subscribe((dummy) => {
+      this.searching = false;
     });
-
-    // this.searchTerms
-    // .switchMap(term => term   // switch to new observable each time the term changes
-    //   // return the http search observable
-    //   ? this.heroSearchService.search(term)
-    //   // or the observable of empty heroes if there was no search term
-    //   : Observable.of<Hero[]>([]))
-    // .catch(error => {
-    //   // TODO: add real error handling
-    //   console.log(error);
-    //   return Observable.of<Hero[]>([]);
-    // });
-    // let value = this.route.params['_value']['id'];
-    // this.runSearch(value);
-
-    // .switchMap((params: Params) => {
-    //   if (XbrlUtility.isBlank(params['id'])) {
-    //     console.log('params: ', JSON.stringify(params));
-    //   } else {
-    //     console.log('search params: ', JSON.stringify(params));
-    //     return this.runSearch(params['id']);
-    //   }
-    // });
-    // .subscribe((a?: any) => console.log('made it'));
-      // console.log(this.route.params['id']);
 
     this.parsed = nlp('Now this is a story all about how..');
     this.parsedOut = this.parsed.normalize().out('terms');
@@ -181,11 +150,12 @@ export class HomeComponent implements OnInit {
   }
 
   public runSearch(value: string): Observable<any> {
+    this.searching = true;
     this.clearXbrlReports();
     this.appState.set('searchTerm', value);
     this.localState.value = '';
     if (XbrlUtility.isBlank(value)) {
-      console.log('blank');
+      // console.log('blank');
       return Observable.empty<Response>();
     } else {
       return this.edgarArchiveService.getCachedEdgarTerm(value)
@@ -193,8 +163,8 @@ export class HomeComponent implements OnInit {
         this.appState.set('companyName', (cikInfoObj || {}).companyName);
         this.appState.set('cik', (cikInfoObj || {}).cik);
         console.log('home app state: ', this.appState.get('cik'));
-        console.log('(cikInfoObj || {}).cik: ', (cikInfoObj || {}).cik);
-        return this.edgarArchiveService.getCikArchive(this.appState.get('cik'));
+        // console.log('(cikInfoObj || {}).cik: ', (cikInfoObj || {}).cik);
+        return this.edgarArchiveService.getCachedCikArchive(this.appState.get('cik'));
       })
       .mergeAll()
       .mergeMap((cikObj) => {
@@ -210,8 +180,13 @@ export class HomeComponent implements OnInit {
         //     }
         //   }, (getArchiveXbrlZipError) => {
         console.log('cikObj.href: ', cikObj.href);
-        return this.edgarArchiveService.getArchive(cikObj.href);
-        // return this.edgarArchiveService.getCachedCikArchive(cikObj.href);
+        if (cikObj.hasOwnProperty('hasXbrl') && cikObj.hasXbrl === false) {
+          return Observable.of([]);
+        } else if (cikObj.hasXbrl && !XbrlUtility.isBlank(cikObj.edgarArchiveFiles)) {
+          return Observable.of(cikObj.edgarArchiveFiles);
+        } else {
+          return this.edgarArchiveService.getCachedArchive(cikObj.href);
+        }
       }).flatMap((archiveObjs) => {
         // console.log('archiveObjs: ', JSON.stringify(archiveObjs || ''));
         return Observable.of(this.edgarArchiveService.archiveUrlObjsToEdgarArchiveFiles(archiveObjs));

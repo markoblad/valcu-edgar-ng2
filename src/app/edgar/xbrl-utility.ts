@@ -978,7 +978,7 @@ export class XbrlUtility {
 
   public static getHrefAnchor(href): string { let pieces = (href || '').split('#'); return pieces[pieces.length - 1]; }
 
-  public static getLastSlash(href): string { let pieces = (href || '').split('/'); return pieces[pieces.length - 1]; }
+  public static getLastSlash(href): string { let pieces = (href || '').trim().replace(/\/$/, '').split('/'); return pieces[pieces.length - 1]; }
 
   public static manageLabelBreaks(str): string {
     return (XbrlUtility.isBlank(str) ? '' : str).toString().replace(/[ -]/g, (m, i) => (i % 80 > 60) ? m : (m.match(/ /) ? '\u00a0' : '\u2011'));

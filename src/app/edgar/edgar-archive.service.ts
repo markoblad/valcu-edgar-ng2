@@ -69,11 +69,34 @@ export class EdgarArchiveService {
   }
 
   public getCachedCikArchive(cik: string): Observable<any> {
+    let unscopedCikArchiveObj = {};
     return this.getCikArchive(cik)
     .flatMap((cikArchiveUrlObjs) => {
-      return this.cacheCikArchive(cik, cikArchiveUrlObjs);
+      cikArchiveUrlObjs.forEach((cikArchiveUrlObj) => {
+        unscopedCikArchiveObj[XbrlUtility.getLastSlash(cikArchiveUrlObj.href)] = cikArchiveUrlObj;
+      });
+      return this.getCikArchiveCache(cik);
     })
-    .map(this.getJson);
+    .map(this.getJson)
+    .map((cikArchiveCache) => {
+      // console.log('JSON.stringify(cikArchiveCache): ', JSON.stringify(cikArchiveCache));
+      let edgarArchiveFileObj = cikArchiveCache.edgarArchiveFileObj;
+      cikArchiveCache.xbrl.forEach((cikArchiveObj) => {
+        let archive = cikArchiveObj.archive;
+        let obj = unscopedCikArchiveObj[archive];
+        if (obj) {
+          obj.hasXbrl = cikArchiveObj.has_xbrl;
+          obj.edgarArchiveFiles = edgarArchiveFileObj[archive];
+        }
+      });
+      cikArchiveCache.notXbrl.forEach((cikArchiveObj) => {
+        let obj = unscopedCikArchiveObj[cikArchiveObj.archive];
+        if (obj) {
+          obj.hasXbrl = cikArchiveObj.has_xbrl;
+        }
+      });
+      return Object.keys(unscopedCikArchiveObj).map((key) => unscopedCikArchiveObj[key]);
+    });
   }
 
   public getCikArchiveCache(cik: string): Observable<any> {
@@ -87,7 +110,7 @@ export class EdgarArchiveService {
   public cacheCikArchive(cik: string, cikArchiveUrlObjs: any): Observable<any> {
     console.log('cacheCikArchive');
     return this.http.post(
-      `/edgar_archives/`, // /${xbrlVReport.xbrlVReportKey}
+      `/edgar_archives/`,
       {cik, cikArchiveUrlObjs},
       {headers: this.headers}
     )
@@ -105,6 +128,55 @@ export class EdgarArchiveService {
     .map(this.checkForError)
     .catch((err) => Observable.throw(err))
     .map((resp) => this.toArchiveUrlObjs(resp, path));
+  }
+
+  public getCachedArchive(archivePath: string): Observable<any> {
+    let unscopedArchiveObj = {};
+    return this.getArchive(archivePath)
+    .flatMap((archiveUrlObjs) => {
+      // console.log('JSON.stringify(archiveUrlObjs): ', JSON.stringify(archiveUrlObjs));
+      archiveUrlObjs.forEach((archiveUrlObj) => {
+        unscopedArchiveObj[XbrlUtility.getLastSlash(archiveUrlObj.href)] = archiveUrlObj;
+      });
+      this.cacheArchive(archivePath, archiveUrlObjs).subscribe();
+      // return this.getArchiveCache(archivePath);
+      return Observable.of(archiveUrlObjs);
+
+    })
+    .map(this.getJson);
+    // .map((archiveCache) => {
+    //   console.log('JSON.stringify(archiveCache): ', JSON.stringify(archiveCache));
+    //   // archiveCache.forEach((archiveObj) => {
+    //   //   let obj = unscopedArchiveObj[archiveObj.archive];
+    //   //   if (obj) {
+    //   //     obj.hasXbrl = archiveObj.has_xbrl;
+    //   //   }
+    //   // });
+    //   return Object.keys(unscopedArchiveObj).map((key) => unscopedArchiveObj[key]);
+    // });
+  }
+
+  public getArchiveCache(archivePath: string): Observable<any> {
+    let archivePathPieces = (archivePath || '').toString().trim().replace(/^\//, '').trim().split('/');
+    // let cik = archivePathPieces[archivePathPieces.length - 2];
+    let archive = archivePathPieces[archivePathPieces.length - 1];
+    let url = `/edgar_archive_files/?archive=` + archive;
+    return this.http.get(url)
+    .map(this.checkForError)
+    .catch((err) => Observable.throw(err))
+    .map(this.getJson);
+  }
+
+  public cacheArchive(archivePath: string, archiveUrlObjs: any): Observable<any> {
+    console.log('cacheArchive');
+    return this.http.post(
+      `/edgar_archives/`,
+      {archivePath, archiveUrlObjs},
+      {headers: this.headers}
+    )
+    .map(this.checkForError)
+    .catch((err) => Observable.throw(err))
+    .map(this.getJson);
   }
 
   public getArchive(archivePath: string): Observable<any> {
@@ -224,7 +296,15 @@ export class EdgarArchiveService {
 
   public archiveUrlObjsToEdgarArchiveFiles(archiveUrlObjs): any {
     let edgarArchiveFiles = [];
-    (archiveUrlObjs || []).filter((archiveUrlObj) => archiveUrlObj.href.match(/\.(?:xsd)|(?:xml)$/))
+    (archiveUrlObjs || [])
+    .map((archiveUrlObj) => {
+      if (!archiveUrlObj.href) {
+        archiveUrlObj.href = this.edgarArchivePathStub + (archiveUrlObj.cik || '') + '/' +
+        (archiveUrlObj.archive || '') + '/' + (archiveUrlObj.file_name || '');
+      }
+      return archiveUrlObj;
+    })
+    .filter((archiveUrlObj) => archiveUrlObj.href.match(/\.(?:xsd)|(?:xml)$/))
     .forEach((archiveUrlObj) => {
       let edgarArchiveFile = {url: archiveUrlObj.href, type: null};
       let href = archiveUrlObj.href;
