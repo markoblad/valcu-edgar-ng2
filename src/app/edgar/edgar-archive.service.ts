@@ -276,6 +276,45 @@ export class EdgarArchiveService {
     return Observable.forkJoin(observableBatch);
   }
 
+  public getXbrlVReport(xbrlVReportKey: string): Observable<any> {
+    return this.getXbrlVReportCache(xbrlVReportKey)
+    .flatMap((json) => {
+      console.log('json: ', JSON.stringify(json));
+      if (XbrlUtility.isBlank(json)) {
+        return Observable.of([]);
+      } else {
+        return this.getXbrlVReportZip((json || {}).url);
+      }
+    });
+  }
+
+  public getXbrlVReportZip(url: string): Observable<any> {
+    return this.http.get(
+      url,
+      {headers: new Headers({
+        // 'Content-Type': 'application/javascript',
+        'Content-Type': 'application/json',
+        // 'Accept': 'application/json',
+        // 'Accept-Encoding': 'gzip',
+        'Content-Encoding': 'gzip',
+        // 'Content-Encoding': 'application/x-gzip',
+        // 'Content-Encoding': 'application/gzip',
+      })}
+    )
+    .map(this.checkForError)
+    .catch((err) => Observable.throw(err))
+    .map(this.getJson);
+  }
+
+  public getXbrlVReportCache(xbrlVReportKey: string): Observable<any> {
+    console.log('xbrlVReportKey: ', xbrlVReportKey);
+    let url = `/xbrl_v_reports/?archive_key=` + (xbrlVReportKey || '').toString().trim().replace(/^\//, '').trim();
+    return this.http.get(url)
+    .map(this.checkForError)
+    .catch((err) => Observable.throw(err))
+    .map(this.getJson);
+  }
+
   public post(path, body): Observable<any> {
     return this.http.post(
       `${this.edgarProxyUrl}${this.edgarArchivePathStub}${path}`,
@@ -347,7 +386,15 @@ export class EdgarArchiveService {
     .forEach((header) => this.headers.set(header, headers[header]));
   }
 
+  private unzip(resp: Response) {
+    return resp instanceof Response ? resp.json() : resp;
+  }
+
   private getJson(resp: Response) {
+//     if (!(resp instanceof Response)) {
+// console.log('json resp' + JSON.stringify(resp));
+//     }
+// {"_body":"...","status":200,"ok":true,"statusText":"OK","headers":{"Last-Modified":["Fri"," 28 Jul 2017 11:33:53 GMT"],"Content-Type":["application/gzip"],"Cache-Control":["public"," max-age=31536000"]},"type":2,"url":"https://s3.amazonaws.com/valcu-edgar-api-dev/uploads/xbrl_v_report/file_store/6d253f54-0764-48f0-9c38-737e162badf6/xvr.json?X-Amz-Expires=600&X-Amz-Date=20170728T120219Z&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAJTNLNY5L4PEHWXWQ/20170728/us-east-1/s3/aws4_request&X-Amz-SignedHeaders=host&X-Amz-Signature=be9800cfcfaeedbfab51c37678ea6938f60199203b765339a2bb2abe2bed73d7"}
     return resp instanceof Response ? resp.json() : resp;
   }
 

@@ -143,6 +143,7 @@ export class XbrlService {
     xbrlVReport.units = ins.units;
     xbrlVReport.instances = ins.instances;
     xbrlVReport.description = XbrlUtility.getXbrlVReportDescription(xbrlVReport);
+    console.log('xbrlVReport.description: ', xbrlVReport.description);
     xbrlVReport.status = XbrlUtility.isBlank(parsedXbrls) ? 2 : 4;
 
     return xbrlVReport;
@@ -150,6 +151,11 @@ export class XbrlService {
 
   public addParsedXbrls(xbrlVReportKey: string, parsedXbrls: any[] = [], edgarArchiveFiles: any[]): XbrlVReportInterface {
     let xbrlVReport = this.packageXbrlVReport(xbrlVReportKey, parsedXbrls, edgarArchiveFiles);
+    return this.addXbrlVReport(xbrlVReport, xbrlVReportKey);
+  }
+
+  public addXbrlVReport(xbrlVReport: XbrlVReportInterface, xbrlVReportKey?: string): XbrlVReportInterface {
+    xbrlVReportKey = xbrlVReportKey || (xbrlVReport || {}).xbrlVReportKey;
     if (this.xbrlVReportKeys.indexOf(xbrlVReportKey) < 0) {
       this.xbrlVReportKeys = (this.xbrlVReportKeys.concat([xbrlVReportKey])).sort((a, b) => parseInt(b.substring(10), 10) - parseInt(a.substring(10), 10));
     }
@@ -168,48 +174,65 @@ export class XbrlService {
   }
 
   public getXbrlReport(xbrlVReportKey, xbrlVReport, verbose?: boolean) {
-    return this.edgarArchiveService.getParsedXbrls(xbrlVReport.edgarArchiveFiles, verbose).subscribe(
-      (parsedXbrls) => {
-        // console.log('parsedXbrls: ', JSON.stringify(parsedXbrls));
-        xbrlVReport = this.addParsedXbrls(xbrlVReportKey, parsedXbrls, xbrlVReport.edgarArchiveFiles);
-        this.edgarArchiveService.postXbrlVReport(xbrlVReport).subscribe(
-          (returnObj) => {
-            // console.log('postXbrlVReport returnObj: ', JSON.stringify(returnObj));
-        });
+    return this.edgarArchiveService.getXbrlVReport(xbrlVReportKey)
+    .subscribe((cachedXbrlVReport) => {
+      if (XbrlUtility.isBlank(cachedXbrlVReport)) {
+        console.log('cachedXbrlVReport is blank');
+        return this.edgarArchiveService.getParsedXbrls(xbrlVReport.edgarArchiveFiles, verbose).subscribe(
+          (parsedXbrls) => {
+            // console.log('parsedXbrls: ', JSON.stringify(parsedXbrls));
+            xbrlVReport = this.addParsedXbrls(xbrlVReportKey, parsedXbrls, xbrlVReport.edgarArchiveFiles);
+            console.log('getXbrlReport xbrlVReport.description: ', xbrlVReport.description);
+            this.edgarArchiveService.postXbrlVReport(xbrlVReport).subscribe(
+              (returnObj) => {
+                // console.log('postXbrlVReport returnObj: ', JSON.stringify(returnObj));
+            });
+            if (XbrlUtility.isBlank(this.selectedXbrlVReportKey)) {
+                this.selectXbrlVReport(xbrlVReportKey);
+            } else {
+              // this.selectDefaultXbrlVStatement();
+            }
+            this.selectingXbrlVReport = false;
+          },
+          (error) => console.log(error)
+        );
+      } else {
+        xbrlVReport = this.addXbrlVReport(cachedXbrlVReport, xbrlVReportKey);
         if (XbrlUtility.isBlank(this.selectedXbrlVReportKey)) {
           this.selectXbrlVReport(xbrlVReportKey);
         } else {
           // this.selectDefaultXbrlVStatement();
         }
         this.selectingXbrlVReport = false;
+        return Observable.of(xbrlVReport);
+      }
 
-        // this.xbrlStatements.filter((xbrlStatement) => !XbrlUtility.isBlank(xbrlStatement.calculationLinkTrees)).map((xbrlStatement) => {
-        //   let newMultiData = [];
-        //   let newSingleData = [];
-        //   xbrlStatement.calculationLinkTrees.map((calculationLinkTree) => {
-        //     // console.log('Object.keys(calculationLinkTree): ', JSON.stringify(Object.keys(calculationLinkTree)));
-        //     let rootKey = Object.keys(calculationLinkTree)[0];
-        //     let root = calculationLinkTree[rootKey] || {};
-        //     let branch = root.branch || {};
-        //     let branchesKeys = Object.keys(branch) || [];
-        //     let series = branchesKeys.map((branchesKey) => { return {
-        //       name: (((branch[branchesKey] || {}).instances || {}).Context_As_Of_31_Dec_2015T00_00_00_TO_31_Dec_2015T00_00_00 || {}).localName || '',
-        //       value: parseInt((((branch[branchesKey] || {}).instances || {}).Context_As_Of_31_Dec_2015T00_00_00_TO_31_Dec_2015T00_00_00 || {}).textContent || 0, 10)
-        //     }; });
-        //     newSingleData = newSingleData.concat(series);
-        //     newMultiData.push({name: rootKey, series});
-        //   });
-        //   // console.log('newMulti: ', JSON.stringify(newMultiData));
-        //   if (!XbrlUtility.isBlank(newSingleData)) {
-        //     this.singleDatas.push(newSingleData);
-        //   }
-        //   if (!XbrlUtility.isBlank(newMultiData)) {
-        //     this.multiDatas.push(newMultiData);
-        //   }
-        // });
-      },
-      (error) => console.log(error)
-    );
+      // this.xbrlStatements.filter((xbrlStatement) => !XbrlUtility.isBlank(xbrlStatement.calculationLinkTrees)).map((xbrlStatement) => {
+      //   let newMultiData = [];
+      //   let newSingleData = [];
+      //   xbrlStatement.calculationLinkTrees.map((calculationLinkTree) => {
+      //     // console.log('Object.keys(calculationLinkTree): ', JSON.stringify(Object.keys(calculationLinkTree)));
+      //     let rootKey = Object.keys(calculationLinkTree)[0];
+      //     let root = calculationLinkTree[rootKey] || {};
+      //     let branch = root.branch || {};
+      //     let branchesKeys = Object.keys(branch) || [];
+      //     let series = branchesKeys.map((branchesKey) => { return {
+      //       name: (((branch[branchesKey] || {}).instances || {}).Context_As_Of_31_Dec_2015T00_00_00_TO_31_Dec_2015T00_00_00 || {}).localName || '',
+      //       value: parseInt((((branch[branchesKey] || {}).instances || {}).Context_As_Of_31_Dec_2015T00_00_00_TO_31_Dec_2015T00_00_00 || {}).textContent || 0, 10)
+      //     }; });
+      //     newSingleData = newSingleData.concat(series);
+      //     newMultiData.push({name: rootKey, series});
+      //   });
+      //   // console.log('newMulti: ', JSON.stringify(newMultiData));
+      //   if (!XbrlUtility.isBlank(newSingleData)) {
+      //     this.singleDatas.push(newSingleData);
+      //   }
+      //   if (!XbrlUtility.isBlank(newMultiData)) {
+      //     this.multiDatas.push(newMultiData);
+      //   }
+      // });
+
+    });
   }
 
   public clearXbrlReports() {
