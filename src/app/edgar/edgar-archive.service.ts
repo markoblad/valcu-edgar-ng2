@@ -87,13 +87,18 @@ export class EdgarArchiveService {
         if (obj) {
           obj.hasXbrl = cikArchiveObj.has_xbrl;
           obj.edgarArchiveFiles = edgarArchiveFileObj[archive];
+          console.log('cikArchiveObj: ', JSON.stringify(cikArchiveObj));
+          obj.description = cikArchiveObj.description;
         }
+        unscopedCikArchiveObj[archive] = obj;
       });
       cikArchiveCache.notXbrl.forEach((cikArchiveObj) => {
-        let obj = unscopedCikArchiveObj[cikArchiveObj.archive];
+        let archive = cikArchiveObj.archive;
+        let obj = unscopedCikArchiveObj[archive];
         if (obj) {
           obj.hasXbrl = cikArchiveObj.has_xbrl;
         }
+        unscopedCikArchiveObj[archive] = obj;
       });
       return Object.keys(unscopedCikArchiveObj).map((key) => unscopedCikArchiveObj[key]);
     });
@@ -128,6 +133,14 @@ export class EdgarArchiveService {
     .map(this.checkForError)
     .catch((err) => Observable.throw(err))
     .map((resp) => this.toArchiveUrlObjs(resp, path));
+  }
+
+  public addCachedArchiveToCikObj(cikObj: any): Observable<any> {
+    return this.getCachedArchive(cikObj.href)
+    .flatMap((archiveObjs) => {
+      cikObj.edgarArchiveFiles = archiveObjs;
+      return Observable.of(cikObj);
+    });
   }
 
   public getCachedArchive(archivePath: string): Observable<any> {
@@ -230,7 +243,8 @@ export class EdgarArchiveService {
     return this.http.get(url)
     .map(this.checkForError)
     .catch((err) => Observable.throw(err))
-    .map(this.getJson);
+    .map(this.getJson)
+    .map(this.toCikInfoObjFromCache);
   }
 
   public cacheEdgarTerm(term: string, cikInfoObj: any): Observable<any> {
@@ -308,7 +322,7 @@ export class EdgarArchiveService {
 
   public getXbrlVReportCache(xbrlVReportKey: string): Observable<any> {
     console.log('xbrlVReportKey: ', xbrlVReportKey);
-    let url = `/xbrl_v_reports/?archive_key=` + (xbrlVReportKey || '').toString().trim().replace(/^\//, '').trim();
+    let url = `/xbrl_v_reports/?archive=` + (xbrlVReportKey || '').toString().trim().replace(/^\//, '').trim();
     return this.http.get(url)
     .map(this.checkForError)
     .catch((err) => Observable.throw(err))
@@ -394,7 +408,10 @@ export class EdgarArchiveService {
 //     if (!(resp instanceof Response)) {
 // console.log('json resp' + JSON.stringify(resp));
 //     }
-// {"_body":"...","status":200,"ok":true,"statusText":"OK","headers":{"Last-Modified":["Fri"," 28 Jul 2017 11:33:53 GMT"],"Content-Type":["application/gzip"],"Cache-Control":["public"," max-age=31536000"]},"type":2,"url":"https://s3.amazonaws.com/valcu-edgar-api-dev/uploads/xbrl_v_report/file_store/6d253f54-0764-48f0-9c38-737e162badf6/xvr.json?X-Amz-Expires=600&X-Amz-Date=20170728T120219Z&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=AKIAJTNLNY5L4PEHWXWQ/20170728/us-east-1/s3/aws4_request&X-Amz-SignedHeaders=host&X-Amz-Signature=be9800cfcfaeedbfab51c37678ea6938f60199203b765339a2bb2abe2bed73d7"}
+// {"_body":"...","status":200,"ok":true,"statusText":"OK",
+// "headers":{"Last-Modified":["Fri"," 28 Jul 2017 11:33:53 GMT"],
+// "Content-Type":["application/gzip"],"Cache-Control":["public"," max-age=31536000"]},
+// "type":2,"url":"..."}
     return resp instanceof Response ? resp.json() : resp;
   }
 
@@ -446,6 +463,14 @@ export class EdgarArchiveService {
     let zipObj = resp.text();
     console.log('zipObj: ', zipObj);
     return 'return';
+  }
+
+  private toCikInfoObjFromCache(obj: any): {} {
+    if (!obj) {
+      return null;
+    }
+    obj.companyName = obj.entity_name;
+    return obj;
   }
 
   private toCikInfoObj(resp: Response): {} {

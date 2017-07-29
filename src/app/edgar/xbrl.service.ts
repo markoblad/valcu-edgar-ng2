@@ -104,7 +104,7 @@ export class XbrlService {
     };
   }
 
-  public packageXbrlVReport(xbrlVReportKey: string, parsedXbrls: any[] = [], edgarArchiveFiles: any[]): XbrlVReportInterface {
+  public packageXbrlVReport(xbrlVReportKey: string, parsedXbrls: any[] = [], edgarArchiveFiles: any[], description?: string): XbrlVReportInterface {
     let xbrlVReport: XbrlVReportInterface = {
       version: XbrlUtility.VERSION,
       xbrlVReportKey,
@@ -142,15 +142,15 @@ export class XbrlService {
     xbrlVReport.contexts = ins.contexts;
     xbrlVReport.units = ins.units;
     xbrlVReport.instances = ins.instances;
-    xbrlVReport.description = XbrlUtility.getXbrlVReportDescription(xbrlVReport);
+    xbrlVReport.description = description || XbrlUtility.getXbrlVReportDescription(xbrlVReport);
     console.log('xbrlVReport.description: ', xbrlVReport.description);
     xbrlVReport.status = XbrlUtility.isBlank(parsedXbrls) ? 2 : 4;
 
     return xbrlVReport;
   }
 
-  public addParsedXbrls(xbrlVReportKey: string, parsedXbrls: any[] = [], edgarArchiveFiles: any[]): XbrlVReportInterface {
-    let xbrlVReport = this.packageXbrlVReport(xbrlVReportKey, parsedXbrls, edgarArchiveFiles);
+  public addParsedXbrls(xbrlVReportKey: string, parsedXbrls: any[] = [], edgarArchiveFiles: any[], description?: string): XbrlVReportInterface {
+    let xbrlVReport = this.packageXbrlVReport(xbrlVReportKey, parsedXbrls, edgarArchiveFiles, description);
     return this.addXbrlVReport(xbrlVReport, xbrlVReportKey);
   }
 

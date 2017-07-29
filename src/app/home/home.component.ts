@@ -103,14 +103,15 @@ export class HomeComponent implements OnInit {
         return this.runSearch(this.id);
       }
     })
-    .flatMap((edgarArchiveFiles) => {
+    .flatMap((cikObj) => {
+      let edgarArchiveFiles = cikObj.edgarArchiveFiles;
       if (edgarArchiveFiles) {
         // console.log('xbrlVReport: ', JSON.stringify(xbrlVReport));
         let urlPieces = (edgarArchiveFiles[0].url || '').split('/');
         let xbrlVReportKey = urlPieces[urlPieces.length - 2];
         // console.log('xbrlVReportKey: ', xbrlVReportKey);
         // this.getXbrlReport(xbrlVReportKey, xbrlVReport, this.xbrlService.verbose);
-        let xbrlVReport = this.xbrlService.addParsedXbrls(xbrlVReportKey, [], edgarArchiveFiles);
+        let xbrlVReport = this.xbrlService.addParsedXbrls(xbrlVReportKey, [], edgarArchiveFiles, cikObj.description);
       }
       return Observable.of([]);
     })
@@ -181,15 +182,18 @@ export class HomeComponent implements OnInit {
         //   }, (getArchiveXbrlZipError) => {
         console.log('cikObj.href: ', cikObj.href);
         if (cikObj.hasOwnProperty('hasXbrl') && cikObj.hasXbrl === false) {
-          return Observable.of([]);
+          return Observable.of({});
         } else if (cikObj.hasXbrl && !XbrlUtility.isBlank(cikObj.edgarArchiveFiles)) {
-          return Observable.of(cikObj.edgarArchiveFiles);
+          return Observable.of(cikObj);
         } else {
-          return this.edgarArchiveService.getCachedArchive(cikObj.href);
+          // return this.edgarArchiveService.getCachedArchive(cikObj.href);
+          return this.edgarArchiveService.addCachedArchiveToCikObj(cikObj);
         }
-      }).flatMap((archiveObjs) => {
+      }).flatMap((cikObj) => {
         // console.log('archiveObjs: ', JSON.stringify(archiveObjs || ''));
-        return Observable.of(this.edgarArchiveService.archiveUrlObjsToEdgarArchiveFiles(archiveObjs));
+        let archiveObjs = cikObj.edgarArchiveFiles;
+        cikObj.edgarArchiveFiles = this.edgarArchiveService.archiveUrlObjsToEdgarArchiveFiles(archiveObjs);
+        return Observable.of(cikObj);
       });
     }
   }

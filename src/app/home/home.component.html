@@ -75,9 +75,9 @@
       <div class="col">
         <!-- <p [innerHTML]="parsedOut | json"></p> -->
         <p>
-          Entity: <span [innerHTML]="appState.get('companyName')"></span>&nbsp;
-          CIK: <span [innerHTML]="appState.get('cik')"></span>&nbsp;
-          Search term: <span [innerHTML]="appState.get('searchTerm')"></span>
+          Entity: <span [innerHTML]="appState.get('companyName') | mySanitizeHtml"></span>&nbsp;
+          CIK: <span [innerHTML]="appState.get('cik') | mySanitizeHtml"></span>&nbsp;
+          Search term: <span [innerHTML]="appState.get('searchTerm') | mySanitizeHtml"></span>
         </p>
       </div>
       <div class="col-xs-1">
@@ -121,7 +121,7 @@
           <li *ngFor="let xbrlVReportKey of xbrlService.xbrlVReportKeys" class="nav-item">
             <small>
               <a [ngClass]="{'nav-link': true, active: xbrlVReportKey === xbrlService.selectedXbrlVReportKey}"
-                (click)="xbrlService.selectXbrlVReport(xbrlVReportKey)" [innerHTML]="xbrlService.getXbrlVReportDescriptionByKey(xbrlVReportKey)"></a>
+                (click)="xbrlService.selectXbrlVReport(xbrlVReportKey)" [innerHTML]="xbrlService.getXbrlVReportDescriptionByKey(xbrlVReportKey) | mySanitizeHtml"></a>
             </small>
           </li>
         </nav>
@@ -147,18 +147,18 @@
             <thead class="thead-inverse">
               <tr>
                 <th>{{xbrlService.displayRoleURI(xbrlService.selectedXbrlVStatementRoleURI)}}</th>
-                <th *ngFor="let periodKey of xbrlService.selectedXbrlVStatement.paredPeriodKeys"><span placement="top" [innerHTML]="xbrlService.displayPeriodKey(periodKey)"></span></th>
+                <th *ngFor="let periodKey of xbrlService.selectedXbrlVStatement.paredPeriodKeys"><span placement="top" [innerHTML]="xbrlService.displayPeriodKey(periodKey) | mySanitizeHtml"></span></th>
               </tr>
             </thead>
             <tbody *ngFor="let dimension of xbrlService.lineItemIterators(xbrlService.selectedXbrlVStatement.dimensions)">
               <tr *ngIf="dimension.member" class="table-inverse bg-primary">
                 <td>{{xbrlService.getHeadDimensionedRectangleItemLabel(xbrlService.selectedXbrlVStatement.rectangleKeys, dimension)}}</td>
-                <td *ngFor="let periodKey of xbrlService.selectedXbrlVStatement.paredPeriodKeys" [innerHTML]="xbrlService.displayPeriodKey(periodKey)"></td>
+                <td *ngFor="let periodKey of xbrlService.selectedXbrlVStatement.paredPeriodKeys" [innerHTML]="xbrlService.displayPeriodKey(periodKey) | mySanitizeHtml"></td>
               </tr>
               <tr *ngFor="let rectangleItem of xbrlService.getDimensionedRectangleItems(xbrlService.selectedXbrlVStatement.rectangleKeys, dimension)" [ngClass]="{'thead-inverse': rectangleItem.domainMember}">
                 <td><span>{{repeat('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', rectangleItem.level - 1)}}</span><span *ngIf="rectangleItem.level !== 0">{{rectangleItem.lastChild ? '└──' : '├──'}}</span>{{xbrlService.getLabel(rectangleItem.toHref, rectangleItem.preferredLabel)}}</td>
                 <td *ngFor="let instanceObj of xbrlService.instanceObjIterators(dimension, rectangleItem, xbrlService.selectedXbrlVStatement.paredPeriodKeys)" class="text-right xbrl-instance-display">
-                  <div *ngIf="!rectangleItem.domainMember"><span *ngIf="xbrlService.nlpMode != 'redline'" [innerHTML]="xbrlService.getContent(rectangleItem, instanceObj.contextRef, null, xbrlService.selectedXbrlVReport.units)"></span><span *ngIf="xbrlService.nlpMode === 'redline'"><diff [diffType]="'diffWords'" [priorContent]="xbrlService.getPriorContent(rectangleItem, instanceObj.contextRef)"  [postContent]="xbrlService.getContent(rectangleItem, instanceObj.contextRef, null, xbrlService.selectedXbrlVReport.units)"></diff></span></div>
+                  <div *ngIf="!rectangleItem.domainMember"><span *ngIf="xbrlService.nlpMode != 'redline'" [innerHTML]="xbrlService.getContent(rectangleItem, instanceObj.contextRef, null, xbrlService.selectedXbrlVReport.units) | mySanitizeHtml"></span><span *ngIf="xbrlService.nlpMode === 'redline'"><diff [diffType]="'diffWords'" [priorContent]="xbrlService.getPriorContent(rectangleItem, instanceObj.contextRef)"  [postContent]="xbrlService.getContent(rectangleItem, instanceObj.contextRef, null, xbrlService.selectedXbrlVReport.units)"></diff></span></div>
                 </td>
               </tr>
             </tbody>

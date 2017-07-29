@@ -32,6 +32,7 @@ import { VChartComponent } from './v-chart';
 import { NoContentComponent } from './no-content';
 import { XLargeDirective } from './home/x-large';
 import { LoadingComponent } from './ui/loading';
+import { SanitizeHtmlPipe } from './ui/pipes';
 import { DiffComponent } from './diff';
 import { XbrlUtility } from './edgar';
 import { XbrlVStatementUtility } from './edgar';
@@ -68,6 +69,7 @@ type StoreType = {
     NoContentComponent,
     XLargeDirective,
     LoadingComponent,
+    SanitizeHtmlPipe,
     DiffComponent
   ],
   imports: [ // import Angular's modules
