@@ -75,6 +75,10 @@ export class HomeComponent implements OnInit {
   public parsed: any;
   public parsedOut: any;
 
+  public showXbrlVStatementNav: boolean = true;
+  public showXbrlVStatement: boolean = true;
+  public showTopNav: boolean = true;
+
   private searchTerms = new Subject<string>();
 
   private id: any;
@@ -207,6 +211,18 @@ export class HomeComponent implements OnInit {
 
   public repeat(str: string, times: number = 1): string {
     return str.repeat(Math.max(times || 0, 0));
+  }
+
+  public toggleXbrlVStatementNav(): void {
+    this.showXbrlVStatementNav = !this.showXbrlVStatementNav;
+  }
+
+  public toggleXbrlVStatement(): void {
+    this.showXbrlVStatement = !this.showXbrlVStatement;
+  }
+
+  public toggleTopNav(): void {
+    this.showTopNav = !this.showTopNav;
   }
 
   // public tryLogisticRegression() {

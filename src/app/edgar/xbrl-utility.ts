@@ -923,13 +923,13 @@ export class XbrlUtility {
     if (parsedXbrl.type === 'xsd') {
       // return parsedXbrl.roles.map((i) => i.roleURI);
       return Object.keys(parsedXbrl.roleTypes || {});
-    } else if (parsedXbrl.type === 'pre') {
-      return parsedXbrl.presentationLinks.map((i) => i.role);
-    } else if (parsedXbrl.type === 'def') {
-      return parsedXbrl.definitionLinks.map((i) => i.role);
-    } else if (parsedXbrl.type === 'cal') {
-      return parsedXbrl.calculationLinks.map((i) => i.role);
-    }
+    } // else if (parsedXbrl.type === 'pre') {
+    //   return parsedXbrl.presentationLinks.map((i) => i.role);
+    // } else if (parsedXbrl.type === 'def') {
+    //   return parsedXbrl.definitionLinks.map((i) => i.role);
+    // } else if (parsedXbrl.type === 'cal') {
+    //   return parsedXbrl.calculationLinks.map((i) => i.role);
+    // }
   }
 
   public static getXbrlsRoleURIs(parsedXbrls): any {

@@ -6,3 +6,13 @@ html, body{
 a.active {
   // background-color: gray;
 }
+
+main {
+  min-height: 600px;
+}
+
+footer {
+  min-height: 200px;
+  // position: absolute;
+  bottom: 0 !important;
+}

@@ -367,24 +367,41 @@ export class XbrlService {
 
   public displayRoleURI(roleURI): string {
     let definition = XbrlUtility.getRoleURIDefinition(this.selectedXbrlVReport, roleURI);
-    let categorization = XbrlVStatementUtility.categorizeStatement(definition);
+    // let categorization = XbrlVStatementUtility.categorizeStatement(definition);
     let pieces = (definition || '').split(/\s+-\s+/);
-    return XbrlUtility.manageLabelBreaks(pieces[pieces.length - 1] + ' ' + JSON.stringify(categorization));
+    // return XbrlUtility.manageLabelBreaks(pieces[pieces.length - 1] + ' ' + JSON.stringify(categorization));
+    return XbrlUtility.manageLabelBreaks(pieces[pieces.length - 1]);
     // || (XbrlUtility.getLastSlash(roleURI) || '').replace(/[A-Z]/g, (letter) => ' ' + letter).trim();
   }
 
   public displayPeriodKey(periodKey): string {
-    return XbrlUtility.manageLabelBreaks(periodKey);
+    // return XbrlUtility.manageLabelBreaks(periodKey);
+    return periodKey.toString().split(/\s+/).join('<br />');
+  }
+
+  public getInstance(item, contextRef): any {
+    return ((item || {}).instances || {})[contextRef];
+  }
+
+  public getInstanceTextContent(item, contextRef): any {
+    let instance = this.getInstance(item, contextRef) || {};
+    return (instance).textContent;
+  }
+
+  public getUnits(item, contextRef, unitsPool?: any): any {
+    let instance = this.getInstance(item, contextRef) || {};
+    return (unitsPool || {})[instance.unitRef];
   }
 
   public getContent(item, contextRef, decimals?: any, unitsPool?: any): any {
-    let instance = ((item || {}).instances || {})[contextRef] || {};
+    let instance = this.getInstance(item, contextRef) || {};
     let textContent = (instance).textContent || '';
     let instanceDecimals = (((item || {}).instances || {})[contextRef] || {}).decimals;
     let value = textContent;
     let details = '<div class="xbrl-details bg-primary text-white text-left">';
     // details += '<div class="xbrl-details-footnotes">Instance: ' + JSON.stringify(instance) + '</div>';
-    if (!XbrlUtility.isBlank(instance.unitRef) && !XbrlUtility.isBlank(unitsPool)) {
+    let units = (unitsPool || {})[instance.unitRef];
+    if (!XbrlUtility.isBlank(instance.unitRef)) {
       if (XbrlUtility.isNumber(textContent)) {
         value = parseFloat(textContent);
         if (XbrlUtility.isNumber(instanceDecimals)) {
@@ -392,7 +409,7 @@ export class XbrlService {
         }
         value = value.toFixed(2).replace(/(\d)(?=(\d{3})+\.)/g, '$1,');
       }
-      details += '<div class="xbrl-details-units">Units: ' + (((unitsPool || {})[instance.unitRef] || {}).display || 'N/A') + '</div>';
+      details += '<div class="xbrl-details-units bg-info">Units: ' + ((units || {}).display || 'N/A') + '</div>';
     }
     if (!XbrlUtility.isBlank(instance.footnotes)) {
       details += '<div class="xbrl-details-footnotes">Footnotes: ' + (instance.footnotes || []).map((footnote) => footnote.textContent).join('<br />') + '</div>';

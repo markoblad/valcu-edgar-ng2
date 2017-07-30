@@ -11,7 +11,7 @@
     <span class="navbar-toggler-icon"></span>
   </button>
   <a class="navbar-brand"
-    [routerLink]=" ['./'] "
+    [routerLink]=" ['/'] "
     routerLinkActive="active"
     [routerLinkActiveOptions]= "{exact: true}">
     <img [src]="valcuLogo" height="30" class="d-inline-block align-top" alt="Valcu Viewer Logo">
@@ -19,19 +19,20 @@
   </a>
   <div class="collapse navbar-collapse" id="navbarSupportedContent" [ngbCollapse]="isCollapsed">
     <ul class="navbar-nav mr-auto">
-      <li [ngClass]="{'nav-item': true}">
-        <a class="nav-link" [routerLink]=" ['./home'] "
+      <li *ngIf="false" [ngClass]="{'nav-item': true}">
+        <a class="nav-link" [routerLink]=" ['/home'] "
           routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}">
           Home
         </a>
       </li>
-      <li [ngClass]="{'nav-item': true}">
-        <a class="nav-link" [routerLink]=" ['./about'] "
+      <li *ngIf="false" [ngClass]="{'nav-item': true}">
+        <a class="nav-link" [routerLink]=" ['/about'] "
           routerLinkActive="active" [routerLinkActiveOptions]= "{exact: true}">
           About
         </a>
       </li>
     </ul>
+    <loading *ngIf="searching || xbrlService.selectingXbrlVReport || xbrlService.selectingXbrlVStatement"></loading>
     <form class="form-inline my-2 my-lg-0" (ngSubmit)="submitState(localState.value)" autocomplete="off">
       <div class="input-group">
         <input
@@ -71,6 +72,7 @@
 
   <div>
 
+  <div *ngIf="showTopNav">
     <div class="row">
       <div class="col">
         <!-- <p [innerHTML]="parsedOut | json"></p> -->
@@ -80,13 +82,6 @@
           Search term: <span [innerHTML]="appState.get('searchTerm') | mySanitizeHtml"></span>
         </p>
       </div>
-      <div class="col-xs-1">
-        <loading *ngIf="searching || xbrlService.selectingXbrlVReport || xbrlService.selectingXbrlVStatement"></loading>
-      </div>
-    </div>
-    <hr>
-
-    <div class="row">
       <div class="col align-self-end">
         <div *ngIf="xbrlService.nlpMode === 'redline'" ngbDropdown [up]="false" class="pull-right d-inline-block">
           <button class="btn btn-outline-primary btn-sm" id="dropdownComparisonStatement" ngbDropdownToggle (click)="false">Comparison Statement</button>
@@ -115,9 +110,11 @@
         </div>
       </div>
     </div>
+    <hr>
+
     <div class="row">
       <div class="col">
-        <nav class="nav nav-tabs d-flex flex-wrap">
+        <nav class="nav nav-pills d-flex flex-wrap">
           <li *ngFor="let xbrlVReportKey of xbrlService.xbrlVReportKeys" class="nav-item">
             <small>
               <a [ngClass]="{'nav-link': true, active: xbrlVReportKey === xbrlService.selectedXbrlVReportKey}"
@@ -127,9 +124,19 @@
         </nav>
       </div>
     </div>
-    
+    <hr>
+  </div>
+
     <div *ngIf="xbrlService.selectedXbrlVReportDisplayable()" class="row pt-2">
-      <div class="col-sm-3">
+      <div *ngIf="showXbrlVStatementNav" [ngClass]="{'col-sm-3': showXbrlVStatement, 'col-sm-12': !showXbrlVStatement}">
+        <div class="d-flex justify-content-between mb-1">
+          <button class="btn btn-sm btn-outline-secondary my-1 my-sm-0"
+            (click)="toggleTopNav()"
+          ><span [ngClass]="{fa: true, 'fa-arrow-up': showTopNav, 'fa-arrow-down': !showTopNav}"></span></button>
+          <button class="btn btn-sm btn-outline-secondary my-1 my-sm-0"
+            (click)="toggleXbrlVStatement()"
+          ><span [ngClass]="{fa: true, 'fa-arrow-right': showXbrlVStatement, 'fa-arrow-left': !showXbrlVStatement}"></span></button>
+        </div>
         <ul class="nav flex-column flex-sm-row nav-pills xbrl-statement-nav scroll-column bg-faded rounded-left">
           <li class="nav-item flex-sm-fill">
             <small>
@@ -141,24 +148,37 @@
         </ul>
       </div>
 
-      <div class="col-sm-9">
+      <div *ngIf="showXbrlVStatement" [ngClass]="{'col-sm-9': showXbrlVStatementNav, 'col-sm-12': !showXbrlVStatementNav}">
+        <div class="d-flex justify-content-between mb-1">
+          <button class="btn btn-sm btn-outline-secondary my-1 my-sm-0"
+            (click)="toggleXbrlVStatementNav()"
+          ><span [ngClass]="{fa: true, 'fa-arrow-left': showXbrlVStatementNav, 'fa-arrow-right': !showXbrlVStatementNav}"></span></button>
+          <button class="btn btn-sm btn-outline-secondary my-1 my-sm-0"
+            (click)="toggleTopNav()"
+          ><span [ngClass]="{fa: true, 'fa-arrow-up': showTopNav, 'fa-arrow-down': !showTopNav}"></span></button>
+        </div>
         <small class="bg-faded rounded-right">
-          <table *ngIf="xbrlService.selectedXbrlVStatementRoleURI" class="table table-striped table-sm">
+          <table *ngIf="xbrlService.selectedXbrlVStatementRoleURI" class="table table-striped table-sm table-responsive">
             <thead class="thead-inverse">
               <tr>
                 <th>{{xbrlService.displayRoleURI(xbrlService.selectedXbrlVStatementRoleURI)}}</th>
-                <th *ngFor="let periodKey of xbrlService.selectedXbrlVStatement.paredPeriodKeys"><span placement="top" [innerHTML]="xbrlService.displayPeriodKey(periodKey) | mySanitizeHtml"></span></th>
+                <th *ngFor="let periodKey of xbrlService.selectedXbrlVStatement.paredPeriodKeys" class="text-center"><span placement="top" [innerHTML]="xbrlService.displayPeriodKey(periodKey) | mySanitizeHtml"></span></th>
               </tr>
             </thead>
             <tbody *ngFor="let dimension of xbrlService.lineItemIterators(xbrlService.selectedXbrlVStatement.dimensions)">
               <tr *ngIf="dimension.member" class="table-inverse bg-primary">
                 <td>{{xbrlService.getHeadDimensionedRectangleItemLabel(xbrlService.selectedXbrlVStatement.rectangleKeys, dimension)}}</td>
-                <td *ngFor="let periodKey of xbrlService.selectedXbrlVStatement.paredPeriodKeys" [innerHTML]="xbrlService.displayPeriodKey(periodKey) | mySanitizeHtml"></td>
+                <td *ngFor="let periodKey of xbrlService.selectedXbrlVStatement.paredPeriodKeys" class="text-center" [innerHTML]="xbrlService.displayPeriodKey(periodKey) | mySanitizeHtml"></td>
               </tr>
               <tr *ngFor="let rectangleItem of xbrlService.getDimensionedRectangleItems(xbrlService.selectedXbrlVStatement.rectangleKeys, dimension)" [ngClass]="{'thead-inverse': rectangleItem.domainMember}">
                 <td><span>{{repeat('&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;', rectangleItem.level - 1)}}</span><span *ngIf="rectangleItem.level !== 0">{{rectangleItem.lastChild ? '└──' : '├──'}}</span>{{xbrlService.getLabel(rectangleItem.toHref, rectangleItem.preferredLabel)}}</td>
-                <td *ngFor="let instanceObj of xbrlService.instanceObjIterators(dimension, rectangleItem, xbrlService.selectedXbrlVStatement.paredPeriodKeys)" class="text-right xbrl-instance-display">
-                  <div *ngIf="!rectangleItem.domainMember"><span *ngIf="xbrlService.nlpMode != 'redline'" [innerHTML]="xbrlService.getContent(rectangleItem, instanceObj.contextRef, null, xbrlService.selectedXbrlVReport.units) | mySanitizeHtml"></span><span *ngIf="xbrlService.nlpMode === 'redline'"><diff [diffType]="'diffWords'" [priorContent]="xbrlService.getPriorContent(rectangleItem, instanceObj.contextRef)"  [postContent]="xbrlService.getContent(rectangleItem, instanceObj.contextRef, null, xbrlService.selectedXbrlVReport.units)"></diff></span></div>
+                <td *ngFor="let instanceObj of xbrlService.instanceObjIterators(dimension, rectangleItem, xbrlService.selectedXbrlVStatement.paredPeriodKeys)" class="xbrl-instance-display">
+                  <div *ngIf="!rectangleItem.domainMember" [ngClass]="{'text-right': xbrlService.getUnits(rectangleItem, instanceObj.contextRef, xbrlService.selectedXbrlVReport.units)}">
+                    <span *ngIf="xbrlService.nlpMode != 'redline'" [innerHTML]="xbrlService.getContent(rectangleItem, instanceObj.contextRef, null, xbrlService.selectedXbrlVReport.units) | mySanitizeHtml"></span>
+                    <span *ngIf="xbrlService.nlpMode === 'redline'">
+                      <diff [diffType]="'diffWords'" [priorContent]="xbrlService.getPriorContent(rectangleItem, instanceObj.contextRef)"  [postContent]="xbrlService.getContent(rectangleItem, instanceObj.contextRef, null, xbrlService.selectedXbrlVReport.units)"></diff>
+                    </span>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -177,7 +197,7 @@
     <pre *ngIf="false">xbrlService.selectedXbrlVStatement = {{ xbrlService.selectedXbrlVStatement | json }}</pre>
     <pre *ngIf="false && xbrlService.selectedXbrlVStatement">xbrlService.selectedXbrlVStatement.xbrlStatementKeys = {{ xbrlService.selectedXbrlVStatement.xbrlStatementKeys | json }}</pre>
     <pre *ngIf="false">xbrlService.selectedXbrlVStatement.xbrlStatements = {{ xbrlService.selectedXbrlVStatement.xbrlStatements | json }}</pre>
-    <pre *ngIf="true && xbrlService.selectedXbrlVReport">xbrlService.selectedXbrlVReport.xbrls = {{ xbrlService.selectedXbrlVReport.xbrls | json }}</pre>
+    <pre *ngIf="false && xbrlService.selectedXbrlVReport">xbrlService.selectedXbrlVReport.xbrls = {{ xbrlService.selectedXbrlVReport.xbrls | json }}</pre>
     <pre *ngIf="false">xbrlService.selectedXbrlVReport.xbrls.xsd = {{ ((xbrlService.selectedXbrlVReport.xbrls || {})).xsd | json }}</pre>
 
   </div>

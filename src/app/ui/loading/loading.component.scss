@@ -1,11 +1,13 @@
-$green: #1ABC9C; // #008744;
+// $green: #1ABC9C; // #008744;
+$green: #fff; // #008744;
 $blue: #3498DB; // #0057e7;
-$red: #1ABC9C; // #c0392b; // #d62d20;
+// $red: #1ABC9C; // #c0392b; // #d62d20;
+$red: #fff; // #c0392b; // #d62d20;
 $yellow: #3498DB; // #f1c40f; // #ffa700;
 $white: #eee;
 
 // scaling... any units
-$width: 75px;
+$width: 38px;
 
 body {
   background-color: $white;
