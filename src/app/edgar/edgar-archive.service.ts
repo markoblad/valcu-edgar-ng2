@@ -480,8 +480,8 @@ export class EdgarArchiveService {
     let selection = (<Element> doc.lastChild);
     // console.log('selection: ', JSON.stringify(selection));
     // let content = selection.querySelectorAll('.companyInfo')[0].textContent;
-    let companyName = (((selection.querySelectorAll('.companyName')[0] || {}).firstChild || {}).textContent || '').trim();
-    let cik = (((selection.querySelectorAll('.companyName a')[0] || {}).firstChild || {}).textContent || '').trim().substring(0, 10);
+    let companyName = (((selection.querySelectorAll('.companyName')[0] || {firstChild: null}).firstChild || {}).textContent || '').trim();
+    let cik = (((selection.querySelectorAll('.companyName a')[0] || {firstChild: null}).firstChild || {}).textContent || '').trim().substring(0, 10);
 
     console.log('content: ', companyName);
     return {companyName, cik};
